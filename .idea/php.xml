@@ -89,13 +89,24 @@
       <path value="$PROJECT_DIR$/taskforce-backend/vendor/psr/cache" />
       <path value="$PROJECT_DIR$/taskforce-backend/vendor/psr/link" />
       <path value="$PROJECT_DIR$/taskforce-backend/vendor/psr/container" />
+      <path value="$PROJECT_DIR$/taskforce-backend/vendor/lcobucci/jwt" />
+      <path value="$PROJECT_DIR$/taskforce-backend/vendor/lcobucci/clock" />
+      <path value="$PROJECT_DIR$/taskforce-backend/vendor/lexik/jwt-authentication-bundle" />
+      <path value="$PROJECT_DIR$/taskforce-backend/vendor/nikic/php-parser" />
+      <path value="$PROJECT_DIR$/taskforce-backend/vendor/symfony/maker-bundle" />
+      <path value="$PROJECT_DIR$/taskforce-backend/vendor/symfony/process" />
     </include_path>
   </component>
-  <component name="PhpProjectSharedConfiguration" php_language_level="8.4">
+  <component name="PhpProjectSharedConfiguration" php_language_level="8.2">
     <option name="suggestChangeDefaultLanguageLevel" value="false" />
   </component>
   <component name="PhpStanOptionsConfiguration">
     <option name="transferred" value="true" />
+  </component>
+  <component name="PhpUnit">
+    <phpunit_settings>
+      <PhpUnitSettings custom_loader_path="$PROJECT_DIR$/taskforce-backend/vendor/autoload.php" />
+    </phpunit_settings>
   </component>
   <component name="PsalmOptionsConfiguration">
     <option name="transferred" value="true" />
