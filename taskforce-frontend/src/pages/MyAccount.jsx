@@ -4,6 +4,7 @@ import Header from "../compenents/includes/header";
 import Footer from "../compenents/includes/footer";
 import ProfileInfo from "../compenents/myAccount/ProfileInfo";
 import UserSkillsManager from "../compenents/myAccount/UserSkillsManager";
+import UserTasksManager from "../compenents/myAccount/UserTasksManager";
 import profileService from '../services/profil/profileService';
 import authService from '../services/authServices';
 import '../assets/styles/compenents/MyAccount/MyAccount.scss';
@@ -85,6 +86,8 @@ const MyAccount = () => {
                     <ProfileInfo user={user} onUpdate={handleProfileUpdate} />
 
                     <UserSkillsManager />
+
+                    <UserTasksManager />
 
                     <div className="account-stats">
                         <div className="stat-card">
