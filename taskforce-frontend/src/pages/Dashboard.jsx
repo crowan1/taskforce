@@ -79,7 +79,6 @@ const Dashboard = () => {
 
     const handleCreateTask = async (taskData) => {
         try {
-            // La tâche a déjà été créée par le modal, on ajoute juste à la liste
             setTasks(prev => [...prev, taskData]);
             setShowCreateTask(false);
         } catch (err) {
@@ -97,6 +96,32 @@ const Dashboard = () => {
         } catch (err) {
             console.error('Erreur création projet:', err);
             setError(err.message || 'Erreur lors de la création du projet');
+        }
+    };
+
+    const handleAssignTask = async (taskId) => {
+        try {
+            const response = await dashboardServices.assignTaskAutomatically(taskId);
+            
+            setTasks(prev => prev.map(task => 
+                task.id === taskId 
+                    ? { ...task, assignedTo: response.assignedTo }
+                    : task
+            ));
+        } catch (err) {
+            setError(err.message || 'Erreur lors de l\'assignation de la tâche');
+        }
+    };
+
+    const handleAssignAllTasks = async () => {
+        if (!selectedProject) return;
+        
+        try {
+            const response = await dashboardServices.assignAllProjectTasks(selectedProject.id);
+            
+            await fetchTasks(selectedProject.id);
+        } catch (err) {
+            setError(err.message || 'Erreur lors de l\'assignation des tâches');
         }
     };
 
@@ -297,7 +322,15 @@ const Dashboard = () => {
                                     className="btn-manage-users" 
                                     onClick={() => setShowManageUsers(true)}
                                 >
-                                    👥 Gérer Utilisateurs
+                                     Gérer Utilisateurs
+                                </button>
+                                <button 
+                                    className="btn-assign-all"
+                                    onClick={handleAssignAllTasks}
+                                    disabled={currentUserRole !== 'admin'}
+                                    title={currentUserRole !== 'admin' ? 'Seuls les administrateurs peuvent assigner les tâches' : 'Assigner automatiquement toutes les tâches non assignées'}
+                                >
+                                     Assigner Toutes
                                 </button>
 
                                 {isCreator(selectedProject) && (
@@ -341,6 +374,8 @@ const Dashboard = () => {
                             setShowAddSkills(true);
                         }}
                         onEditTask={handleEditTask}
+                        onAssignTask={handleAssignTask}
+                        currentUserRole={currentUserRole}
                     />
                 )}
             </div>

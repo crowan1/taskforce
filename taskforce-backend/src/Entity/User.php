@@ -52,10 +52,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: ProjectUser::class, orphanRemoval: true)]
     private Collection $projectUsers;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserSkill::class, orphanRemoval: true)]
+    private Collection $userSkills;
+
     public function __construct()
     {
         $this->roles = ['ROLE_USER'];
         $this->projectUsers = new ArrayCollection();
+        $this->userSkills = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -200,5 +204,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getProjects(): array
     {
         return $this->projectUsers->map(fn($pu) => $pu->getProject())->toArray();
+    }
+
+    public function getUserSkills(): Collection
+    {
+        return $this->userSkills;
+    }
+
+    public function addUserSkill(UserSkill $userSkill): static
+    {
+        if (!$this->userSkills->contains($userSkill)) {
+            $this->userSkills->add($userSkill);
+            $userSkill->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserSkill(UserSkill $userSkill): static
+    {
+        if ($this->userSkills->removeElement($userSkill)) {
+            if ($userSkill->getUser() === $this) {
+                $userSkill->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getSkills(): array
+    {
+        return $this->userSkills->map(fn($us) => [
+            'id' => $us->getSkill()->getId(),
+            'name' => $us->getSkill()->getName()
+        ])->toArray();
     }
 }

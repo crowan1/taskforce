@@ -26,8 +26,7 @@ class Skill
 
 
 
-    #[ORM\Column]
-    private ?int $level = 1;
+
 
     #[ORM\Column]
     private ?bool $isActive = true;
@@ -48,7 +47,6 @@ class Skill
     public function __construct()
     {
         $this->isActive = true;
-        $this->level = 1;
         $this->tasks = new ArrayCollection();
     }
 
@@ -94,16 +92,7 @@ class Skill
 
 
 
-    public function getLevel(): ?int
-    {
-        return $this->level;
-    }
 
-    public function setLevel(int $level): static
-    {
-        $this->level = $level;
-        return $this;
-    }
 
     public function isActive(): ?bool
     {

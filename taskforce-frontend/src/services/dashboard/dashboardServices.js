@@ -108,6 +108,22 @@ export const dashboardServices = {
         });
     },
 
+    assignTaskAutomatically: async (taskId) => {
+        return apiCall(`${API_BASE_URL}/tasks/${taskId}/assign`, {
+            method: 'POST'
+        });
+    },
+
+    assignAllProjectTasks: async (projectId) => {
+        return apiCall(`${API_BASE_URL}/tasks/project/${projectId}/assign-all`, {
+            method: 'POST'
+        });
+    },
+
+    getProjectWorkload: async (projectId) => {
+        return apiCall(`${API_BASE_URL}/tasks/project/${projectId}/workload`);
+    },
+
     // COlonnes
     getColumns: async (projectId) => {
         return apiCall(`${API_BASE_URL}/columns?projectId=${projectId}`);
@@ -163,5 +179,28 @@ export const dashboardServices = {
         return apiCall(`${API_BASE_URL}/users`);
     },
 
+    // compétences utilisateur
+    getUserSkills: async () => {
+        return apiCall(`${API_BASE_URL}/user-skills`);
+    },
 
+    addUserSkill: async (skillData) => {
+        return apiCall(`${API_BASE_URL}/user-skills`, {
+            method: 'POST',
+            body: JSON.stringify(skillData)
+        });
+    },
+
+    updateUserSkill: async (userSkillId, skillData) => {
+        return apiCall(`${API_BASE_URL}/user-skills/${userSkillId}`, {
+            method: 'PUT',
+            body: JSON.stringify(skillData)
+        });
+    },
+
+    deleteUserSkill: async (userSkillId) => {
+        return apiCall(`${API_BASE_URL}/user-skills/${userSkillId}`, {
+            method: 'DELETE'
+        });
+    }
 };

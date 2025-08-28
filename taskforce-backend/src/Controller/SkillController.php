@@ -30,7 +30,6 @@ class SkillController extends AbstractController
                 'name' => $skill->getName(),
                 'description' => $skill->getDescription(),
                 'category' => null,
-                'level' => $skill->getLevel(),
                 'createdAt' => $skill->getCreatedAt()->format('Y-m-d H:i:s'),
                 'createdBy' => [
                     'id' => $skill->getCreatedBy()->getId(),
@@ -72,10 +71,6 @@ class SkillController extends AbstractController
         $skill = new Skill();
         $skill->setName($data['name']);
         $skill->setDescription($data['description'] ?? null);
-        
-
-        
-        $skill->setLevel(1); 
         $skill->setCreatedBy($user);
 
         $this->entityManager->persist($skill);
@@ -89,7 +84,6 @@ class SkillController extends AbstractController
                 'name' => $skill->getName(),
                 'description' => $skill->getDescription(),
                 'category' => null,
-                'level' => $skill->getLevel(),
                 'createdAt' => $skill->getCreatedAt()->format('Y-m-d H:i:s'),
                 'createdBy' => [
                     'id' => $skill->getCreatedBy()->getId(),

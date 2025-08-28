@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask }) => {
+const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole }) => {
     const [showDetails, setShowDetails] = useState(false);
 
     const handleDragStart = (e) => {
@@ -44,6 +44,18 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
             <div className="task-header">
                 <h4 className="task-title">{task.title}</h4>
                 <div className="task-actions">
+                    {!task.assignedTo && currentUserRole === 'admin' && (
+                        <button 
+                            className="btn-assign"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAssignTask(task.id);
+                            }}
+                            title="Assigner automatiquement"
+                        >
+                            🎯
+                        </button>
+                    )}
                     <button 
                         className="btn-edit"
                         onClick={(e) => {

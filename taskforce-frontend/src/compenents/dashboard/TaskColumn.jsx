@@ -1,7 +1,7 @@
 import React from 'react';
 import TaskCard from './TaskCard';
 
-const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask }) => {
+const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole }) => {
     const handleDragOver = (e) => {
         e.preventDefault();
     };
@@ -42,6 +42,8 @@ const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDel
                             onShowDeleteModal={onShowDeleteModal}
                             onAddSkills={onAddSkills}
                             onEditTask={onEditTask}
+                            onAssignTask={onAssignTask}
+                            currentUserRole={currentUserRole}
                         />
                     ))
                 )}

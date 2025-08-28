@@ -46,6 +46,12 @@ class Task
     #[ORM\JoinColumn(nullable: true)]
     private ?User $assignedTo = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $assignedAt = null;
+
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $assignmentScore = null;
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
     private ?User $createdBy = null;
@@ -134,16 +140,7 @@ class Task
         return $this;
     }
 
-    public function getLevel(): ?string
-    {
-        return $this->level;
-    }
 
-    public function setLevel(string $level): static
-    {
-        $this->level = $level;
-        return $this;
-    }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {
@@ -175,6 +172,31 @@ class Task
     public function setAssignedTo(?User $assignedTo): static
     {
         $this->assignedTo = $assignedTo;
+        if ($assignedTo) {
+            $this->assignedAt = new \DateTimeImmutable();
+        }
+        return $this;
+    }
+
+    public function getAssignedAt(): ?\DateTimeImmutable
+    {
+        return $this->assignedAt;
+    }
+
+    public function setAssignedAt(?\DateTimeImmutable $assignedAt): static
+    {
+        $this->assignedAt = $assignedAt;
+        return $this;
+    }
+
+    public function getAssignmentScore(): ?float
+    {
+        return $this->assignmentScore;
+    }
+
+    public function setAssignmentScore(?float $assignmentScore): static
+    {
+        $this->assignmentScore = $assignmentScore;
         return $this;
     }
 

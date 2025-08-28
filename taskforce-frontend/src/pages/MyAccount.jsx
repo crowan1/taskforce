@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from "../compenents/includes/header";
 import Footer from "../compenents/includes/footer";
 import ProfileInfo from "../compenents/myAccount/ProfileInfo";
+import UserSkillsManager from "../compenents/myAccount/UserSkillsManager";
 import profileService from '../services/profil/profileService';
 import authService from '../services/authServices';
 import '../assets/styles/compenents/MyAccount/MyAccount.scss';
@@ -82,6 +83,8 @@ const MyAccount = () => {
                     </div>
 
                     <ProfileInfo user={user} onUpdate={handleProfileUpdate} />
+
+                    <UserSkillsManager />
 
                     <div className="account-stats">
                         <div className="stat-card">
