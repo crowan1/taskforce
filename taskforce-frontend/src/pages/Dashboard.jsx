@@ -3,16 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import KanbanBoard from '../compenents/dashboard/KanbanBoard';
-import CreateTaskModal from '../compenents/dashboard/modal/CreateTaskModal';
-import CreateProjectModal from '../compenents/dashboard/modal/CreateProjectModal';
-import CreateColumnModal from '../compenents/dashboard/modal/CreateColumnModal';
-
-
-import ManageUsersModal from '../compenents/dashboard/modal/ManageUsersModal';
+import ModalManager from '../compenents/dashboard/modal/ModalManager';
 import AddSkillsModal from '../compenents/dashboard/modal/AddSkillsModal';
-import EditTaskModal from '../compenents/dashboard/modal/EditTaskModal';
-import { dashboardServices } from '../services/dashboard/dashboardServices';
+import SelectColumnToDeleteModal from '../compenents/dashboard/modal/columns/SelectColumnToDeleteModal';
+import SelectColumnToEditModal from '../compenents/dashboard/modal/columns/SelectColumnToEditModal';
+import EditColumnModal from '../compenents/dashboard/modal/columns/EditColumnModal';
 
+import { dashboardServices } from '../services/dashboard/dashboardServices';
 
 // styles
 import '../assets/styles/compenents/Dashboard/CreateTaskProjectModal.scss';
@@ -41,6 +38,15 @@ const Dashboard = () => {
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [showDeleteProjectModal, setShowDeleteProjectModal] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
+    const [columnToDelete, setColumnToDelete] = useState(null);
+    const [showEditColumnModal, setShowEditColumnModal] = useState(false);
+    const [columnToEdit, setColumnToEdit] = useState(null);
+
+    const [showColumnActionsMenu, setShowColumnActionsMenu] = useState(false);
+
+    const [showSelectColumnToDeleteModal, setShowSelectColumnToDeleteModal] = useState(false);
+    const [showSelectColumnToEditModal, setShowSelectColumnToEditModal] = useState(false);
     const navigate = useNavigate();
 
 
@@ -77,6 +83,54 @@ const Dashboard = () => {
         }
     };
 
+    // drag & drop des colonnes
+    const handleReorderColumns = async (draggedColumnId, targetColumnId) => {
+        try {
+            const current = [...columns];
+            const draggedIndex = current.findIndex(c => c.id === draggedColumnId);
+            const targetIndex = current.findIndex(c => c.id === targetColumnId);
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            const [dragged] = current.splice(draggedIndex, 1);
+            current.splice(targetIndex, 0, dragged);
+
+            const updated = current.map((c, idx) => ({ ...c, position: idx }));
+            setColumns(updated);
+
+            await Promise.all(updated.map(c =>
+                dashboardServices.updateColumn(c.id, { position: c.position })
+            ));
+        } catch (err) {
+            setError(err.message || 'Erreur lors du réordonnancement des colonnes');
+            if (selectedProject) {
+                fetchColumns(selectedProject.id);
+            }
+        }
+    };
+
+    // Edit d'une colonne
+    const handleEditColumn = (column) => {
+        setColumnToEdit(column);
+        setShowEditColumnModal(true);
+    };
+
+
+
+    const handleUpdateColumn = async (columnId, columnData) => {
+        try {
+            const data = await dashboardServices.updateColumn(columnId, columnData);
+            setColumns(prev => prev.map(col => 
+                col.id === columnId ? { ...col, ...data.column } : col
+            ));
+            setShowEditColumnModal(false);
+            setColumnToEdit(null);
+        } catch (err) {
+            setError(err.message || 'Erreur lors de la mise à jour de la colonne');
+        }
+    };
+
+
+
     const handleCreateTask = async (taskData) => {
         try {
             setTasks(prev => [...prev, taskData]);
@@ -94,7 +148,6 @@ const Dashboard = () => {
             setSelectedProject(data.project);
             setShowCreateProject(false);
         } catch (err) {
-            console.error('Erreur création projet:', err);
             setError(err.message || 'Erreur lors de la création du projet');
         }
     };
@@ -109,7 +162,7 @@ const Dashboard = () => {
                     : task
             ));
         } catch (err) {
-            setError(err.message || 'Erreur lors de l\'assignation de la tâche');
+            setError(err.message || 'Erreure lors de l\'assignation de la tâche');
         }
     };
 
@@ -121,7 +174,7 @@ const Dashboard = () => {
             
             await fetchTasks(selectedProject.id);
         } catch (err) {
-            setError(err.message || 'Erreur lors de l\'assignation des tâches');
+            setError(err.message || 'Erreur lors de l\'assignation des tâche');
         }
     };
 
@@ -164,7 +217,6 @@ const Dashboard = () => {
             setSelectedProject(null);
             setShowDeleteProjectModal(false);
         } catch (err) {
-            console.error('Erreur suppression projet:', err);
             setError(err.message || 'Erreur lors de la suppression du projet');
         }
     };
@@ -173,6 +225,12 @@ const Dashboard = () => {
         const currentUser = JSON.parse(localStorage.getItem('user'));
         return currentUser && project.createdBy && project.createdBy.id === currentUser.id;
     };
+
+    const isAdmin = role => role === 'responsable_projet';
+    const isManager = role => ['responsable_projet', 'manager'].includes(role);
+    const canDeleteColumns = role => role === 'responsable_projet';
+    const canManageUsers = role => role === 'responsable_projet';
+    const canDeleteProject = role => role === 'responsable_projet';
 
     const handleEditTask = (task) => {
         setSelectedTask(task);
@@ -202,7 +260,6 @@ const Dashboard = () => {
                 const currentUserInProject = selectedProject.users?.find(u => u.id === currentUser.id);
                 setCurrentUserRole(currentUserInProject?.role);
             } else {
-                console.error('Utilisateur non connecté');
                 setCurrentUserRole(null);
             }
         }
@@ -214,6 +271,19 @@ const Dashboard = () => {
             fetchColumns(selectedProject.id);
         }
     }, [selectedProject]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showColumnActionsMenu && !event.target.closest('.column-actions-dropdown')) {
+                setShowColumnActionsMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showColumnActionsMenu]);
 
     if (loading) {
         return (
@@ -247,7 +317,6 @@ const Dashboard = () => {
             <Header />
             
             <div className="dashboard-layout">
-                {/* Sidebar */}
                 <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
                     {sidebarOpen ? (
                         <>
@@ -302,54 +371,104 @@ const Dashboard = () => {
                     )}
                 </div>
 
-                {/* Main Content */}
                 <div className="main-content">
                     {selectedProject ? (
                         <div className="kanban-header">
                             <div className="project-info-header">
                                 <h1>{selectedProject.name}</h1>
                                 <p>{selectedProject.description}</p>
+                                                            {currentUserRole && (
+                                <div className="current-user-role">
+                                    <span className="role-indicator">
+                                        {currentUserRole}
+                                    </span>
+
+                                </div>
+                            )}
                             </div>
                             
                             <div className="kanban-actions">
-                                <button 
-                                    className="btn-create-column"
-                                    onClick={() => setShowCreateColumn(true)}
-                                >
-                                    + Nouvelle Colonne
-                                </button>
-                                <button 
-                                    className="btn-manage-users" 
-                                    onClick={() => setShowManageUsers(true)}
-                                >
-                                     Gérer Utilisateurs
-                                </button>
-                                <button 
-                                    className="btn-assign-all"
-                                    onClick={handleAssignAllTasks}
-                                    disabled={currentUserRole !== 'admin'}
-                                    title={currentUserRole !== 'admin' ? 'Seuls les administrateurs peuvent assigner les tâches' : 'Assigner automatiquement toutes les tâches non assignées'}
-                                >
-                                     Assigner Toutes
-                                </button>
+                                {isManager(currentUserRole) && (
+                                    <div className="column-actions-dropdown">
+                                        <button 
+                                            className="btn-column-actions"
+                                            onClick={() => setShowColumnActionsMenu(!showColumnActionsMenu)}
+                                        >
+                                            ⋮ Gérer les Colonnes
+                                        </button>
+                                        
+                                        {showColumnActionsMenu && (
+                                            <div className="column-actions-menu">
+                                                <button 
+                                                    className="menu-item add-column"
+                                                    onClick={() => {
+                                                        setShowCreateColumn(true);
+                                                        setShowColumnActionsMenu(false);
+                                                    }}
+                                                >
+                                                    Nouvelle Colonne
+                                                </button>
+                                                <button 
+                                                    className="menu-item edit-columns"
+                                                    onClick={() => {
+                                                        setShowColumnActionsMenu(false);
+                                                        setShowSelectColumnToEditModal(true);
+                                                    }}
+                                                >
+                                                    Modifier une Colonne
+                                                </button>
+                                                {canDeleteColumns(currentUserRole) && (
+                                                    <button 
+                                                        className="menu-item delete-columns"
+                                                        onClick={() => {
+                                                            setShowColumnActionsMenu(false);
+                                                            setShowSelectColumnToDeleteModal(true);
+                                                        }}
+                                                    >
+                                                        Supprimer une Colonne
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {canManageUsers(currentUserRole) && (
+                                    <button 
+                                        className="btn-manage-users" 
+                                        onClick={() => setShowManageUsers(true)}
+                                    >
+                                         Gérer Utilisateurs
+                                    </button>
+                                )}
+                                {isManager(currentUserRole) && (
+                                    <button 
+                                        className="btn-assign-all"
+                                        onClick={handleAssignAllTasks}
+                                        title="Assigner automatiquement toutes les tâches non assignées"
+                                    >
+                                         Assigner Toutes
+                                    </button>
+                                )}
 
-                                {isCreator(selectedProject) && (
+                                {canDeleteProject(currentUserRole) && (
                                     <button 
                                         className="btn-delete-project" 
                                         onClick={() => setShowDeleteProjectModal(true)}
-                                        title="Supprimer ce projet"
+                                        title="Seuls les responsables de projet peuvent supprimer des projets"
                                     >
-                                        🗑️ Supprimer Projet
+                                        Supprimer Projet
                                     </button>
                                 )}
-                                <button 
-                                    className="btn-create-task"
-                                    onClick={() => setShowCreateTask(true)}
-                                    disabled={currentUserRole !== 'admin'}
-                                    title={currentUserRole !== 'admin' ? 'Seuls les administrateurs peuvent créer des tâches' : ''}
-                                >
-                                    + Nouvelle Tâche
-                                </button>
+                                {isManager(currentUserRole) && (
+                                    <button 
+                                        className="btn-create-task"
+                                        onClick={() => setShowCreateTask(true)}
+                                        title="Créer une nouvelle tâche"
+                                    >
+                                        + Nouvelle Tâche
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ) : (
@@ -376,59 +495,28 @@ const Dashboard = () => {
                         onEditTask={handleEditTask}
                         onAssignTask={handleAssignTask}
                         currentUserRole={currentUserRole}
+                        onReorderColumns={handleReorderColumns}
                     />
                 )}
             </div>
         </div>
 
-            {showCreateTask && (
-                <CreateTaskModal 
-                    isOpen={showCreateTask}
-                    onClose={() => setShowCreateTask(false)}
-                    onTaskCreated={handleCreateTask}
-                    projectId={selectedProject?.id}
-                />
-            )}
-
-            {showCreateProject && (
-                <CreateProjectModal 
-                    onClose={() => setShowCreateProject(false)}
-                    onCreateProject={handleCreateProject}
-                />
-            )}
-
-            {showCreateColumn && (
-                <CreateColumnModal 
-                    onClose={() => setShowCreateColumn(false)}
-                    onCreateColumn={handleCreateColumn}
-                />
-            )}
-
-
-
-            {showEditTask && selectedTask && (
-                <EditTaskModal 
-                    onClose={() => {
-                        setShowEditTask(false);
-                        setSelectedTask(null);
-                    }}
-                    onUpdateTask={handleUpdateTask}
-                    task={selectedTask}
-                    project={selectedProject}
-                />
-            )}
-
-
-
-            {showManageUsers && (
-                <ManageUsersModal 
-                    onClose={() => setShowManageUsers(false)}
-                    project={selectedProject}
-                    onUserUpdated={() => {
-                        fetchProjects();
-                    }}
-                />
-            )}
+            <ModalManager 
+                showCreateTask={showCreateTask} setShowCreateTask={setShowCreateTask}
+                showCreateProject={showCreateProject} setShowCreateProject={setShowCreateProject}
+                showCreateColumn={showCreateColumn} setShowCreateColumn={setShowCreateColumn}
+                showEditTask={showEditTask} setShowEditTask={setShowEditTask}
+                showManageUsers={showManageUsers} setShowManageUsers={setShowManageUsers}
+                showDeleteProjectModal={showDeleteProjectModal} setShowDeleteProjectModal={setShowDeleteProjectModal}
+                selectedTask={selectedTask} setSelectedTask={setSelectedTask}
+                selectedProject={selectedProject}
+                onCreateTask={handleCreateTask}
+                onCreateProject={handleCreateProject}
+                onCreateColumn={handleCreateColumn}
+                onUpdateTask={handleUpdateTask}
+                onUserUpdated={() => fetchProjects()}
+                onDeleteProject={handleDeleteProject}
+            />
 
             {showAddSkills && selectedTask && (
                 <AddSkillsModal 
@@ -480,39 +568,89 @@ const Dashboard = () => {
                 </div>
             )}
 
-            {showDeleteProjectModal && selectedProject && (
-                <div className="delete-modal-overlay" onClick={() => setShowDeleteProjectModal(false)}>
+
+
+            {showDeleteColumnModal && columnToDelete && (
+                <div className="delete-modal-overlay" onClick={() => setShowDeleteColumnModal(false)}>
                     <div className="delete-modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="delete-modal-header">
-                            <h3>Confirmer la suppression du projet</h3>
+                            <h3>Confirmer la suppression de la colonne</h3>
                             <button 
                                 className="btn-close"
-                                onClick={() => setShowDeleteProjectModal(false)}
+                                onClick={() => setShowDeleteColumnModal(false)}
                             >
                                 ×
                             </button>
                         </div>
                         <div className="delete-modal-body">
-                            <p>Êtes-vous sûr de vouloir supprimer le projet :</p>
-                            <p className="task-title-confirm">"{selectedProject.name}" ?</p>
-                            <p className="delete-warning">⚠️ Cette action est irréversible et supprimera toutes les tâches et colonnes associées.</p>
+                            <p>Êtes-vous sûr de vouloir supprimer la colonne :</p>
+                            <p className="task-title-confirm">"{columnToDelete.name}" ?</p>
+                            <p className="delete-warning">Cette action est irréversible.</p>
                         </div>
                         <div className="delete-modal-actions">
                             <button 
                                 className="btn-cancel"
-                                onClick={() => setShowDeleteProjectModal(false)}
+                                onClick={() => setShowDeleteColumnModal(false)}
                             >
                                 Annuler
                             </button>
                             <button 
                                 className="btn-confirm-delete"
-                                onClick={handleDeleteProject}
+                                onClick={() => {
+                                    dashboardServices.deleteColumn(columnToDelete.id).then(() => {
+                                        setColumns(columns.filter(col => col.id !== columnToDelete.id));
+                                        setShowDeleteColumnModal(false);
+                                        setColumnToDelete(null);
+                                    }).catch(err => {
+                                        setError(err.message || 'Erreur lors de la suppression de la colonne');
+                                    });
+                                }}
                             >
-                                Supprimer le projet
+                                Supprimer la colonne
                             </button>
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showEditColumnModal && columnToEdit && (
+                <EditColumnModal 
+                    isOpen={showEditColumnModal}
+                    onClose={() => {
+                        setShowEditColumnModal(false);
+                        setColumnToEdit(null);
+                    }}
+                    column={columnToEdit}
+                    onUpdateColumn={handleUpdateColumn}
+                />
+            )}
+
+
+
+            {showSelectColumnToDeleteModal && (
+                <SelectColumnToDeleteModal 
+                    isOpen={showSelectColumnToDeleteModal}
+                    onClose={() => setShowSelectColumnToDeleteModal(false)}
+                    columns={columns}
+                    onSelectColumn={(column) => {
+                        setColumnToDelete(column);
+                        setShowSelectColumnToDeleteModal(false);
+                        setShowDeleteColumnModal(true);
+                    }}
+                />
+            )}
+
+            {showSelectColumnToEditModal && (
+                <SelectColumnToEditModal 
+                    isOpen={showSelectColumnToEditModal}
+                    onClose={() => setShowSelectColumnToEditModal(false)}
+                    columns={columns}
+                    onSelectColumn={(column) => {
+                        setColumnToEdit(column);
+                        setShowSelectColumnToEditModal(false);
+                        setShowEditColumnModal(true);
+                    }}
+                />
             )}
 
             <Footer />

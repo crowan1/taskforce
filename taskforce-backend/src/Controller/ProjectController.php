@@ -78,7 +78,7 @@ class ProjectController extends AbstractController
         if (!$data) {
             return $this->json([
                 'success' => false,
-                'message' => 'Données invalidess'
+                'message' => 'Données invalides'
             ], 400);
         }
 
@@ -95,11 +95,11 @@ class ProjectController extends AbstractController
         $project->setStatus($data['status'] ?? 'active');
         $project->setCreatedBy($user);
 
-        // Ajouter le créateur comme admin du projet
+        //   créateur = responsable de projet
         $projectUser = new ProjectUser();
         $projectUser->setProject($project);
         $projectUser->setUser($user);
-        $projectUser->setRole('admin');
+        $projectUser->setRole('responsable_projet');
 
         $this->entityManager->persist($project);
         $this->entityManager->persist($projectUser);
@@ -127,7 +127,7 @@ class ProjectController extends AbstractController
                         'firstname' => $user->getFirstname(),
                         'lastname' => $user->getLastname(),
                         'email' => $user->getEmail(),
-                        'role' => 'admin',
+                        'role' => 'responsable_projet',
                         'joinedAt' => $projectUser->getJoinedAt()->format('Y-m-d H:i:s')
                     ]
                 ],
@@ -149,21 +149,21 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Projet non trouvé'], 404);
         }
 
-        // Vérifier si l'utilisateur actuel est admin sur le projet
+        // verif l'utilisateur actuel peut gérer les utilisateurs du projet
         $currentUserProject = $this->projectUserRepository->findByUserAndProject($currentUser->getId(), $id);
-        if (!$currentUserProject || !$currentUserProject->isAdmin()) {
-            return $this->json(['error' => 'Seuls les administrateurs peuvent ajouter des utilisateurs'], 403);
+        if (!$currentUserProject || !$currentUserProject->isResponsableProjet()) {
+            return $this->json(['error' => 'Seuls les responsables de projet peuvent ajouter des utilisateurs'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
         $email = $data['email'] ?? null;
-        $role = $data['role'] ?? 'member';
+        $role = $data['role'] ?? 'collaborateur';
 
         if (!$email) {
             return $this->json(['error' => 'Email requis'], 400);
         }
 
-        if (!in_array($role, ['admin', 'member'])) {
+        if (!in_array($role, ['responsable_projet', 'manager', 'collaborateur'])) {
             return $this->json(['error' => 'Rôle invalide'], 400);
         }
 
@@ -174,7 +174,7 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Aucun utilisateur trouvé avec cet email: ' . $email], 404);
         }
 
-        // Vérifier si l'utilisateur est déjà dans le projet
+        // verif si l'utilisateur est déjà dans le projet
         $existingProjectUser = $this->projectUserRepository->findByUserAndProject($user->getId(), $id);
         if ($existingProjectUser) {
             return $this->json(['error' => 'L\'utilisateur ' . $user->getFirstname() . ' ' . $user->getLastname() . ' est déjà dans ce projet'], 400);
@@ -214,10 +214,10 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Projet non trouvé'], 404);
         }
 
-        // Vérifier si l'utilisateur actuel est admin du projet
+        // verif si l'utilisateur actuel peut gérer les utilisateurs du projet
         $currentUserProject = $this->projectUserRepository->findByUserAndProject($currentUser->getId(), $id);
-        if (!$currentUserProject || !$currentUserProject->isAdmin()) {
-            return $this->json(['error' => 'Seuls les administrateurs peuvent modifier les rôles'], 403);
+        if (!$currentUserProject || !$currentUserProject->isResponsableProjet()) {
+            return $this->json(['error' => 'Seuls les responsables de projet peuvent modifier les rôles'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -228,17 +228,16 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'userId et role requis'], 400);
         }
 
-        if (!in_array($role, ['admin', 'member'])) {
+        if (!in_array($role, ['responsable_projet', 'manager', 'collaborateur'])) {
             return $this->json(['error' => 'Rôle invalide'], 400);
         }
 
-        // Empêcher de retirer le dernier admin
-        if ($role === 'member') {
-            $admins = $this->projectUserRepository->findAdminsByProject($id);
-            if (count($admins) === 1) {
+        if ($role === 'collaborateur') {
+            $responsables = $this->projectUserRepository->findResponsablesByProject($id);
+            if (count($responsables) === 1) {
                 $targetProjectUser = $this->projectUserRepository->findByUserAndProject($userId, $id);
-                if ($targetProjectUser && $targetProjectUser->isAdmin()) {
-                    return $this->json(['error' => 'Impossible de retirer le dernier administrateur'], 400);
+                if ($targetProjectUser && $targetProjectUser->isResponsableProjet()) {
+                    return $this->json(['error' => 'Impossible de retirer le dernier responsable de projet'], 400);
                 }
             }
         }
@@ -277,10 +276,9 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Projet non trouvé'], 404);
         }
 
-        // Vérifier si l'utilisateur actuel est admin du projet
         $currentUserProject = $this->projectUserRepository->findByUserAndProject($currentUser->getId(), $id);
-        if (!$currentUserProject || !$currentUserProject->isAdmin()) {
-            return $this->json(['error' => 'Seuls les administrateurs peuvent supprimer des utilisateurs'], 403);
+        if (!$currentUserProject || !$currentUserProject->isResponsableProjet()) {
+            return $this->json(['error' => 'Seuls les responsables de projet peuvent supprimer des utilisateurs'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -295,12 +293,12 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Impossible de supprimer le créateur du projet'], 400);
         }
 
-        // Empêcher de supprimer le dernier admin
-        $admins = $this->projectUserRepository->findAdminsByProject($id);
-        if (count($admins) === 1) {
+        // Empêcher de supprimer le dernier responsable de projet
+        $responsables = $this->projectUserRepository->findResponsablesByProject($id);
+        if (count($responsables) === 1) {
             $targetProjectUser = $this->projectUserRepository->findByUserAndProject($userId, $id);
-            if ($targetProjectUser && $targetProjectUser->isAdmin()) {
-                return $this->json(['error' => 'Impossible de supprimer le dernier administrateur'], 400);
+            if ($targetProjectUser && $targetProjectUser->isResponsableProjet()) {
+                return $this->json(['error' => 'Impossible de supprimer le dernier responsable de projet'], 400);
             }
         }
 
@@ -331,12 +329,10 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Projet non trouvé'], 404);
         }
 
-        // Vérifier si l'utilisateur actuel est le créateur du projet
         if ($project->getCreatedBy()->getId() !== $currentUser->getId()) {
             return $this->json(['error' => 'Seul le créateur peut supprimer le projet'], 403);
         }
 
-        // Supprimer le projet
         $this->entityManager->remove($project);
         $this->entityManager->flush();
 

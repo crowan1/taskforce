@@ -23,7 +23,7 @@ class ProjectUser
     private ?User $user = null;
 
     #[ORM\Column(length: 20)]
-    private ?string $role = 'member'; // 'admin' ou 'member'
+    private ?string $role = 'collaborateur';  
 
     #[ORM\Column]
     private ?\DateTimeImmutable $joinedAt = null;
@@ -71,9 +71,34 @@ class ProjectUser
         return $this;
     }
 
-    public function isAdmin(): bool
+    public function isResponsableProjet(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'responsable_projet';
+    }
+
+    public function isManager(): bool
+    {
+        return $this->role === 'manager';
+    }
+
+    public function isCollaborateur(): bool
+    {
+        return $this->role === 'collaborateur';
+    }
+
+    public function canManageProject(): bool
+    {
+        return in_array($this->role, ['responsable_projet', 'manager']);
+    }
+
+    public function canAssignTasks(): bool
+    {
+        return in_array($this->role, ['responsable_projet', 'manager']);
+    }
+
+    public function canViewReports(): bool
+    {
+        return in_array($this->role, ['responsable_projet', 'manager']);
     }
 
     public function getJoinedAt(): ?\DateTimeImmutable

@@ -25,6 +25,21 @@ $border-radius: 8px;
 $border-radius-lg: 12px;
 $warning-color: #f59e0b;
 
+* {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 // Dashboard Container
 .dashboard-container {
   min-height: 100vh;
@@ -231,6 +246,23 @@ $warning-color: #f59e0b;
       color: $gray-600;
       font-size: 0.875rem;
     }
+
+    .current-user-role {
+      margin-top: 0.5rem;
+
+      .role-indicator {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: $primary-color;
+        color: $white;
+        border-radius: $border-radius-lg;
+        font-size: 0.875rem;
+        font-weight: 600;
+        box-shadow: $shadow-sm;
+      }
+
+      
+    }
   }
 
   .kanban-actions {
@@ -404,13 +436,37 @@ $warning-color: #f59e0b;
 // Kanban Board
 .kanban-board {
   margin-top: 2rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  
+  scrollbar-width: thin;
+  scrollbar-color: $gray-300 transparent;
+  
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $gray-300;
+    border-radius: 4px;
+    
+    &:hover {
+      background: $gray-400;
+    }
+  }
 }
 
 .kanban-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
   gap: 1.5rem;
-  align-items: start;
+  align-items: flex-start;
+  min-width: max-content;
+  padding: 0.5rem 0;
+  transition: transform 0.3s ease;
 }
 
 .task-column {
@@ -421,7 +477,8 @@ $warning-color: #f59e0b;
   min-height: 400px;
   display: flex;
   flex-direction: column;
-  max-width: 400px;
+  width: 320px;
+  flex-shrink: 0;
 }
 
 .column-header {
@@ -1073,6 +1130,229 @@ $warning-color: #f59e0b;
   }
 }
 
+// Styles pour les modals d'édition et add de colonne
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: $white;
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-xl;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid $gray-200;
+
+    h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $gray-800;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: $gray-500;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: $gray-700;
+        }
+    }
+}
+
+.modal-body {
+    padding: 1.5rem;
+
+    .form-group {
+        margin-bottom: 1.5rem;
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: $gray-700;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid $gray-300;
+            border-radius: $border-radius;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+
+            &:focus {
+                outline: none;
+                border-color: $primary-color;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            border-radius: $border-radius;
+            cursor: pointer;
+        }
+    }
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid $gray-200;
+
+    .btn-cancel {
+        background: $gray-500;
+        color: $white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: $border-radius;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background: $gray-600;
+        }
+    }
+
+    .btn-confirm {
+        background: $primary-color;
+        color: $white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: $border-radius;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+            background: $primary-hover;
+        }
+    }
+}
+
+// Styles  sélection  colonnes
+.columns-selection {
+    .selection-description {
+        margin-bottom: 1.5rem;
+        color: $gray-600;
+        font-size: 0.875rem;
+    }
+
+    .columns-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid $gray-200;
+        border-radius: $border-radius;
+        background: $gray-50;
+    }
+
+    .column-selection-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid $gray-200;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background-color: $white;
+        }
+
+        .column-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+
+            .column-color-indicator {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 2px solid $white;
+                box-shadow: 0 0 0 1px $gray-300;
+            }
+
+            .column-details {
+                h4 {
+                    margin: 0 0 0.25rem 0;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: $gray-800;
+                }
+
+                p {
+                    margin: 0 0 0.25rem 0;
+                    font-size: 0.875rem;
+                    color: $gray-600;
+                }
+
+                small {
+                    color: $gray-500;
+                    font-size: 0.75rem;
+                }
+            }
+        }
+
+        .column-actions {
+            .btn-select-column {
+                background: $primary-color;
+                color: $white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: $border-radius;
+                font-size: 0.875rem;
+                cursor: pointer;
+                transition: background-color 0.2s ease;
+
+                &:hover {
+                    background: $primary-hover;
+                }
+            }
+        }
+    }
+}
+
 @media (max-width: 768px) {
   .dashboard-layout {
     flex-direction: column;
@@ -1115,6 +1395,19 @@ $warning-color: #f59e0b;
     grid-template-columns: 1fr;
   }
 
+  .kanban-columns {
+    flex-direction: column;
+    min-width: auto;
+    gap: 1rem;
+  }
+
+  .task-column {
+    width: 100%;
+    max-width: none;
+  }
+
+
+
   .form-row {
     grid-template-columns: 1fr;
   }
@@ -1135,5 +1428,192 @@ $warning-color: #f59e0b;
     .btn-confirm-delete {
       width: 100%;
     }
+  }
+}
+
+.kanban-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+
+  .btn-create-column,
+  .btn-manage-users,
+  .btn-assign-all,
+  .btn-delete-project,
+  .btn-create-task {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $border-radius;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .btn-create-column {
+    background: $success-color;
+    color: $white;
+
+    &:hover {
+      background: darken($success-color, 10%);
+    }
+  }
+
+  .btn-manage-users {
+    background: $gray-600;
+    color: $white;
+
+    &:hover {
+      background: $gray-700;
+    }
+  }
+
+  .btn-assign-all {
+    background: $warning-color;
+    color: $white;
+
+    &:hover {
+      background: darken($warning-color, 10%);
+    }
+  }
+
+  .btn-delete-project {
+    background: $danger-color;
+    color: $white;
+
+    &:hover {
+      background: $danger-hover;
+    }
+  }
+
+  .btn-create-task {
+    background: $primary-color;
+    color: $white;
+
+    &:hover {
+      background: $primary-hover;
+    }
+  }
+}
+
+.column-actions-dropdown {
+  position: relative;
+
+  .btn-column-actions {
+    background: $success-color;
+    color: $white;
+    border: none;
+    border-radius: $border-radius;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover {
+      background: darken($success-color, 10%);
+    }
+  }
+
+  .column-actions-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: $white;
+    border: 1px solid $gray-300;
+    border-radius: $border-radius;
+    box-shadow: $shadow-lg;
+    z-index: 1000;
+    min-width: 220px;
+    margin-top: 0.5rem;
+
+    .menu-item {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border-bottom: 1px solid $gray-100;
+      font-size: 0.875rem;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: $gray-50;
+      }
+
+      &.add-column {
+        color: $success-color;
+      }
+
+      &.edit-columns {
+        color: $primary-color;
+      }
+
+      &.delete-columns {
+        color: $danger-color;
+      }
+    }
+  }
+}
+
+// Messages suucès/erreurr
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  border-radius: $border-radius;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: slideIn 0.3s ease;
+
+  &::before {
+    content: '✅';
+    font-size: 1rem;
+  }
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: $border-radius;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: slideIn 0.3s ease;
+
+  &::before {
+    content: '❌';
+    font-size: 1rem;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

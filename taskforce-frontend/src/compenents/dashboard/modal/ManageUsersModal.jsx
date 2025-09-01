@@ -5,17 +5,18 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
     const [currentUserRole, setCurrentUserRole] = useState(null);
     const [showAddUser, setShowAddUser] = useState(false);
     const [email, setEmail] = useState('');
-    const [role, setRole] = useState('member');
+    const [role, setRole] = useState('collaborateur');
     const [availableUsers, setAvailableUsers] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     useEffect(() => {
         if (project) {
             setUsers(project.users || []);
-            // Trouver le rôle de l'utilisateur actuel
+            // rôle de l'utilisateur 
             const currentUser = JSON.parse(localStorage.getItem('user'));
             const currentUserInProject = project.users?.find(u => u.id === currentUser.id);
             setCurrentUserRole(currentUserInProject?.role);
@@ -47,7 +48,7 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
         setShowSuggestions(false);
     };
 
-    const handleAddUser = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!email.trim()) return;
 
@@ -58,11 +59,8 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
             const data = await dashboardServices.addUserToProject(project.id, email, role);
             setUsers(prev => [...prev, data.user]);
             setEmail('');
-            setRole('member');
-            setShowAddUser(false);
-            if (onUserUpdated) {
-                onUserUpdated();
-            }
+            setRole('collaborateur');
+            setError(null);
         } catch (err) {
             setError(err.message || 'Erreur lors de l\'ajout de l\'utilisateur');
         } finally {
@@ -71,50 +69,32 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
     };
 
     const handleRoleChange = async (userId, newRole) => {
-        setLoading(true);
-        setError(null);
-
         try {
+            setError(null);
+            setSuccessMessage('');
             await dashboardServices.updateUserRole(project.id, userId, newRole);
-            
-            // Mettre à jour la liste locale
             setUsers(prev => prev.map(user => 
                 user.id === userId ? { ...user, role: newRole } : user
             ));
             
-            // Notifier le parent
-            if (onUserUpdated) {
-                onUserUpdated();
-            }
+            const updatedUser = users.find(user => user.id === userId);
+            setSuccessMessage(`✅ Rôle de ${updatedUser?.firstname} ${updatedUser?.lastname} mis à jour avec succès !`);
+            
+            setTimeout(() => {
+                setSuccessMessage('');
+            }, 3000);
         } catch (err) {
-            setError(err.message || 'Erreur lors de la modification du rôle');
-        } finally {
-            setLoading(false);
+            console.error('Erreur mise à jour rôle:', err);
+            setError(err.message || 'Erreur lors de la mise à jour du rôle');
         }
     };
 
     const handleRemoveUser = async (userId) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur du projet ?')) {
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
         try {
             await dashboardServices.removeUserFromProject(project.id, userId);
-            
-            // Mettre à jour la liste locale
             setUsers(prev => prev.filter(user => user.id !== userId));
-            
-            // Notifier le parent
-            if (onUserUpdated) {
-                onUserUpdated();
-            }
         } catch (err) {
             setError(err.message || 'Erreur lors de la suppression de l\'utilisateur');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -128,6 +108,8 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
     };
 
     const isAdmin = currentUserRole === 'admin';
+    const canManageUsers = currentUserRole && ['responsable_projet', 'manager'].includes(currentUserRole);
+    const isResponsableProjet = currentUserRole === 'responsable_projet';
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -137,7 +119,7 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                     <button className="modal-close" onClick={onClose}>×</button>
                 </div>
 
-                {isAdmin && (
+                {canManageUsers && (
                     <div className="modal-actions">
                         <button 
                             className="btn-add-user"
@@ -154,11 +136,17 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                             {error}
                         </div>
                     )}
+                    
+                    {successMessage && (
+                        <div className="success-message">
+                            {successMessage}
+                        </div>
+                    )}
 
                     {showAddUser && (
                         <div className="add-user-section">
                             <h3>Ajouter un nouvel utilisateur</h3>
-                            <form onSubmit={handleAddUser} className="add-user-form">
+                            <form onSubmit={handleSubmit} className="add-user-form">
                                 <div className="form-group" style={{ position: 'relative' }}>
                                     <label htmlFor="email">Email de l'utilisateur *</label>
                                     <input
@@ -202,8 +190,9 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                                         onChange={(e) => setRole(e.target.value)}
                                         className="form-control"
                                     >
-                                        <option value="member">Membre</option>
-                                        <option value="admin">Administrateur</option>
+                                        <option value="collaborateur">Collaborateur</option>
+                                        <option value="responsable_projet">Responsable de Projet</option>
+                                        <option value="manager">Manager</option>
                                     </select>
                                     <small className="form-help">
                                         Les administrateurs peuvent ajouter/supprimer des utilisateurs et modifier les rôles
@@ -224,7 +213,7 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                                         onClick={() => {
                                             setShowAddUser(false);
                                             setEmail('');
-                                            setRole('member');
+                                            setRole('collaborateur');
                                         }}
                                     >
                                         Annuler
@@ -245,12 +234,12 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                                         <div className="user-email">{user.email}</div>
                                         <div className="user-role">
                                             <span className={`role-badge role-${user.role}`}>
-                                                {user.role === 'admin' ? '👑 Administrateur' : '👤 Membre'}
+                                                {user.role === 'responsable_projet' ? 'Responsable de Projet' : user.role === 'manager' ? 'Manager' : 'Collaborateur'}
                                             </span>
                                         </div>
                                     </div>
                                     
-                                    {isAdmin && !isCurrentUser(user.id) && !isCreator(user.id) && (
+                                    {canManageUsers && !isCurrentUser(user.id) && !isCreator(user.id) && (
                                         <div className="user-actions">
                                             <select
                                                 value={user.role}
@@ -258,8 +247,9 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                                                 disabled={loading}
                                                 className="role-select"
                                             >
-                                                <option value="member">Membre</option>
-                                                <option value="admin">Administrateur</option>
+                                                <option value="collaborateur">Collaborateur</option>
+                                                <option value="responsable_projet">Responsable de Projet</option>
+                                                <option value="manager">Manager</option>
                                             </select>
                                             
                                             <button
@@ -291,9 +281,9 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
                         )}
                     </div>
 
-                    {!isAdmin && (
+                    {!canManageUsers && (
                         <div className="info-message">
-                            Seuls les administrateurs peuvent modifier les rôles et supprimer des utilisateurs.
+                            Seuls les responsables de projet peuvent modifier les rôles et supprimer des utilisateurs.
                         </div>
                     )}
                 </div>

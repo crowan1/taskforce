@@ -36,14 +36,38 @@ class ProjectUserRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    public function findAdminsByProject(int $projectId): array
+    public function findResponsablesByProject(int $projectId): array
     {
         return $this->createQueryBuilder('pu')
             ->leftJoin('pu.user', 'u')
             ->addSelect('u')
             ->andWhere('pu.project = :projectId AND pu.role = :role')
             ->setParameter('projectId', $projectId)
-            ->setParameter('role', 'admin')
+            ->setParameter('role', 'responsable_projet')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findManagersByProject(int $projectId): array
+    {
+        return $this->createQueryBuilder('pu')
+            ->leftJoin('pu.user', 'u')
+            ->addSelect('u')
+            ->andWhere('pu.project = :projectId AND pu.role = :role')
+            ->setParameter('projectId', $projectId)
+            ->setParameter('role', 'manager')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findCollaborateursByProject(int $projectId): array
+    {
+        return $this->createQueryBuilder('pu')
+            ->leftJoin('pu.user', 'u')
+            ->addSelect('u')
+            ->andWhere('pu.project = :projectId AND pu.role = :role')
+            ->setParameter('projectId', $projectId)
+            ->setParameter('role', 'collaborateur')
             ->getQuery()
             ->getResult();
     }

@@ -44,7 +44,7 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
             <div className="task-header">
                 <h4 className="task-title">{task.title}</h4>
                 <div className="task-actions">
-                    {!task.assignedTo && currentUserRole === 'admin' && (
+                    {!task.assignedTo && ['responsable_projet', 'manager'].includes(currentUserRole) && (
                         <button 
                             className="btn-assign"
                             onClick={(e) => {
@@ -56,25 +56,30 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
                             🎯
                         </button>
                     )}
-                    <button 
-                        className="btn-edit"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEditTask(task);
-                        }}
-                        title="Modifier la tâche"
-                    >
-                        ✏️
-                    </button>
-                    <button 
-                        className="btn-delete"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onShowDeleteModal(task);
-                        }}
-                    >
-                        ×
-                    </button>
+                    {['responsable_projet', 'manager'].includes(currentUserRole) && (
+                        <button 
+                            className="btn-edit"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEditTask(task);
+                            }}
+                            title="Modifier la tâche"
+                        >
+                            ✏️
+                        </button>
+                    )}
+                    {['responsable_projet', 'manager'].includes(currentUserRole) && (
+                        <button 
+                            className="btn-delete"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onShowDeleteModal(task);
+                            }}
+                            title="Supprimer la tâche"
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
             </div>
 
