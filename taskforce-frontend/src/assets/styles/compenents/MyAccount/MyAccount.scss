@@ -309,7 +309,6 @@
       border: 3px solid #e5e7eb;
       border-top: 3px solid #3b82f6;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
       margin-bottom: 1rem;
     }
   
@@ -362,10 +361,7 @@
     }
   }
   
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+
   @media (max-width: 768px) {
     .my-account-content {
       padding: 0 1rem;

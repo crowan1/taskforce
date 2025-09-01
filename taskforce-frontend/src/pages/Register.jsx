@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import '../assets/styles/Register.scss';
 import { useNavigate } from 'react-router-dom';
 import authService from "../services/authServices";
+import Header from "../compenents/includes/header";
+import Footer from "../compenents/includes/footer";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -46,7 +48,9 @@ const Register = () => {
     };
 
     return (
-        <div className="register-container">
+        <div className="register-page">
+            <Header />
+            <div className="register-container">
             <div className="welcome-section">
                 <div className="decorative-elements">
                     <div className="circle-1"></div>
@@ -196,6 +200,9 @@ const Register = () => {
                 </div>
             </div>
         </div>
+        <Footer />
+        </div>
+    
     );
 };
 

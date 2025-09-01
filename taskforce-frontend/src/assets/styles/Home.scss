@@ -312,30 +312,26 @@
           justify-content: center;
           font-size: 1.5rem;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-          animation: float 6s ease-in-out infinite;
+
 
           &.icon-1 {
             top: 10%;
             right: 20%;
-            animation-delay: 0s;
           }
 
           &.icon-2 {
             top: 30%;
             right: -5%;
-            animation-delay: 1s;
           }
 
           &.icon-3 {
             bottom: 40%;
             right: 15%;
-            animation-delay: 2s;
           }
 
           &.icon-4 {
             bottom: 10%;
             right: -10%;
-            animation-delay: 3s;
           }
         }
       }
@@ -343,10 +339,7 @@
   }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
-}
+
 
 
 @media (max-width: 1024px) {

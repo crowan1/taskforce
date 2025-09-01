@@ -3,6 +3,7 @@ import authService from "../services/authServices";
 import { useNavigate } from "react-router-dom";
 import '../assets/styles/Login.scss';
 import Header from "../compenents/includes/header";
+import Footer from "../compenents/includes/footer";
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -156,6 +157,7 @@ const Login = () => {
                     </div>
                 </div>
             </div>
+            <Footer/>
         </div>
     );
 };
