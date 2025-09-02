@@ -68,7 +68,8 @@ class Task
     #[ORM\JoinTable(name: 'task_required_skills')]
     private Collection $requiredSkills;
 
-
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $images = [];
 
     public function __construct()
     {
@@ -76,6 +77,7 @@ class Task
         $this->priority = 'medium';
         $this->level = 'intermediate';
         $this->requiredSkills = new ArrayCollection();
+        $this->images = [];
     }
 
     #[ORM\PrePersist]
@@ -254,6 +256,35 @@ class Task
     {
         $this->requiredSkills->removeElement($skill);
 
+        return $this;
+    }
+
+    public function getImages(): ?array
+    {
+        return $this->images;
+    }
+
+    public function setImages(?array $images): static
+    {
+        $this->images = $images;
+        return $this;
+    }
+
+    public function addImage(string $imagePath): static
+    {
+        if (!in_array($imagePath, $this->images ?? [])) {
+            $this->images[] = $imagePath;
+        }
+        return $this;
+    }
+
+    public function removeImage(string $imagePath): static
+    {
+        $key = array_search($imagePath, $this->images ?? []);
+        if ($key !== false) {
+            unset($this->images[$key]);
+            $this->images = array_values($this->images);
+        }
         return $this;
     }
 }

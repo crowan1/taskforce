@@ -101,6 +101,34 @@ export const dashboardServices = {
         });
     },
 
+    uploadTaskImage: async (taskId, imageFile) => {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/upload-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
+    },
+
+    deleteTaskImage: async (taskId, imagePath) => {
+        return apiCall(`${API_BASE_URL}/tasks/${taskId}/delete-image`, {
+            method: 'DELETE',
+            body: JSON.stringify({ imagePath })
+        });
+    },
+
     addSkillsToTask: async (taskId, skillIds) => {
         return apiCall(`${API_BASE_URL}/tasks/${taskId}/add-skills`, {
             method: 'POST',

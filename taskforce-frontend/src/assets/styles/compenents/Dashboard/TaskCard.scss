@@ -1,4 +1,5 @@
-// Variables
+// Variables pas toutes utilisées 
+//TODO FAIRE LE TRIE 
 $primary-color: #3b82f6;
 $primary-hover: #2563eb;
 $secondary-color: #8b5cf6;
@@ -25,223 +26,166 @@ $border-radius-lg: 12px;
 
 
 
-// Task Cards
 .task-card {
-    background: $white;
-    border: 1px solid $gray-300;
-    border-radius: $border-radius;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: $shadow-sm;
-  
-    &:hover {
-      box-shadow: $shadow-lg;
-      transform: translateY(-2px);
-    }
-  
-    &:last-child {
-      margin-bottom: 0;
-    }
-    
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "kern" 1;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
   }
-  
+
   .task-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.75rem;
-  }
-  
-  .task-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: $gray-800;
-    margin: 0;
-    flex: 1;
-    margin-right: 0.5rem;
-  }
-  
-  .task-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .btn-assign {
-    background: $secondary-color;
-    color: $white;
-    border: none;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: bold;
-    transition: all 0.2s ease;
-  
-    &:hover {
-      background: $secondary-hover;
-      transform: scale(1.1);
+    margin-bottom: 12px;
+
+    .task-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 4px;
+      margin-left: 8px;
+
+      button {
+        background: none;
+        border: none;
+        padding: 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #f3f4f6;
+        }
+
+        &.btn-assign {
+          color: #3b82f6;
+        }
+
+        &.btn-edit {
+          color: #f59e0b;
+        }
+
+        &.btn-delete {
+          color: #ef4444;
+        }
+      }
     }
   }
 
-  .btn-edit {
-    background: $primary-color;
-    color: $white;
-    border: none;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: bold;
-    transition: all 0.2s ease;
-  
-    &:hover {
-      background: $primary-hover;
-      transform: scale(1.1);
-    }
-  }
-
-  .btn-delete {
-    background: $danger-color;
-    color: $white;
-    border: none;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: bold;
-    transition: all 0.2s ease;
-  
-    &:hover {
-      background: $danger-hover;
-      transform: scale(1.1);
-    }
-  }
-  
   .task-description {
-    font-size: 0.875rem;
-    color: $gray-500;
-    margin: 0 0 0.75rem 0;
-    line-height: 1.4;
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 12px;
+    line-height: 1.5;
   }
-  
+
   .task-meta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
-  }
-  
-  .task-priority {
-    display: flex;
-    align-items: center;
-  }
-  
-  .priority-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: $white;
-    text-transform: uppercase;
-  }
-  
-  .task-info {
-    font-size: 0.75rem;
-    color: $gray-500;
-    
-    .task-date {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      font-feature-settings: "kern" 1;
-      overflow: visible;
-      white-space: nowrap;
-      font-weight: 500;
-      letter-spacing: 0.025em;
+    margin-bottom: 12px;
 
-      &.fallback-font {
-        font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-        font-variant-numeric: tabular-nums;
+    .task-priority {
+      .priority-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: white;
+      }
+    }
+
+    .task-info {
+      .task-date {
+        font-size: 12px;
+        color: #9ca3af;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-feature-settings: "kern" 1;
       }
     }
   }
-  
+
   .task-assignee {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .assignee-label {
-    font-size: 0.75rem;
-    color: $gray-500;
-  }
-  
-  .assignee-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: $gray-800;
+    margin-bottom: 12px;
+    font-size: 14px;
+
+    .assignee-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    .assignee-name {
+      color: #1f2937;
+      margin-left: 4px;
+    }
   }
 
   .task-skills {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-bottom: 0.75rem;
+    gap: 6px;
+    margin-bottom: 12px;
+
+    .skill-tag {
+      background: #e5e7eb;
+      color: #374151;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
   }
 
-  .skill-tag {
-    background: $secondary-color;
-    color: $white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.625rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  
-  .task-details {
-    border-top: 1px solid $gray-300;
-    padding-top: 0.75rem;
-    margin-top: 0.75rem;
-  }
-  
-  .detail-item {
-    font-size: 0.875rem;
-    color: $gray-500;
-    margin-bottom: 0.5rem;
-  
-    &:last-child {
-      margin-bottom: 0;
+  .task-images-preview {
+    display: flex;
+    gap: 4px;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: 6px;
+
+    .task-image-preview {
+      width: 60px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      flex-shrink: 0;
     }
-  
-    strong {
-      color: $gray-800;
+
+    .more-images {
+      width: 60px;
+      height: 40px;
+      background: #f3f4f6;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      flex-shrink: 0;
     }
   }
-  
-.column-header {
-    position: relative;
 }
   

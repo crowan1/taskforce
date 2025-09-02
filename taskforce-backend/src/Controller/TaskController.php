@@ -9,6 +9,7 @@ use App\Entity\Skill;
 use App\Repository\TaskRepository;
 use App\Repository\ProjectRepository;
 use App\Service\TaskAssignmentService;
+use App\Service\ImageUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +24,8 @@ class TaskController extends AbstractController
         private EntityManagerInterface $entityManager,
         private TaskRepository $taskRepository,
         private ProjectRepository $projectRepository,
-        private TaskAssignmentService $taskAssignmentService
+        private TaskAssignmentService $taskAssignmentService,
+        private ImageUploadService $imageUploadService
     ) {}
 
     #[Route('', name: 'get_tasks', methods: ['GET'])]
@@ -72,7 +74,8 @@ class TaskController extends AbstractController
                         'name' => $skill->getName(),
                         'category' => null
                     ];
-                }, $task->getRequiredSkills()->toArray())
+                }, $task->getRequiredSkills()->toArray()),
+                'images' => $task->getImages() ?? []
             ];
         }, $tasks);
 
@@ -135,7 +138,6 @@ class TaskController extends AbstractController
             }
         }
 
-        // Ajouter les compétences requises à la tâche
         if (!empty($data['skillIds'])) {
             $skillRepository = $this->entityManager->getRepository(Skill::class);
             foreach ($data['skillIds'] as $skillId) {
@@ -201,7 +203,6 @@ class TaskController extends AbstractController
             ], 404);
         }
 
-        // Vérifier que l'utilisateur a accès à cette tâche
         $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
             ->findOneBy(['project' => $task->getProject(), 'user' => $user]);
         
@@ -241,7 +242,6 @@ class TaskController extends AbstractController
             }
         }
 
-        // Mettre à jour les compétences requises
         if (isset($data['skillIds'])) {
             $task->getRequiredSkills()->clear();
             if (!empty($data['skillIds'])) {
@@ -311,7 +311,6 @@ class TaskController extends AbstractController
             ], 404);
         }
 
-        // Vérifier que l'utilisateur a accès à cette tâche
         $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
             ->findOneBy(['project' => $task->getProject(), 'user' => $user]);
         
@@ -346,7 +345,6 @@ class TaskController extends AbstractController
             ], 404);
         }
 
-        // Vérifier que l'utilisateur a accès à cette tâche
         $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
             ->findOneBy(['project' => $task->getProject(), 'user' => $user]);
         
@@ -399,8 +397,7 @@ class TaskController extends AbstractController
                 'message' => 'Projet non trouvé'
             ], 404);
         }
-
-        // Vérifier que l'utilisateur a accès à ce projet
+ 
         $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
             ->findOneBy(['project' => $project, 'user' => $user]);
         
@@ -441,8 +438,7 @@ class TaskController extends AbstractController
                 'message' => 'Projet non trouvé'
             ], 404);
         }
-
-        // Vérifier que l'utilisateur a accès à ce projet
+ 
         $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
             ->findOneBy(['project' => $project, 'user' => $user]);
         
@@ -467,4 +463,134 @@ class TaskController extends AbstractController
             ], 500);
         }
     }
+
+    #[Route('/{taskId}/upload-image', name: 'upload_task_image', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function uploadTaskImage(int $taskId, Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        
+        $task = $this->taskRepository->find($taskId);
+        if (!$task) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Tâche non trouvée'
+            ], 404);
+        }
+ 
+        $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
+            ->findOneBy(['project' => $task->getProject(), 'user' => $user]);
+        
+        if (!$projectUser) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès non autorisé'
+            ], 403);
+        }
+
+        $uploadedFile = $request->files->get('image');
+        if (!$uploadedFile) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Aucune image fournie'
+            ], 400);
+        }
+ 
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($uploadedFile->getMimeType(), $allowedTypes)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Type de fichier non autorisé. Utilisez JPEG, PNG, GIF ou WebP.'
+            ], 400);
+        }
+
+        //   taillle (max 5MB)
+        if ($uploadedFile->getSize() > 5 * 1024 * 1024) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Fichier trop volumineux. Taille maximum : 5MB.'
+            ], 400);
+        }
+
+        try {
+            $imagePath = $this->imageUploadService->uploadImage($uploadedFile, $taskId);
+            $task->addImage($imagePath);
+            $this->entityManager->persist($task);
+            $this->entityManager->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Image uploadée avec succès',
+                'imagePath' => $imagePath,
+                'imageUrl' => $this->imageUploadService->getImageUrl($imagePath)
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    #[Route('/{taskId}/delete-image', name: 'delete_task_image', methods: ['DELETE'])]
+    #[IsGranted('ROLE_USER')]
+    public function deleteTaskImage(int $taskId, Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        
+        $task = $this->taskRepository->find($taskId);
+        if (!$task) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Tâche non trouvée'
+            ], 404);
+        }
+
+        $projectUser = $this->entityManager->getRepository('App\Entity\ProjectUser')
+            ->findOneBy(['project' => $task->getProject(), 'user' => $user]);
+        
+        if (!$projectUser) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès non autorisé'
+            ], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $imagePath = $data['imagePath'] ?? null;
+
+        if (!$imagePath) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Chemin de l\'image non fourni'
+            ], 400);
+        }
+
+        try {
+            $result = $this->imageUploadService->deleteImage($imagePath);
+            if ($result) {
+                $task->removeImage($imagePath);
+                $this->entityManager->persist($task);
+                $this->entityManager->flush();
+
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Image supprimée avec succès'
+                ]);
+            } else {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Erreur lors de la suppression de l\'image'
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
 }

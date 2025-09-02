@@ -8,6 +8,7 @@ import AddSkillsModal from '../compenents/dashboard/modal/AddSkillsModal';
 import SelectColumnToDeleteModal from '../compenents/dashboard/modal/columns/SelectColumnToDeleteModal';
 import SelectColumnToEditModal from '../compenents/dashboard/modal/columns/SelectColumnToEditModal';
 import EditColumnModal from '../compenents/dashboard/modal/columns/EditColumnModal';
+import TaskDetailModal from '../compenents/dashboard/modal/TaskDetailModal';
 
 import { dashboardServices } from '../services/dashboard/dashboardServices';
 
@@ -15,6 +16,7 @@ import { dashboardServices } from '../services/dashboard/dashboardServices';
 import '../assets/styles/compenents/Dashboard/CreateTaskProjectModal.scss';
 import '../assets/styles/compenents/Dashboard/ModalDelete.scss';
 import '../assets/styles/compenents/Dashboard/TaskCard.scss';
+import '../assets/styles/compenents/Dashboard/TaskDetailModal.scss';
 import '../assets/styles/Dashboard.scss';
 
 const Dashboard = () => {
@@ -47,6 +49,8 @@ const Dashboard = () => {
 
     const [showSelectColumnToDeleteModal, setShowSelectColumnToDeleteModal] = useState(false);
     const [showSelectColumnToEditModal, setShowSelectColumnToEditModal] = useState(false);
+    const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
+    const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null);
     const navigate = useNavigate();
 
 
@@ -246,6 +250,28 @@ const Dashboard = () => {
             setSelectedTask(null);
         } catch (err) {
             setError(err.message);
+        }
+    };
+
+    const handleShowTaskDetail = (task) => {
+        setSelectedTaskForDetail(task);
+        setShowTaskDetailModal(true);
+    };
+
+    const handleTaskDetailUpdate = async () => {
+        if (selectedProject) {
+            await fetchTasks(selectedProject.id);
+            await fetchColumns(selectedProject.id);
+            
+            if (selectedTaskForDetail) {
+                const updatedTasks = await dashboardServices.getTasks(selectedProject.id);
+                if (updatedTasks && Array.isArray(updatedTasks)) {
+                    const updatedTask = updatedTasks.find(t => t.id === selectedTaskForDetail.id);
+                    if (updatedTask) {
+                        setSelectedTaskForDetail(updatedTask);
+                    }
+                }
+            }
         }
     };
 
@@ -496,6 +522,7 @@ const Dashboard = () => {
                         onAssignTask={handleAssignTask}
                         currentUserRole={currentUserRole}
                         onReorderColumns={handleReorderColumns}
+                        onShowTaskDetail={handleShowTaskDetail}
                     />
                 )}
             </div>
@@ -650,6 +677,18 @@ const Dashboard = () => {
                         setShowSelectColumnToEditModal(false);
                         setShowEditColumnModal(true);
                     }}
+                />
+            )}
+
+            {showTaskDetailModal && selectedTaskForDetail && (
+                <TaskDetailModal 
+                    task={selectedTaskForDetail}
+                    isOpen={showTaskDetailModal}
+                    onClose={() => {
+                        setShowTaskDetailModal(false);
+                        setSelectedTaskForDetail(null);
+                    }}
+                    onTaskUpdate={handleTaskDetailUpdate}
                 />
             )}
 

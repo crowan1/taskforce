@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole }) => {
+const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole, onShowTaskDetail }) => {
     const [showDetails, setShowDetails] = useState(false);
 
     const handleDragStart = (e) => {
@@ -39,7 +39,7 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
             className="task-card"
             draggable
             onDragStart={handleDragStart}
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={() => onShowTaskDetail(task)}
         >
             <div className="task-header">
                 <h4 className="task-title">{task.title}</h4>
@@ -125,20 +125,6 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
                             {skill.name}
                         </span>
                     ))}
-                </div>
-            )}
-
-            {showDetails && (
-                <div className="task-details">
-                    <div className="detail-item">
-                        <strong>Créé par :</strong> {task.createdBy.firstname} {task.createdBy.lastname}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Projet :</strong> {task.project.name}
-                    </div>
-                    <div className="detail-item">
-                        <strong>Dernière modification :</strong> {formatDate(task.updatedAt)}
-                    </div>
                 </div>
             )}
         </div>
