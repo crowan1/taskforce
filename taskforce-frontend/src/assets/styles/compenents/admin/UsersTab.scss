@@ -1,0 +1,235 @@
+.users-tab {
+  .tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h3 {
+      margin: 0;
+      color: #374151;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .tab-actions {
+      .btn-primary {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #2563eb;
+        }
+      }
+    }
+  }
+
+  .project-users-detailed {
+    h4 {
+      margin: 0 0 1.5rem 0;
+      color: #374151;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .users-detailed-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+
+      @media (min-width: 769px) and (max-width: 1024px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (min-width: 1025px) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .user-detailed-item {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+
+        &.clickable {
+          cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+
+        .user-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 1.5rem;
+
+          .user-info {
+            strong {
+              display: block;
+              color: #374151;
+              font-size: 1.125rem;
+              font-weight: 600;
+              margin-bottom: 0.25rem;
+            }
+
+            .user-email {
+              color: #6b7280;
+              font-size: 0.875rem;
+            }
+          }
+
+          .user-role {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+
+            &.role-responsable_projet {
+              background: #fef3c7;
+              color: #92400e;
+            }
+
+            &.role-manager {
+              background: #dbeafe;
+              color: #1e40af;
+            }
+
+            &.role-collaborateur {
+              background: #d1fae5;
+              color: #065f46;
+            }
+          }
+        }
+
+        .user-details {
+          .user-section {
+            margin-bottom: 1.5rem;
+
+            h5 {
+              margin: 0 0 1rem 0;
+              color: #374151;
+              font-size: 1rem;
+              font-weight: 600;
+            }
+
+            .user-tasks {
+              .no-tasks {
+                color: #9ca3af;
+                font-style: italic;
+                margin: 0;
+              }
+
+              .user-task-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem;
+                background: #f9fafb;
+                border-radius: 6px;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+
+                .task-title {
+                  color: #374151;
+                  font-weight: 500;
+                }
+
+                .task-priority {
+                  padding: 0.125rem 0.5rem;
+                  border-radius: 8px;
+                  font-size: 0.75rem;
+                  font-weight: 600;
+
+                  &.priority-low {
+                    background: #d1fae5;
+                    color: #065f46;
+                  }
+
+                  &.priority-medium {
+                    background: #fef3c7;
+                    color: #92400e;
+                  }
+
+                  &.priority-high {
+                    background: #fee2e2;
+                    color: #991b1b;
+                  }
+                }
+
+                .task-status {
+                  color: #6b7280;
+                  font-size: 0.75rem;
+                }
+              }
+            }
+
+            .user-skills {
+              .no-skills {
+                color: #9ca3af;
+                font-style: italic;
+                margin: 0;
+              }
+
+              .skill-tag {
+                display: inline-block;
+                background: #3b82f6;
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 500;
+                margin: 0.25rem 0.25rem 0.25rem 0;
+              }
+            }
+
+            .user-stats {
+              display: flex;
+              gap: 2rem;
+
+              .stat-item {
+                text-align: center;
+
+                .stat-number {
+                  display: block;
+                  font-size: 1.5rem;
+                  font-weight: 700;
+                  color: #3b82f6;
+                  margin-bottom: 0.25rem;
+                }
+
+                .stat-label {
+                  color: #6b7280;
+                  font-size: 0.75rem;
+                  font-weight: 500;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

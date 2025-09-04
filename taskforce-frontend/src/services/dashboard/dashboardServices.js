@@ -207,9 +207,25 @@ export const dashboardServices = {
         return apiCall(`${API_BASE_URL}/users`);
     },
 
+    getAllUsers: async () => {
+        return apiCall(`${API_BASE_URL}/users`);
+    },
+
+    getProjectUsers: async (projectId) => {
+        return apiCall(`${API_BASE_URL}/projects/${projectId}/users`);
+    },
+
+    getProfile: async () => {
+        return apiCall(`${API_BASE_URL}/user`);
+    },
+
     // compétences utilisateur
     getUserSkills: async () => {
         return apiCall(`${API_BASE_URL}/user-skills`);
+    },
+
+    getUserSkillsByUserId: async (userId) => {
+        return apiCall(`${API_BASE_URL}/users/${userId}/skills`);
     },
 
     addUserSkill: async (skillData) => {
@@ -226,8 +242,8 @@ export const dashboardServices = {
         });
     },
 
-    deleteUserSkill: async (userSkillId) => {
-        return apiCall(`${API_BASE_URL}/user-skills/${userSkillId}`, {
+    deleteUserSkill: async (skillId) => {
+        return apiCall(`${API_BASE_URL}/user-skills/skill/${skillId}`, {
             method: 'DELETE'
         });
     }

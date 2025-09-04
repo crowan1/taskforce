@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TaskCard from './TaskCard';
 
 const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole, onReorder, onShowTaskDetail }) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
+
     const handleDragOver = (e) => {
         e.preventDefault();
     };
@@ -17,15 +20,31 @@ const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDel
     //  drag & drop des colonnes 
     const handleHeaderDragStart = (e) => {
         e.dataTransfer.setData('columnId', String(column.id));
+        e.dataTransfer.effectAllowed = 'move';
+        setIsDragging(true);
+    };
+
+    const handleHeaderDragEnd = (e) => {
+        setIsDragging(false);
     };
 
     const handleHeaderDragOver = (e) => {
         e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        setIsDragOver(true);
+    };
+
+    const handleHeaderDragLeave = (e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            setIsDragOver(false);
+        }
     };
 
     const handleHeaderDrop = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        setIsDragOver(false);
+        
         const draggedColumnId = e.dataTransfer.getData('columnId');
         const draggedTaskId = e.dataTransfer.getData('taskId');
         if (draggedTaskId) {
@@ -41,17 +60,20 @@ const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDel
 
     return (
         <div 
-            className="task-column"
+            className={`task-column ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
         >
             <div 
-                className="column-header" 
+                className={`column-header ${isDragging ? 'dragging' : ''}`}
                 style={{ borderTopColor: column.color }}
                 draggable
                 onDragStart={handleHeaderDragStart}
+                onDragEnd={handleHeaderDragEnd}
                 onDragOver={handleHeaderDragOver}
+                onDragLeave={handleHeaderDragLeave}
                 onDrop={handleHeaderDrop}
+                title="Glisser pour réorganiser la colonne"
             >
                 <div className="column-title">
                     <h3>{column.name}</h3>

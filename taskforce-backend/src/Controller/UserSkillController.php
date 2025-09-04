@@ -36,14 +36,33 @@ class UserSkillController extends AbstractController
 
         $skills = array_map(function($userSkill) {
             return [
-                'id' => $userSkill->getId(),
-                'skill' => [
-                    'id' => $userSkill->getSkill()->getId(),
-                    'name' => $userSkill->getSkill()->getName(),
-                    'description' => $userSkill->getSkill()->getDescription()
-                ],
+                'id' => $userSkill->getSkill()->getId(),
+                'name' => $userSkill->getSkill()->getName(),
+                'description' => $userSkill->getSkill()->getDescription()
+            ];
+        }, $userSkills);
 
-                'createdAt' => $userSkill->getCreatedAt()->format('Y-m-d H:i:s')
+        return $this->json([
+            'success' => true,
+            'skills' => $skills
+        ]);
+    }
+
+    #[Route('/user/{userId}', name: 'get_user_skills_by_id', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function getUserSkillsByUserId(int $userId): JsonResponse
+    {
+        $currentUser = $this->getUser();
+        if (!$currentUser) {
+            return $this->json(['error' => 'Utilisateur non connecté'], 401);
+        }
+        $userSkills = $this->userSkillRepository->findByUser($userId);
+
+        $skills = array_map(function($userSkill) {
+            return [
+                'id' => $userSkill->getSkill()->getId(),
+                'name' => $userSkill->getSkill()->getName(),
+                'description' => $userSkill->getSkill()->getDescription()
             ];
         }, $userSkills);
 
@@ -90,12 +109,9 @@ class UserSkillController extends AbstractController
             'success' => true,
             'message' => 'Compétence créée et ajoutée avec succès',
             'userSkill' => [
-                'id' => $userSkill->getId(),
-                'skill' => [
-                    'id' => $skill->getId(),
-                    'name' => $skill->getName(),
-                    'description' => $skill->getDescription()
-                ]
+                'id' => $skill->getId(),
+                'name' => $skill->getName(),
+                'description' => $skill->getDescription()
             ]
         ]);
     }
@@ -112,7 +128,8 @@ class UserSkillController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         $userSkill = $this->userSkillRepository->find($id);
-        if (!$userSkill || $userSkill->getUser()->getId() !== $user->getId()) {
+        $currentUserId = $user->getId();
+        if (!$userSkill || !$currentUserId || $userSkill->getUser()->getId() !== $currentUserId) {
             return $this->json(['error' => 'Compétence non trouvée'], 404);
         }
 
@@ -125,32 +142,44 @@ class UserSkillController extends AbstractController
             'success' => true,
             'message' => 'Compétence mise à jour avec succès',
             'userSkill' => [
-                'id' => $userSkill->getId(),
-                'skill' => [
-                    'id' => $userSkill->getSkill()->getId(),
-                    'name' => $userSkill->getSkill()->getName(),
-                    'description' => $userSkill->getSkill()->getDescription()
-                ]
+                'id' => $userSkill->getSkill()->getId(),
+                'name' => $userSkill->getSkill()->getName(),
+                'description' => $userSkill->getSkill()->getDescription()
             ]
         ]);
     }
 
-    #[Route('/{id}', name: 'delete_user_skill', methods: ['DELETE'])]
+    #[Route('/skill/{skillId}', name: 'delete_user_skill', methods: ['DELETE'])]
     #[IsGranted('ROLE_USER')]
-    public function deleteUserSkill(int $id): JsonResponse
+    public function deleteUserSkill(int $skillId): JsonResponse
     {
         $user = $this->getUser();
         if (!$user) {
             return $this->json(['error' => 'Utilisateur non connecté'], 401);
         }
-        /** @var User $user */
-        $userSkill = $this->userSkillRepository->find($id);
+        
+        $userId = $user->getId();
+        if (!$userId) {
+            return $this->json(['error' => 'ID utilisateur invalide'], 400);
+        }
+        
+        $userSkill = $this->userSkillRepository->findOneBy([
+            'user' => $userId,
+            'skill' => $skillId
+        ]);
 
-        if (!$userSkill || $userSkill->getUser()->getId() !== $user->getId()) {
+        if (!$userSkill) {
             return $this->json(['error' => 'Compétence non trouvée'], 404);
         }
 
         $this->entityManager->remove($userSkill);
+         
+        $skill = $userSkill->getSkill();
+        $otherUserSkills = $this->userSkillRepository->findBy(['skill' => $skillId]);
+        if (count($otherUserSkills) <= 1) {  
+            $this->entityManager->remove($skill);
+        }
+        
         $this->entityManager->flush();
 
         return $this->json([

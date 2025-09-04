@@ -1,0 +1,130 @@
+.tasks-tab {
+  .tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h3 {
+      margin: 0;
+      color: #374151;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+
+  .project-tasks {
+    h4 {
+      margin: 0 0 1rem 0;
+      color: #374151;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .task-item {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+
+        .task-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+
+          h5 {
+            margin: 0;
+            color: #374151;
+            font-size: 1.125rem;
+            font-weight: 600;
+          }
+
+          .priority {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+
+            &.priority-low {
+              background: #d1fae5;
+              color: #065f46;
+            }
+
+            &.priority-medium {
+              background: #fef3c7;
+              color: #92400e;
+            }
+
+            &.priority-high {
+              background: #fee2e2;
+              color: #991b1b;
+            }
+          }
+        }
+
+        .task-description {
+          color: #6b7280;
+          margin-bottom: 1rem;
+          line-height: 1.5;
+        }
+
+        .task-meta {
+          display: flex;
+          gap: 2rem;
+          margin-bottom: 1rem;
+          font-size: 0.875rem;
+
+          .assigned-to {
+            color: #374151;
+            font-weight: 500;
+          }
+
+          .created-at {
+            color: #6b7280;
+          }
+        }
+
+        .task-actions {
+          .btn-reassign {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+              background: #7c3aed;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -67,6 +67,9 @@ const Header = () => {
                             <button className="btn-login" onClick={() => navigate('/dashboard')}>
                                 Mes Tableaux
                             </button>
+                            <button className="btn-admin" onClick={() => navigate('/admin')}>
+                                Admin
+                            </button>
                             <button className="btn-signup" onClick={() => navigate('/account')}>
                                 Mon Compte
                             </button>

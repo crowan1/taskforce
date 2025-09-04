@@ -6,6 +6,11 @@ $secondary-hover: #7c3aed;
 $success-color: #10b981;
 $danger-color: #ef4444;
 $danger-hover: #dc2626;
+$blue-50: #eff6ff;
+$blue-100: #dbeafe;
+$blue-200: #bfdbfe;
+$blue-500: #3b82f6;
+$blue-700: #1d4ed8;
 $gray-50: #f9fafb;
 $gray-100: #f3f4f6;
 $gray-200: #e5e7eb;
@@ -40,7 +45,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Dashboard Container
 .dashboard-container {
   min-height: 100vh;
   background: $gray-50;
@@ -53,7 +57,6 @@ body {
   height: calc(100vh - 80px);
 }
 
-// Sidebar
 .sidebar {
   background: $white;
   border-right: 1px solid $gray-200;
@@ -216,7 +219,6 @@ body {
   }
 }
 
-// Main Content
 .main-content {
   flex: 1;
   display: flex;
@@ -228,48 +230,38 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  margin-bottom: 2rem;
   padding: 1.5rem;
   background: $white;
-  border-bottom: 1px solid $gray-200;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $gray-200;
+}
 
-  .project-info-header {
-    margin-right: 10px;
-    h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: $gray-800;
-    }
+.kanban-info {
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
 
-    p {
-      margin: 0;
-      color: $gray-600;
-      font-size: 0.875rem;
-    }
+.drag-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: $blue-50;
+  border: 1px solid $blue-200;
+  border-radius: $border-radius-lg;
+  color: $blue-700;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
 
-    .current-user-role {
-      margin-top: 0.5rem;
+.drag-icon {
+  font-size: 1rem;
+}
 
-      .role-indicator {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        background: $primary-color;
-        color: $white;
-        border-radius: $border-radius-lg;
-        font-size: 0.875rem;
-        font-weight: 600;
-        box-shadow: $shadow-sm;
-      }
-
-      
-    }
-  }
-
-  .kanban-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
+.drag-text {
+  flex: 1;
 }
 
 .no-project-selected {
@@ -296,12 +288,10 @@ body {
 .dashboard-content {
   flex: 1;
   padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 95%;
+  overflow: hidden;
+  width: 100%;
 }
 
-// Dashboard Header
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -348,7 +338,6 @@ body {
   flex-wrap: wrap;
 }
 
-// Buttons
 .btn-create-project,
 .btn-create-column,
 .btn-add-user,
@@ -433,17 +422,20 @@ body {
   width: 50px;
 }
 
-// Kanban Board
 .kanban-board {
   margin-top: 2rem;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
+  width: 100%;
+  min-width: 100%;
+  height: calc(100vh - 250px);
   
   scrollbar-width: thin;
   scrollbar-color: $gray-300 transparent;
   
   &::-webkit-scrollbar {
     height: 8px;
+    width: 8px;
   }
   
   &::-webkit-scrollbar-track {
@@ -467,6 +459,7 @@ body {
   min-width: max-content;
   padding: 0.5rem 0;
   transition: transform 0.3s ease;
+  width: max-content;
 }
 
 .task-column {
@@ -474,17 +467,48 @@ body {
   border-radius: $border-radius-lg;
   box-shadow: $shadow-md;
   border: 1px solid $gray-300;
-  min-height: 400px;
+  min-height: 600px;
+  height: calc(100vh - 300px);
   display: flex;
   flex-direction: column;
   width: 320px;
   flex-shrink: 0;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: default;
+
+  &.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    box-shadow: $shadow-lg;
+  }
+
+  &.drag-over {
+    border: 2px dashed $blue-500;
+    transform: scale(1.02);
+  }
 }
 
 .column-header {
   padding: 1.5rem;
   border-top: 4px solid;
   border-radius: $border-radius-lg $border-radius-lg 0 0;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: $gray-50;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.dragging {
+    background-color: $blue-50;
+    border-color: $blue-500;
+  }
 }
 
 .column-title {
@@ -520,6 +544,28 @@ body {
   flex: 1;
   padding: 0 1.5rem 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  
+  scrollbar-width: thin;
+  scrollbar-color: $gray-300 transparent;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $gray-300;
+    border-radius: 3px;
+    
+    &:hover {
+      background: $gray-400;
+    }
+  }
 }
 
 .empty-column {
@@ -529,7 +575,6 @@ body {
   font-style: italic;
 }
 
-// Form Styles
 .form-group {
   margin-bottom: 1rem;
 
@@ -654,8 +699,6 @@ body {
   }
 }
 
-// Styles responsiv
-// Skills Modal
 .skills-list {
   max-height: 300px;
   overflow-y: auto;
@@ -771,7 +814,6 @@ body {
   }
 }
 
-// Gestion des utilisateurs
 .users-list {
   max-height: 400px;
   overflow-y: auto;
@@ -1130,7 +1172,6 @@ body {
   }
 }
 
-// Styles pour les modals d'édition et add de colonne
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -1266,7 +1307,6 @@ body {
     }
 }
 
-// Styles  sélection  colonnes
 .columns-selection {
     .selection-description {
         margin-bottom: 1.5rem;
@@ -1568,7 +1608,6 @@ body {
   }
 }
 
-// Messages suucès/erreurr
 .success-message {
   background: #d4edda;
   color: #155724;

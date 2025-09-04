@@ -20,7 +20,6 @@ const UserTasksManager = () => {
             const assigned = tasks.filter(task => task.assignedTo);
             setAssignedTasks(assigned);
             
-            // open first project
             if (assigned.length > 0) {
                 const firstProjectId = assigned[0].project?.id;
                 if (firstProjectId) {

@@ -40,14 +40,14 @@ const UserSkillsManager = () => {
         }
     };
 
-    const handleDeleteSkill = async (userSkillId) => {
+    const handleDeleteSkill = async (skillId) => {
         if (!window.confirm('voulez vous supprimer cette compétence ?')) {
             return;
         }
 
         try {
-            await dashboardServices.deleteUserSkill(userSkillId);
-            setUserSkills(prev => prev.filter(skill => skill.id !== userSkillId));
+            await dashboardServices.deleteUserSkill(skillId);
+            setUserSkills(prev => prev.filter(skill => skill.id !== skillId));
         } catch (err) {
             setError('Erreur lors de la suppression de la compétence');
         }
@@ -133,8 +133,8 @@ const UserSkillsManager = () => {
                     userSkills.map(userSkill => (
                         <div key={userSkill.id} className="skill-item">
                             <div className="skill-info">
-                                <h4>{userSkill.skill.name}</h4>
-                                <p>{userSkill.skill.description}</p>
+                                <h4>{userSkill.name}</h4>
+                                <p>{userSkill.description}</p>
                             </div>
 
                             <button 

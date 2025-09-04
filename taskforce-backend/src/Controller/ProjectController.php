@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Entity\ProjectUser;
+use App\Entity\Role;
 use App\Repository\ProjectRepository;
 use App\Repository\ProjectUserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -52,7 +53,7 @@ class ProjectController extends AbstractController
                         'firstname' => $projectUser->getUser()->getFirstname(),
                         'lastname' => $projectUser->getUser()->getLastname(),
                         'email' => $projectUser->getUser()->getEmail(),
-                        'role' => $projectUser->getRole(),
+                        'role' => $projectUser->getRoleIdentifier(),
                         'joinedAt' => $projectUser->getJoinedAt()->format('Y-m-d H:i:s')
                     ];
                 }, $project->getProjectUsers()->toArray()),
@@ -99,7 +100,9 @@ class ProjectController extends AbstractController
         $projectUser = new ProjectUser();
         $projectUser->setProject($project);
         $projectUser->setUser($user);
-        $projectUser->setRole('responsable_projet');
+        $roleRepository = $this->entityManager->getRepository(Role::class);
+        $responsableRole = $roleRepository->findByIdentifier('responsable_projet');
+        $projectUser->setRole($responsableRole);
 
         $this->entityManager->persist($project);
         $this->entityManager->persist($projectUser);
@@ -127,7 +130,7 @@ class ProjectController extends AbstractController
                         'firstname' => $user->getFirstname(),
                         'lastname' => $user->getLastname(),
                         'email' => $user->getEmail(),
-                        'role' => 'responsable_projet',
+                        'role' => $responsableRole->getIdentifier(),
                         'joinedAt' => $projectUser->getJoinedAt()->format('Y-m-d H:i:s')
                     ]
                 ],
@@ -148,8 +151,7 @@ class ProjectController extends AbstractController
         if (!$project) {
             return $this->json(['error' => 'Projet non trouvé'], 404);
         }
-
-        // verif l'utilisateur actuel peut gérer les utilisateurs du projet
+ 
         $currentUserProject = $this->projectUserRepository->findByUserAndProject($currentUser->getId(), $id);
         if (!$currentUserProject || !$currentUserProject->isResponsableProjet()) {
             return $this->json(['error' => 'Seuls les responsables de projet peuvent ajouter des utilisateurs'], 403);
@@ -162,8 +164,10 @@ class ProjectController extends AbstractController
         if (!$email) {
             return $this->json(['error' => 'Email requis'], 400);
         }
-
-        if (!in_array($role, ['responsable_projet', 'manager', 'collaborateur'])) {
+ 
+        $roleRepository = $this->entityManager->getRepository(Role::class);
+        $roleEntity = $roleRepository->findByIdentifier($role);
+        if (!$roleEntity) {
             return $this->json(['error' => 'Rôle invalide'], 400);
         }
 
@@ -172,9 +176,8 @@ class ProjectController extends AbstractController
 
         if (!$user) {
             return $this->json(['error' => 'Aucun utilisateur trouvé avec cet email: ' . $email], 404);
-        }
+        } 
 
-        // verif si l'utilisateur est déjà dans le projet
         $existingProjectUser = $this->projectUserRepository->findByUserAndProject($user->getId(), $id);
         if ($existingProjectUser) {
             return $this->json(['error' => 'L\'utilisateur ' . $user->getFirstname() . ' ' . $user->getLastname() . ' est déjà dans ce projet'], 400);
@@ -183,7 +186,7 @@ class ProjectController extends AbstractController
         $projectUser = new ProjectUser();
         $projectUser->setProject($project);
         $projectUser->setUser($user);
-        $projectUser->setRole($role);
+        $projectUser->setRole($roleEntity);
 
         $this->entityManager->persist($projectUser);
         $this->entityManager->flush();
@@ -196,7 +199,7 @@ class ProjectController extends AbstractController
                 'firstname' => $user->getFirstname(),
                 'lastname' => $user->getLastname(),
                 'email' => $user->getEmail(),
-                'role' => $role
+                'role' => $roleEntity->getIdentifier()
             ]
         ]);
     }
@@ -213,8 +216,7 @@ class ProjectController extends AbstractController
         if (!$project) {
             return $this->json(['error' => 'Projet non trouvé'], 404);
         }
-
-        // verif si l'utilisateur actuel peut gérer les utilisateurs du projet
+ 
         $currentUserProject = $this->projectUserRepository->findByUserAndProject($currentUser->getId(), $id);
         if (!$currentUserProject || !$currentUserProject->isResponsableProjet()) {
             return $this->json(['error' => 'Seuls les responsables de projet peuvent modifier les rôles'], 403);
@@ -228,18 +230,13 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'userId et role requis'], 400);
         }
 
-        if (!in_array($role, ['responsable_projet', 'manager', 'collaborateur'])) {
+        $roleEntity = $this->entityManager->getRepository(Role::class)->findByIdentifier($role);
+        if (!$roleEntity) {
             return $this->json(['error' => 'Rôle invalide'], 400);
         }
 
-        if ($role === 'collaborateur') {
-            $responsables = $this->projectUserRepository->findResponsablesByProject($id);
-            if (count($responsables) === 1) {
-                $targetProjectUser = $this->projectUserRepository->findByUserAndProject($userId, $id);
-                if ($targetProjectUser && $targetProjectUser->isResponsableProjet()) {
-                    return $this->json(['error' => 'Impossible de retirer le dernier responsable de projet'], 400);
-                }
-            }
+        if ($roleEntity->getIdentifier() === 'responsable_projet' && !$currentUserProject->isResponsableProjet()) {
+            return $this->json(['error' => 'Seuls les responsables de projet peuvent promouvoir vers ce rôle'], 403);
         }
 
         $projectUser = $this->projectUserRepository->findByUserAndProject($userId, $id);
@@ -247,7 +244,7 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Utilisateur non trouvé dans ce projet'], 404);
         }
 
-        $projectUser->setRole($role);
+        $projectUser->setRole($roleEntity);
         $this->entityManager->flush();
 
         return $this->json([
@@ -258,8 +255,61 @@ class ProjectController extends AbstractController
                 'firstname' => $projectUser->getUser()->getFirstname(),
                 'lastname' => $projectUser->getUser()->getLastname(),
                 'email' => $projectUser->getUser()->getEmail(),
-                'role' => $role
+                'role' => $roleEntity->getIdentifier()
             ]
+        ]);
+    }
+
+    #[Route('/{id}/users', name: 'get_project_users', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function getProjectUsers(int $id): JsonResponse
+    {
+        /** @var User $currentUser */
+        $currentUser = $this->getUser();
+        
+        $project = $this->projectRepository->find($id);
+        
+        if (!$project) {
+            return $this->json(['error' => 'Projet non trouvé'], 404);
+        }
+
+        $currentUserProject = $this->projectUserRepository->findByUserAndProject($currentUser->getId(), $id);
+        if (!$currentUserProject) {
+            return $this->json(['error' => 'Vous n\'avez pas accès à ce projet'], 403);
+        }
+
+        $projectUsers = $this->projectUserRepository->findByProject($id);
+        
+        $formattedUsers = array_map(function($projectUser) {
+            $user = $projectUser->getUser();
+            
+            $userSkills = $user->getUserSkills();
+            $skills = [];
+            
+            foreach ($userSkills as $userSkill) {
+                $skill = $userSkill->getSkill();
+                $skills[] = [
+                    'id' => $skill->getId(),
+                    'name' => $skill->getName(),
+                    'description' => $skill->getDescription()
+                ];
+            }
+            
+            return [
+                'id' => $user->getId(),
+                'firstname' => $user->getFirstname(),
+                'lastname' => $user->getLastname(),
+                'email' => $user->getEmail(),
+                'role' => $projectUser->getRoleIdentifier(),
+                'roleDisplayName' => $projectUser->getRoleDisplayName(),
+                'joinedAt' => $projectUser->getJoinedAt()->format('Y-m-d H:i:s'),
+                'skills' => $skills
+            ];
+        }, $projectUsers);
+
+        return $this->json([
+            'success' => true,
+            'users' => $formattedUsers
         ]);
     }
 
@@ -292,8 +342,7 @@ class ProjectController extends AbstractController
         if ($project->getCreatedBy()->getId() === $userId) {
             return $this->json(['error' => 'Impossible de supprimer le créateur du projet'], 400);
         }
-
-        // Empêcher de supprimer le dernier responsable de projet
+ 
         $responsables = $this->projectUserRepository->findResponsablesByProject($id);
         if (count($responsables) === 1) {
             $targetProjectUser = $this->projectUserRepository->findByUserAndProject($userId, $id);

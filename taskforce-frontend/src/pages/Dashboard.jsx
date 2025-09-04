@@ -31,7 +31,6 @@ const Dashboard = () => {
     const [showCreateColumn, setShowCreateColumn] = useState(false);
 
 
-    const [showManageUsers, setShowManageUsers] = useState(false);
     const [showAddSkills, setShowAddSkills] = useState(false);
     const [showEditTask, setShowEditTask] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -232,8 +231,7 @@ const Dashboard = () => {
 
     const isAdmin = role => role === 'responsable_projet';
     const isManager = role => ['responsable_projet', 'manager'].includes(role);
-    const canDeleteColumns = role => role === 'responsable_projet';
-    const canManageUsers = role => role === 'responsable_projet';
+    const canDeleteColumns = role => role === 'responsable_projet' || role === 'manager';
     const canDeleteProject = role => role === 'responsable_projet';
 
     const handleEditTask = (task) => {
@@ -339,8 +337,8 @@ const Dashboard = () => {
     }
 
         return (
-        <div className="dashboard-container">
-            <Header />
+    <div className="dashboard-container">  
+        <Header />
             
             <div className="dashboard-layout">
                 <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -459,14 +457,6 @@ const Dashboard = () => {
                                     </div>
                                 )}
                                 
-                                {canManageUsers(currentUserRole) && (
-                                    <button 
-                                        className="btn-manage-users" 
-                                        onClick={() => setShowManageUsers(true)}
-                                    >
-                                         Gérer Utilisateurs
-                                    </button>
-                                )}
                                 {isManager(currentUserRole) && (
                                     <button 
                                         className="btn-assign-all"
@@ -533,7 +523,7 @@ const Dashboard = () => {
                 showCreateProject={showCreateProject} setShowCreateProject={setShowCreateProject}
                 showCreateColumn={showCreateColumn} setShowCreateColumn={setShowCreateColumn}
                 showEditTask={showEditTask} setShowEditTask={setShowEditTask}
-                showManageUsers={showManageUsers} setShowManageUsers={setShowManageUsers}
+                showManageUsers={false} setShowManageUsers={() => {}}
                 showDeleteProjectModal={showDeleteProjectModal} setShowDeleteProjectModal={setShowDeleteProjectModal}
                 selectedTask={selectedTask} setSelectedTask={setSelectedTask}
                 selectedProject={selectedProject}
@@ -692,8 +682,8 @@ const Dashboard = () => {
                 />
             )}
 
-            <Footer />
-        </div>
+        <Footer />
+    </div>
     );
 };
 
