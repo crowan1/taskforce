@@ -5,7 +5,7 @@ const OverviewTab = ({ projectTasks, projectUsers, onCreateTask, onAddUser, onNa
         <div className="overview-tab">
             <div className="overview-grid">
                 <div className="overview-card">
-                    <h3>Statistiques</h3>
+                    <h3>Chiffres clés du projet </h3>
                     <div className="stats">
                         <div className="stat-item">
                             <span className="stat-number">{projectTasks.length}</span>

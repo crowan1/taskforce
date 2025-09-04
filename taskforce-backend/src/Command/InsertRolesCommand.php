@@ -12,7 +12,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:insert-roles',
-    description: 'Ce fichier sert a insèrer les rôles ( Manager, Responsable de Projet, Collaborateur ) dans la base de données si elles n\'existent pas'
+    description: 'Ce fichier sert a insèrer les rôles ( Manager, Responsable de Projet, Collaborateur) dans la base de données pour initier le projet (si pas fait, ca marchera pas)'
 )]
 class InsertRolesCommand extends Command
 {
