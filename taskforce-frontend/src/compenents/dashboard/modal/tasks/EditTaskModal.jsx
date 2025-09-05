@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardServices } from '../../../services/dashboard/dashboardServices';
+import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
 
 const EditTaskModal = ({ onClose, onUpdateTask, task, project }) => {
     const [formData, setFormData] = useState({

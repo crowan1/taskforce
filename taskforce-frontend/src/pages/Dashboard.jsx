@@ -3,12 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import KanbanBoard from '../compenents/dashboard/KanbanBoard';
-import ModalManager from '../compenents/dashboard/modal/ModalManager';
-import AddSkillsModal from '../compenents/dashboard/modal/AddSkillsModal';
-import SelectColumnToDeleteModal from '../compenents/dashboard/modal/columns/SelectColumnToDeleteModal';
-import SelectColumnToEditModal from '../compenents/dashboard/modal/columns/SelectColumnToEditModal';
-import EditColumnModal from '../compenents/dashboard/modal/columns/EditColumnModal';
-import TaskDetailModal from '../compenents/dashboard/modal/TaskDetailModal';
+import KanbanHeader from '../compenents/dashboard/KanbanHeader';
+import ProjectSidebar from '../compenents/dashboard/ProjectSidebar';
+import DashboardModals from '../compenents/dashboard/DashboardModals';
 
 import { dashboardServices } from '../services/dashboard/dashboardServices';
 
@@ -18,6 +15,13 @@ import '../assets/styles/compenents/Dashboard/ModalDelete.scss';
 import '../assets/styles/compenents/Dashboard/TaskCard.scss';
 import '../assets/styles/compenents/Dashboard/TaskDetailModal.scss';
 import '../assets/styles/Dashboard.scss';
+import '../assets/styles/compenents/Dashboard/includes/kanban.scss';
+import '../assets/styles/compenents/Dashboard/includes/project-sidebar.scss';
+import '../assets/styles/compenents/Dashboard/includes/task-columns.scss';
+import '../assets/styles/compenents/Dashboard/includes/buttons.scss';
+import '../assets/styles/compenents/Dashboard/modal/tasks/task-modals.scss';
+import '../assets/styles/compenents/Dashboard/modal/project/project-modals.scss';
+import '../assets/styles/compenents/Dashboard/modal/columns/column-modals.scss';
 
 const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
@@ -50,6 +54,7 @@ const Dashboard = () => {
     const [showSelectColumnToEditModal, setShowSelectColumnToEditModal] = useState(false);
     const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null);
+    const [showDescriptionModal, setShowDescriptionModal] = useState(false);
     const navigate = useNavigate();
 
 
@@ -341,158 +346,33 @@ const Dashboard = () => {
         <Header />
             
             <div className="dashboard-layout">
-                <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-                    {sidebarOpen ? (
-                        <>
-                            <div className="sidebar-header">
-                                <h2>Mes Projets</h2>
-                                <button 
-                                    className="sidebar-toggle"
-                                    onClick={() => setSidebarOpen(false)}
-                                >
-                                    ◀
-                                </button>
-                            </div>
-                            
-                            <div className="sidebar-content">
-                                <button 
-                                    className="btn-create-project-sidebar"
-                                    onClick={() => setShowCreateProject(true)}
-                                >
-                                    + Nouveau Projet
-                                </button>
-                                
-                                <div className="projects-list">
-                                    {projects.map(project => (
-                                        <div 
-                                            key={project.id} 
-                                            className={`project-item ${selectedProject?.id === project.id ? 'active' : ''}`}
-                                            onClick={() => setSelectedProject(project)}
-                                        >
-                                            <div className="project-info">
-                                                <h3>{project.name}</h3>
-                                                <p>{project.description || 'Aucune description'}</p>
-                                                <small>{project.taskCount} tâches</small>
-                                            </div>
-                                            {isCreator(project) && (
-                                                <span className="creator-indicator">°</span>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="sidebar-closed">
-                            <button 
-                                className="sidebar-toggle-closed"
-                                onClick={() => setSidebarOpen(true)}
-                                title="Ouvrir la liste des projets"
-                            >
-                                <img src={require('../assets/icons/fleche-droite.png')} alt="Ouvrir la liste des projets" className="sidebar-toggle-icon" />
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <ProjectSidebar 
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                    projects={projects}
+                    selectedProject={selectedProject}
+                    setSelectedProject={setSelectedProject}
+                    setShowCreateProject={setShowCreateProject}
+                    isCreator={isCreator}
+                />
 
                 <div className="main-content">
-                    {selectedProject ? (
-                        <div className="kanban-header">
-                            <div className="project-info-header">
-                                <h1>{selectedProject.name}</h1>
-                                <p>{selectedProject.description}</p>
-                                                            {currentUserRole && (
-                                <div className="current-user-role">
-                                    <span className="role-indicator">
-                                        {currentUserRole}
-                                    </span>
-
-                                </div>
-                            )}
-                            </div>
-                            
-                            <div className="kanban-actions">
-                                {isManager(currentUserRole) && (
-                                    <div className="column-actions-dropdown">
-                                        <button 
-                                            className="btn-column-actions"
-                                            onClick={() => setShowColumnActionsMenu(!showColumnActionsMenu)}
-                                        >
-                                            ⋮ Gérer les Colonnes
-                                        </button>
-                                        
-                                        {showColumnActionsMenu && (
-                                            <div className="column-actions-menu">
-                                                <button 
-                                                    className="menu-item add-column"
-                                                    onClick={() => {
-                                                        setShowCreateColumn(true);
-                                                        setShowColumnActionsMenu(false);
-                                                    }}
-                                                >
-                                                    Nouvelle Colonne
-                                                </button>
-                                                <button 
-                                                    className="menu-item edit-columns"
-                                                    onClick={() => {
-                                                        setShowColumnActionsMenu(false);
-                                                        setShowSelectColumnToEditModal(true);
-                                                    }}
-                                                >
-                                                    Modifier une Colonne
-                                                </button>
-                                                {canDeleteColumns(currentUserRole) && (
-                                                    <button 
-                                                        className="menu-item delete-columns"
-                                                        onClick={() => {
-                                                            setShowColumnActionsMenu(false);
-                                                            setShowSelectColumnToDeleteModal(true);
-                                                        }}
-                                                    >
-                                                        Supprimer une Colonne
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                {isManager(currentUserRole) && (
-                                    <button 
-                                        className="btn-assign-all"
-                                        onClick={handleAssignAllTasks}
-                                        title="Assigner automatiquement toutes les tâches non assignées"
-                                    >
-                                         Assigner Toutes
-                                    </button>
-                                )}
-
-                                {canDeleteProject(currentUserRole) && (
-                                    <button 
-                                        className="btn-delete-project" 
-                                        onClick={() => setShowDeleteProjectModal(true)}
-                                        title="Seuls les responsables de projet peuvent supprimer des projets"
-                                    >
-                                        Supprimer Projet
-                                    </button>
-                                )}
-                                {isManager(currentUserRole) && (
-                                    <button 
-                                        className="btn-create-task"
-                                        onClick={() => setShowCreateTask(true)}
-                                        title="Créer une nouvelle tâche"
-                                    >
-                                        + Nouvelle Tâche
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="no-project-selected">
-                            <h2>Bienvenue sur TaskForce</h2>
-                            <p>Sélectionnez un projet dans la sidebar pour commencer</p>
-                        </div>
-                    )}
+                    <KanbanHeader 
+                        selectedProject={selectedProject}
+                        currentUserRole={currentUserRole}
+                        showColumnActionsMenu={showColumnActionsMenu}
+                        setShowColumnActionsMenu={setShowColumnActionsMenu}
+                        setShowCreateColumn={setShowCreateColumn}
+                        setShowSelectColumnToEditModal={setShowSelectColumnToEditModal}
+                        setShowSelectColumnToDeleteModal={setShowSelectColumnToDeleteModal}
+                        setShowDeleteProjectModal={setShowDeleteProjectModal}
+                        setShowCreateTask={setShowCreateTask}
+                        setShowDescriptionModal={setShowDescriptionModal}
+                        handleAssignAllTasks={handleAssignAllTasks}
+                        isManager={isManager}
+                        canDeleteColumns={canDeleteColumns}
+                        canDeleteProject={canDeleteProject}
+                    />
 
                 {selectedProject && (
                     <KanbanBoard 
@@ -518,169 +398,43 @@ const Dashboard = () => {
             </div>
         </div>
 
-            <ModalManager 
+            <DashboardModals  
+            //MOdal
                 showCreateTask={showCreateTask} setShowCreateTask={setShowCreateTask}
                 showCreateProject={showCreateProject} setShowCreateProject={setShowCreateProject}
                 showCreateColumn={showCreateColumn} setShowCreateColumn={setShowCreateColumn}
                 showEditTask={showEditTask} setShowEditTask={setShowEditTask}
-                showManageUsers={false} setShowManageUsers={() => {}}
                 showDeleteProjectModal={showDeleteProjectModal} setShowDeleteProjectModal={setShowDeleteProjectModal}
+                showAddSkills={showAddSkills} setShowAddSkills={setShowAddSkills}
+                showDeleteModal={showDeleteModal} setShowDeleteModal={setShowDeleteModal}
+                showDeleteColumnModal={showDeleteColumnModal} setShowDeleteColumnModal={setShowDeleteColumnModal}
+                showEditColumnModal={showEditColumnModal} setShowEditColumnModal={setShowEditColumnModal}
+                showSelectColumnToDeleteModal={showSelectColumnToDeleteModal} setShowSelectColumnToDeleteModal={setShowSelectColumnToDeleteModal}
+                showSelectColumnToEditModal={showSelectColumnToEditModal} setShowSelectColumnToEditModal={setShowSelectColumnToEditModal}
+                showTaskDetailModal={showTaskDetailModal} setShowTaskDetailModal={setShowTaskDetailModal}
+                showDescriptionModal={showDescriptionModal} setShowDescriptionModal={setShowDescriptionModal}
+                 
                 selectedTask={selectedTask} setSelectedTask={setSelectedTask}
                 selectedProject={selectedProject}
+                taskToDelete={taskToDelete} setTaskToDelete={setTaskToDelete}
+                columnToDelete={columnToDelete} setColumnToDelete={setColumnToDelete}
+                columnToEdit={columnToEdit} setColumnToEdit={setColumnToEdit}
+                selectedTaskForDetail={selectedTaskForDetail} setSelectedTaskForDetail={setSelectedTaskForDetail}
+                 
+                columns={columns}
+                 
                 onCreateTask={handleCreateTask}
                 onCreateProject={handleCreateProject}
                 onCreateColumn={handleCreateColumn}
                 onUpdateTask={handleUpdateTask}
                 onUserUpdated={() => fetchProjects()}
                 onDeleteProject={handleDeleteProject}
+                handleUpdateColumn={handleUpdateColumn}
+                handleTaskDetailUpdate={handleTaskDetailUpdate}
+                fetchProjects={fetchProjects}
             />
 
-            {showAddSkills && selectedTask && (
-                <AddSkillsModal 
-                    onClose={() => {
-                        setShowAddSkills(false);
-                        setSelectedTask(null);
-                    }}
-                    onAddSkills={(skillIds) => {
 
-                        setShowAddSkills(false);
-                        setSelectedTask(null);
-                    }}
-                    taskId={selectedTask.id}
-                />
-            )}
-
-            {showDeleteModal && taskToDelete && (
-                <div className="delete-modal-overlay" onClick={() => setShowDeleteModal(false)}>
-                    <div className="delete-modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="delete-modal-header">
-                            <h3>Confirmer la suppression</h3>
-                            <button 
-                                className="btn-close"
-                                onClick={() => setShowDeleteModal(false)}
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className="delete-modal-body">
-                            <p>Êtes-vous sûr de vouloir supprimer la tâche :</p>
-                            <p className="task-title-confirm">"{taskToDelete.title}" ?</p>
-                            <p className="delete-warning">Cette action est irréversible.</p>
-                        </div>
-                        <div className="delete-modal-actions">
-                            <button 
-                                className="btn-cancel"
-                                onClick={() => setShowDeleteModal(false)}
-                            >
-                                Annuler
-                            </button>
-                            <button 
-                                className="btn-confirm-delete"
-                                onClick={() => handleDeleteTask(taskToDelete.id)}
-                            >
-                                Supprimer
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-
-
-            {showDeleteColumnModal && columnToDelete && (
-                <div className="delete-modal-overlay" onClick={() => setShowDeleteColumnModal(false)}>
-                    <div className="delete-modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="delete-modal-header">
-                            <h3>Confirmer la suppression de la colonne</h3>
-                            <button 
-                                className="btn-close"
-                                onClick={() => setShowDeleteColumnModal(false)}
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className="delete-modal-body">
-                            <p>Êtes-vous sûr de vouloir supprimer la colonne :</p>
-                            <p className="task-title-confirm">"{columnToDelete.name}" ?</p>
-                            <p className="delete-warning">Cette action est irréversible.</p>
-                        </div>
-                        <div className="delete-modal-actions">
-                            <button 
-                                className="btn-cancel"
-                                onClick={() => setShowDeleteColumnModal(false)}
-                            >
-                                Annuler
-                            </button>
-                            <button 
-                                className="btn-confirm-delete"
-                                onClick={() => {
-                                    dashboardServices.deleteColumn(columnToDelete.id).then(() => {
-                                        setColumns(columns.filter(col => col.id !== columnToDelete.id));
-                                        setShowDeleteColumnModal(false);
-                                        setColumnToDelete(null);
-                                    }).catch(err => {
-                                        setError(err.message || 'Erreur lors de la suppression de la colonne');
-                                    });
-                                }}
-                            >
-                                Supprimer la colonne
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showEditColumnModal && columnToEdit && (
-                <EditColumnModal 
-                    isOpen={showEditColumnModal}
-                    onClose={() => {
-                        setShowEditColumnModal(false);
-                        setColumnToEdit(null);
-                    }}
-                    column={columnToEdit}
-                    onUpdateColumn={handleUpdateColumn}
-                />
-            )}
-
-
-
-            {showSelectColumnToDeleteModal && (
-                <SelectColumnToDeleteModal 
-                    isOpen={showSelectColumnToDeleteModal}
-                    onClose={() => setShowSelectColumnToDeleteModal(false)}
-                    columns={columns}
-                    onSelectColumn={(column) => {
-                        setColumnToDelete(column);
-                        setShowSelectColumnToDeleteModal(false);
-                        setShowDeleteColumnModal(true);
-                    }}
-                />
-            )}
-
-            {showSelectColumnToEditModal && (
-                <SelectColumnToEditModal 
-                    isOpen={showSelectColumnToEditModal}
-                    onClose={() => setShowSelectColumnToEditModal(false)}
-                    columns={columns}
-                    onSelectColumn={(column) => {
-                        setColumnToEdit(column);
-                        setShowSelectColumnToEditModal(false);
-                        setShowEditColumnModal(true);
-                    }}
-                />
-            )}
-
-            {showTaskDetailModal && selectedTaskForDetail && (
-                <TaskDetailModal 
-                    task={selectedTaskForDetail}
-                    isOpen={showTaskDetailModal}
-                    onClose={() => {
-                        setShowTaskDetailModal(false);
-                        setSelectedTaskForDetail(null);
-                    }}
-                    onTaskUpdate={handleTaskDetailUpdate}
-                />
-            )}
 
         <Footer />
     </div>

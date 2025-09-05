@@ -1,0 +1,116 @@
+@import '../variables';
+
+.task-column {
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+  border: 1px solid $gray-300;
+  min-height: 600px;
+  height: calc(100vh - 300px);
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: default;
+
+  &.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    box-shadow: $shadow-lg;
+  }
+
+  &.drag-over {
+    border: 2px dashed $blue-500;
+    transform: scale(1.02);
+  }
+}
+
+.column-header {
+  padding: 1.5rem;
+  border-top: 4px solid;
+  border-radius: $border-radius-lg $border-radius-lg 0 0;
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: $gray-50;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.dragging {
+    background-color: $blue-50;
+    border-color: $blue-500;
+  }
+}
+
+.column-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $gray-800;
+    margin: 0;
+  }
+}
+
+.task-count {
+  background: $gray-100;
+  color: $gray-500;
+  padding: 0.25rem 0.75rem;
+  border-radius: $border-radius-lg;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.column-description {
+  font-size: 0.875rem;
+  color: $gray-500;
+  margin: 0;
+}
+
+.column-content {
+  flex: 1;
+  padding: 0 1.5rem 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  
+  scrollbar-width: thin;
+  scrollbar-color: $gray-300 transparent;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $gray-300;
+    border-radius: 3px;
+    
+    &:hover {
+      background: $gray-400;
+    }
+  }
+}
+
+.empty-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: $gray-400;
+  font-style: italic;
+}

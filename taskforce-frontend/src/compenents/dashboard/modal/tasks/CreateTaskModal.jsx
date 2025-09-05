@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { dashboardServices } from '../../../services/dashboard/dashboardServices';
-import '../../../assets/styles/Dashboard.scss';
+import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
+import '../../../../assets/styles/Dashboard.scss';
 
 const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
     const isSubmitting = useRef(false);

@@ -5,22 +5,43 @@ const CreateProjectModal = ({ onClose, onCreateProject }) => {
         name: '',
         description: ''
     });
+    const [errors, setErrors] = useState({});
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setErrors({});
+        
+        // Validation
         if (!formData.name.trim()) {
-            alert('Le nom du projet est requis');
+            setErrors({ name: 'Le nom du projet est requis' });
             return;
         }
+        
+        if (formData.name.length > 50) {
+            setErrors({ name: 'Le nom du projet ne peut pas dépasser 50 caractères' });
+            return;
+        }
+        
         onCreateProject(formData);
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        
+        // Limiter le nom à 50 caractères
+        if (name === 'name' && value.length > 50) {
+            return;
+        }
+        
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
+        
+        // Effacer l'erreur quand l'utilisateur corrige
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
     return (
@@ -40,9 +61,15 @@ const CreateProjectModal = ({ onClose, onCreateProject }) => {
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder="Nom du projet"
+                            placeholder="Nom du projet (max 50 caractères)"
+                            maxLength={50}
                             required
+                            className={errors.name ? 'error' : ''}
                         />
+                        <div className="char-counter">
+                            {formData.name.length}/50
+                        </div>
+                        {errors.name && <div className="error-message">{errors.name}</div>}
                     </div>
 
                     <div className="form-group">

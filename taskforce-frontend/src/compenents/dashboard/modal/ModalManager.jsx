@@ -1,10 +1,10 @@
 import React from 'react';
-import CreateTaskModal from './CreateTaskModal';
-import CreateProjectModal from './CreateProjectModal';
+import CreateTaskModal from './tasks/CreateTaskModal';
+import EditTaskModal from './tasks/EditTaskModal';
+import CreateProjectModal from './project/CreateProjectModal';
+import DeleteProjectModal from './project/DeleteProjectModal';
 import CreateColumnModal from './columns/CreateColumnModal';
-import EditTaskModal from './EditTaskModal';
 import ManageUsersModal from './ManageUsersModal';
-import DeleteProjectModal from './DeleteProjectModal';
 
 const ModalManager = ({ 
     showCreateTask, setShowCreateTask, 

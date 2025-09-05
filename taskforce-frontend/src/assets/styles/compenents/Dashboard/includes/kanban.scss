@@ -1,0 +1,300 @@
+@import '../variables';
+
+.kanban-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  border: 1px solid $gray-200;
+  min-height: 120px;
+  height: 120px;
+  width: 100%;
+
+  .kanban-actions {
+    width: 70% !important;
+  }
+
+  .project-info-header {
+    width: 25% !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $gray-800;
+      margin: 0 0 0.5rem 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 200px;
+      
+      &.clickable-title {
+        cursor: pointer;
+        padding: 0.5rem;
+        background: $gray-50;
+        border-radius: $border-radius;
+        border: 1px solid $gray-200;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: $gray-100;
+          border-color: $gray-300;
+          color: $gray-900;
+        }
+      }
+    }
+    
+    p {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.875rem;
+      color: $gray-600;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      transition: color 0.2s ease;
+      
+      &.clickable-description {
+        cursor: pointer;
+        padding: 0.5rem;
+        background: $blue-50;
+        border-radius: $border-radius;
+        border: 1px solid $blue-200;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: $blue-100;
+          border-color: $blue-300;
+          color: $blue-700;
+        }
+      }
+      
+      &.truncated {
+        position: relative;
+        
+        &::after {
+          content: "... (cliquer pour voir plus)";
+          color: $blue-500;
+          font-size: 0.75rem;
+          font-style: italic;
+        }
+      }
+    }
+    
+    .current-user-role {
+      margin-top: 0.5rem;
+      
+      .role-indicator {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: $blue-100;
+        color: $blue-700;
+        border-radius: $border-radius;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.kanban-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 100%;
+  align-items: flex-start;
+
+  .btn-create-column,
+  .btn-manage-users,
+  .btn-assign-all,
+  .btn-delete-project,
+  .btn-create-task {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $border-radius;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .btn-create-column {
+    background: $success-color;
+    color: $white;
+
+    &:hover {
+      background: darken($success-color, 10%);
+    }
+  }
+
+  .btn-manage-users {
+    background: $gray-600;
+    color: $white;
+
+    &:hover {
+      background: $gray-700;
+    }
+  }
+
+  .btn-assign-all {
+    background: $warning-color;
+    color: $white;
+
+    &:hover {
+      background: darken($warning-color, 10%);
+    }
+  }
+
+  .btn-delete-project {
+    background: $danger-color;
+    color: $white;
+
+    &:hover {
+      background: $danger-hover;
+    }
+  }
+
+  .btn-create-task {
+    background: $primary-color;
+    color: $white;
+
+    &:hover {
+      background: $primary-hover;
+    }
+  }
+}
+
+.column-actions-dropdown {
+  position: relative;
+
+  .btn-column-actions {
+    background: $success-color;
+    color: $white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: $border-radius;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      background: darken($success-color, 10%);
+    }
+  }
+
+  .column-actions-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: $white;
+    border: 1px solid $gray-200;
+    border-radius: $border-radius;
+    box-shadow: $shadow-lg;
+    z-index: 1000;
+    min-width: 200px;
+    margin-top: 0.25rem;
+
+    .menu-item {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      text-align: left;
+      font-size: 0.875rem;
+      color: $gray-700;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background: $gray-50;
+      }
+
+      &.add-column {
+        color: $success-color;
+      }
+
+      &.edit-columns {
+        color: $primary-color;
+      }
+
+      &.delete-columns {
+        color: $danger-color;
+      }
+    }
+  }
+}
+
+.no-project-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: $gray-600;
+
+  h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.kanban-board {
+  margin-top: 2rem;
+  overflow-x: auto;
+  overflow-y: auto;
+  width: 100%;
+  min-width: 100%;
+  height: calc(100vh - 250px);
+  
+  scrollbar-width: thin;
+  scrollbar-color: $gray-300 transparent;
+  
+  &::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $gray-300;
+    border-radius: 4px;
+    
+    &:hover {
+      background: $gray-400;
+    }
+  }
+}
+
+.kanban-columns {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  min-width: max-content;
+  padding: 0.5rem 0;
+  transition: transform 0.3s ease;
+  width: max-content;
+}

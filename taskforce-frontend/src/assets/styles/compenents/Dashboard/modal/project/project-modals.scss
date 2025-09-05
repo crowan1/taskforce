@@ -1,0 +1,248 @@
+@import '../../variables';
+
+.description-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  
+  .description-modal-content {
+    background: $white;
+    border-radius: $border-radius-lg;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: $shadow-lg;
+    
+    .description-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $gray-800;
+      }
+      
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: $gray-500;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: $gray-100;
+          color: $gray-700;
+        }
+      }
+    }
+    
+    .description-modal-body {
+      .project-info {
+        margin-bottom: 1.5rem;
+        
+        .info-section {
+          margin-bottom: 1rem;
+          
+          .section-title {
+            font-weight: 600;
+            color: $gray-700;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+          
+          .section-content {
+            color: $gray-600;
+            line-height: 1.5;
+            padding: 0.75rem;
+            background: $gray-50;
+            border-radius: $border-radius;
+            border: 1px solid $gray-200;
+          }
+        }
+      }
+    }
+  }
+}
+
+.create-project-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  
+  .create-project-content {
+    background: $white;
+    border-radius: $border-radius-lg;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: $shadow-lg;
+    
+    .create-project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $gray-800;
+      }
+      
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: $gray-500;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: $gray-100;
+          color: $gray-700;
+        }
+      }
+    }
+  }
+}
+
+.delete-project-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  
+  .delete-project-content {
+    background: $white;
+    border-radius: $border-radius-lg;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: $shadow-lg;
+    
+    .delete-project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      
+      h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $danger-color;
+      }
+      
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: $gray-500;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        
+        &:hover {
+          background: $gray-100;
+          color: $gray-700;
+        }
+      }
+    }
+    
+    .delete-project-body {
+      margin-bottom: 1.5rem;
+      
+      p {
+        color: $gray-600;
+        line-height: 1.5;
+        margin: 0;
+      }
+    }
+    
+    .delete-project-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      
+      .btn-cancel,
+      .btn-confirm-delete {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: $border-radius;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .btn-cancel {
+        background: $gray-200;
+        color: $gray-700;
+        
+        &:hover {
+          background: $gray-300;
+        }
+      }
+      
+      .btn-confirm-delete {
+        background: $danger-color;
+        color: $white;
+        
+        &:hover {
+          background: $danger-hover;
+        }
+      }
+    }
+  }
+}

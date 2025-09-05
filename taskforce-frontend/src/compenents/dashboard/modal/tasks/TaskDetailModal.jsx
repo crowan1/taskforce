@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { dashboardServices } from '../../../services/dashboard/dashboardServices';
+import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
 
 const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdate }) => {
     const [selectedImage, setSelectedImage] = useState(null);
