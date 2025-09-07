@@ -161,7 +161,15 @@ const Dashboard = () => {
     };
 
     const handleAssignTask = async (taskId) => {
+        if (!selectedProject) return;
+        
         try {
+            const projectUsers = await dashboardServices.getProjectUsers(selectedProject.id);
+            if (!projectUsers || projectUsers.length === 0) {
+                setError('Aucun collaborateur n\'est ajouté à ce projet. Veuillez d\'abord ajouter des utilisateurs au projet avant de pouvoir assigner des tâches automatiquement.');
+                return;
+            }
+
             const response = await dashboardServices.assignTaskAutomatically(taskId);
             
             setTasks(prev => prev.map(task => 
@@ -170,7 +178,7 @@ const Dashboard = () => {
                     : task
             ));
         } catch (err) {
-            setError(err.message || 'Erreure lors de l\'assignation de la tâche');
+            setError(err.message || 'Erreur lors de l\'assignation de la tâche');
         }
     };
 
@@ -178,11 +186,17 @@ const Dashboard = () => {
         if (!selectedProject) return;
         
         try {
+            const projectUsers = await dashboardServices.getProjectUsers(selectedProject.id);
+            if (!projectUsers || projectUsers.length === 0) {
+                setError('Aucun collaborateur n\'est ajouté à ce projet. Veuillez d\'abord ajouter des utilisateurs au projet avant de pouvoir assigner des tâches automatiquement.');
+                return;
+            }
+
             const response = await dashboardServices.assignAllProjectTasks(selectedProject.id);
             
             await fetchTasks(selectedProject.id);
         } catch (err) {
-            setError(err.message || 'Erreur lors de l\'assignation des tâche');
+            setError(err.message || 'Erreur lors de l\'assignation des tâches');
         }
     };
 

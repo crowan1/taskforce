@@ -246,5 +246,26 @@ export const dashboardServices = {
         return apiCall(`${API_BASE_URL}/user-skills/skill/${skillId}`, {
             method: 'DELETE'
         });
+    },
+
+    getProjectUserSkills: async (projectId) => {
+        return apiCall(`${API_BASE_URL}/projects/${projectId}/skills/users`);
+    },
+
+    getAllAvailableProjectSkills: async (projectId) => {
+        return apiCall(`${API_BASE_URL}/projects/${projectId}/skills/available`);
+    },
+
+    createProjectSkill: async (projectId, skillData) => {
+        return apiCall(`${API_BASE_URL}/projects/${projectId}/skills`, {
+            method: 'POST',
+            body: JSON.stringify(skillData)
+        });
+    },
+
+    deleteProjectSkill: async (skillId) => {
+        return apiCall(`${API_BASE_URL}/projects/skills/${skillId}`, {
+            method: 'DELETE'
+        });
     }
 };

@@ -21,23 +21,24 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
         name: '',
         description: ''
     });
+    const [currentUser, setCurrentUser] = useState(null);
 
     useEffect(() => {
         if (isOpen) {
             fetchData();
+            const user = JSON.parse(localStorage.getItem('user'));
+            setCurrentUser(user);
         }
     }, [isOpen, projectId]);
 
     const fetchData = async () => {
         try {
             const [skillsData, columnsData] = await Promise.all([
-                dashboardServices.getSkills(),
+                dashboardServices.getAllAvailableProjectSkills(projectId),
                 dashboardServices.getColumns(projectId)
             ]);
             
-
-            
-            setSkills(skillsData.skills || skillsData || []);
+            setSkills(skillsData.skills || []);
             setColumns(columnsData.columns || columnsData || []);
             
             const columnsArray = columnsData.columns || columnsData || [];
@@ -62,6 +63,14 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
         setError('');
 
         try {
+            const projectSkillsData = await dashboardServices.getAllAvailableProjectSkills(projectId);
+            if (!projectSkillsData.hasUsers) {
+                setError('Aucun collaborateur n\'est ajouté à ce projet. Veuillez d\'abord ajouter des utilisateurs au projet avant de pouvoir créer des tâches.');
+                setLoading(false);
+                isSubmitting.current = false;
+                return;
+            }
+
             const taskData = {
                 ...formData,
                 projectId: parseInt(projectId)
@@ -69,7 +78,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
             
             const response = await dashboardServices.createTask(taskData);
             
-            // Vérifier que la tâche a bien été créée avant d'appeler onTaskCreated
             if (response.success && response.task) {
                 onTaskCreated(response.task);
                 setFormData({
@@ -135,6 +143,59 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
                 ? prev.skillIds.filter(id => id !== skillId)
                 : [...prev.skillIds, skillId]
         }));
+    };
+
+    const handleCreateProjectSkill = async () => {
+        if (!newSkill.name.trim()) {
+            setError('Le nom de la compétence est requis');
+            return;
+        }
+
+        try {
+            const response = await dashboardServices.createProjectSkill(projectId, newSkill);
+            const createdSkill = response.skill;
+            setSkills(prev => [...prev, createdSkill]);
+            setFormData(prev => ({
+                ...prev,
+                skillIds: [...prev.skillIds, createdSkill.id]
+            }));
+            
+            setNewSkill({ name: '', description: '' });
+            setShowCreateSkill(false);
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const handleDeleteProjectSkill = async (skillId, e) => {
+        e.stopPropagation();  
+        
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette compétence ?')) {
+            return;
+        }
+
+        try { 
+            const realSkillId = skillId.replace('project_', '');
+            await dashboardServices.deleteProjectSkill(realSkillId);
+            
+            setSkills(prev => prev.filter(skill => skill.id !== skillId));
+            setFormData(prev => ({
+                ...prev,
+                skillIds: prev.skillIds.filter(id => id !== skillId)
+            }));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const canManageSkills = () => {
+        if (!currentUser) return false;
+        return ['responsable_projet', 'manager'].includes(currentUser.role);
+    };
+
+    const canDeleteSkill = (skill) => {
+        if (!currentUser || !skill.createdBy) return false;
+        return skill.type === 'project_skill' && skill.createdBy.id === currentUser.id;
     };
 
     if (!isOpen) return null;
@@ -225,14 +286,28 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
                         <div className="skills-labels-container">
                             {Array.isArray(skills) && skills.map(skill => {
                                 const isSelected = formData.skillIds.includes(skill.id);
+                                const canDelete = canDeleteSkill(skill);
                                 
                                 return (
                                     <div
                                         key={skill.id}
-                                        className={`skill-label ${isSelected ? 'selected' : ''}`}
+                                        className={`skill-label ${isSelected ? 'selected' : ''} ${skill.type === 'project_skill' ? 'project-skill' : 'user-skill'}`}
                                         onClick={() => handleSkillChange(skill.id)}
                                     >
                                         <span className="skill-label-name">{skill.name}</span>
+                                        {skill.type === 'project_skill' && (
+                                            <span className="skill-type-badge">Projet</span>
+                                        )}
+                                        {canDelete && (
+                                            <button
+                                                type="button"
+                                                className="skill-delete-btn"
+                                                onClick={(e) => handleDeleteProjectSkill(skill.id, e)}
+                                                title="Supprimer cette compétence"
+                                            >
+                                                ×
+                                            </button>
+                                        )}
                                         {isSelected && (
                                             <span className="skill-label-check">✓</span>
                                         )}
@@ -240,6 +315,54 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
                                 );
                             })}
                         </div>
+                        
+                        {canManageSkills() && (
+                            <div className="skill-management">
+                                {!showCreateSkill ? (
+                                    <button
+                                        type="button"
+                                        className="btn-add-skill"
+                                        onClick={() => setShowCreateSkill(true)}
+                                    >
+                                        + Ajouter une compétence au projet
+                                    </button>
+                                ) : (
+                                    <div className="create-skill-form">
+                                        <input
+                                            type="text"
+                                            placeholder="Nom de la compétence"
+                                            value={newSkill.name}
+                                            onChange={(e) => setNewSkill(prev => ({ ...prev, name: e.target.value }))}
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Description (optionnel)"
+                                            value={newSkill.description}
+                                            onChange={(e) => setNewSkill(prev => ({ ...prev, description: e.target.value }))}
+                                        />
+                                        <div className="create-skill-actions">
+                                            <button
+                                                type="button"
+                                                onClick={handleCreateProjectSkill}
+                                                className="btn-save-skill"
+                                            >
+                                                Ajouter
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowCreateSkill(false);
+                                                    setNewSkill({ name: '', description: '' });
+                                                }}
+                                                className="btn-cancel-skill"
+                                            >
+                                                Annuler
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         
                         {formData.skillIds.length === 0 && (
                             <p className="no-skills-selected">

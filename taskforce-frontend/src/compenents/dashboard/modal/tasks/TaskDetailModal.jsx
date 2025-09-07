@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
+import '../../../../assets/styles/compenents/Dashboard/TaskDetailModal.scss';
 
 const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdate }) => {
     const [selectedImage, setSelectedImage] = useState(null);
@@ -117,26 +118,35 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdate }) => {
                             <p>{task.description || 'Aucune description'}</p>
                         </div>
 
-                        <div className="task-meta">
-                            <div className="meta-item">
-                                <strong>Statut:</strong> {task.status}
+ 
+                        <div className="task-details-grid">
+                            <div className="detail-item">
+                                <span className="detail-label">Statut</span>
+                                <span className="detail-value status-badge">{task.status}</span>
                             </div>
-                            <div className="meta-item">
-                                <strong>Priorité:</strong> {task.priority}
+                            <div className="detail-item">
+                                <span className="detail-label">Priorité</span>
+                                <span className="detail-value priority-badge">{task.priority}</span>
                             </div>
-                            <div className="meta-item">
-                                <strong>Niveau:</strong> {task.level}
+                            <div className="detail-item">
+                                <span className="detail-label">Niveau</span>
+                                <span className="detail-value level-badge">{task.level || 'Non défini'}</span>
                             </div>
-                            <div className="meta-item">
-                                <strong>Créé le:</strong> {formatDate(task.createdAt)}
+                            <div className="detail-item">
+                                <span className="detail-label">Créé le</span>
+                                <span className="detail-value">{formatDate(task.createdAt)}</span>
                             </div>
                             {task.assignedTo && (
-                                <div className="meta-item">
-                                    <strong>Assigné à:</strong> {task.assignedTo.firstname} {task.assignedTo.lastname}
+                                <div className="detail-item">
+                                    <span className="detail-label">Assigné à</span>
+                                    <span className="detail-value assigned-user">
+                                        {task.assignedTo.firstname} {task.assignedTo.lastname}
+                                    </span>
                                 </div>
                             )}
                         </div>
 
+       
                         <div className="task-skills">
                             <h3>Compétences requises</h3>
                             <div className="skills-list">
@@ -147,7 +157,7 @@ const TaskDetailModal = ({ task, isOpen, onClose, onTaskUpdate }) => {
                                         </span>
                                     ))
                                 ) : (
-                                    <p>Aucune compétence requise</p>
+                                    <p className="no-skills">Aucune compétence requise</p>
                                 )}
                             </div>
                         </div>

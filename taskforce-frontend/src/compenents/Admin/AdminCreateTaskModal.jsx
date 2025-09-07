@@ -37,11 +37,11 @@ const AdminCreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, proje
     const fetchData = async () => {
         try {
             const [skillsData, columnsData] = await Promise.all([
-                dashboardServices.getSkills(),
+                dashboardServices.getAllAvailableProjectSkills(projectId),
                 dashboardServices.getColumns(projectId)
             ]);
             
-            setSkills(skillsData.skills || skillsData || []);
+            setSkills(skillsData.skills || []);
             setColumns(columnsData.columns || columnsData || []);
             
             const columnsArray = columnsData.columns || columnsData || [];
@@ -61,7 +61,14 @@ const AdminCreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, proje
         setLoading(true);
         setError('');
 
-        try {
+        try { 
+            const projectSkillsData = await dashboardServices.getAllAvailableProjectSkills(projectId);
+            if (!projectSkillsData.hasUsers) {
+                setError('Aucun collaborateur n\'est ajouté à ce projet. Veuillez d\'abord ajouter des utilisateurs au projet avant de pouvoir créer des tâches.');
+                setLoading(false);
+                return;
+            }
+
             const autoAssignedUser = getAutoAssignment(projectTasks, projectUsers, formData.skillIds);
             
             const taskData = {
@@ -93,7 +100,7 @@ const AdminCreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, proje
         }
 
         try {
-            const response = await dashboardServices.createSkill(newSkill);
+            const response = await dashboardServices.createProjectSkill(projectId, newSkill);
             if (response.success && response.skill) {
                 setSkills(prev => [...prev, response.skill]);
                 setFormData(prev => ({
@@ -115,6 +122,31 @@ const AdminCreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, proje
                 ? prev.skillIds.filter(id => id !== skillId)
                 : [...prev.skillIds, skillId]
         }));
+    };
+
+    const handleDeleteProjectSkill = async (skillId, e) => {
+        e.stopPropagation(); 
+        
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette compétence ?')) {
+            return;
+        }
+
+        try { 
+            const realSkillId = skillId.replace('project_', '');
+            await dashboardServices.deleteProjectSkill(realSkillId);
+            
+            setSkills(prev => prev.filter(skill => skill.id !== skillId));
+            setFormData(prev => ({
+                ...prev,
+                skillIds: prev.skillIds.filter(id => id !== skillId)
+            }));
+        } catch (err) {
+            setError(err.message);
+        }
+    };
+
+    const canDeleteSkill = (skill) => {
+        return skill.type === 'project_skill' && skill.createdBy;
     };
 
     const getAutoAssignment = (tasks, users, requiredSkills = []) => {
@@ -272,62 +304,91 @@ const AdminCreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, proje
 
                     <div className="form-group">
                         <label>Compétences requises</label>
-                        <div className="skills-container">
-                            {skills.map(skill => (
-                                <label key={skill.id} className="skill-checkbox">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.skillIds.includes(skill.id)}
-                                        onChange={() => handleSkillToggle(skill.id)}
-                                    />
-                                    <span className="skill-name">{skill.name}</span>
-                                </label>
-                            ))}
+                        <div className="skills-labels-container">
+                            {Array.isArray(skills) && skills.map(skill => {
+                                const isSelected = formData.skillIds.includes(skill.id);
+                                const canDelete = canDeleteSkill(skill);
+                                
+                                return (
+                                    <div
+                                        key={skill.id}
+                                        className={`skill-label ${isSelected ? 'selected' : ''} ${skill.type === 'project_skill' ? 'project-skill' : 'user-skill'}`}
+                                        onClick={() => handleSkillToggle(skill.id)}
+                                    >
+                                        <span className="skill-label-name">{skill.name}</span>
+                                        {skill.type === 'project_skill' && (
+                                            <span className="skill-type-badge">Projet</span>
+                                        )}
+                                        {canDelete && (
+                                            <button
+                                                type="button"
+                                                className="skill-delete-btn"
+                                                onClick={(e) => handleDeleteProjectSkill(skill.id, e)}
+                                                title="Supprimer cette compétence"
+                                            >
+                                                ×
+                                            </button>
+                                        )}
+                                        {isSelected && (
+                                            <span className="skill-label-check">✓</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
+                        
+                        {formData.skillIds.length === 0 && (
+                            <p className="no-skills-selected">
+                                Aucune compétence sélectionnée. Cliquez sur les étiquettes pour les sélectionner.
+                            </p>
+                        )}
+                        
+                        {formData.skillIds.length > 0 && (
+                            <div className="selected-skills-summary">
+                                <span className="selected-count">
+                                    {formData.skillIds.length} compétence{formData.skillIds.length > 1 ? 's' : ''} sélectionnée{formData.skillIds.length > 1 ? 's' : ''}
+                                </span>
+                            </div>
+                        )}
+                        
                         <button
                             type="button"
                             className="btn-add-skill"
-                            onClick={() => setShowCreateSkill(true)}
+                            onClick={() => setShowCreateSkill(!showCreateSkill)}
                         >
-                            + Ajouter une compétence
+                            {showCreateSkill ? 'Annuler' : '+ Ajouter une compétence au projet'}
                         </button>
                     </div>
 
                     {showCreateSkill && (
-                        <div className="create-skill-section">
-                            <h4>Créer une nouvelle compétence</h4>
+                        <div className="add-skill-form">
+                            <h4>Créer une nouvelle compétence pour le projet</h4>
                             <div className="form-group">
+                                <label>Nom *</label>
                                 <input
                                     type="text"
-                                    placeholder="Nom de la compétence"
                                     value={newSkill.name}
-                                    onChange={(e) => setNewSkill({...newSkill, name: e.target.value})}
+                                    onChange={(e) => setNewSkill(prev => ({ ...prev, name: e.target.value }))}
+                                    placeholder="Nom de la compétence..."
                                 />
                             </div>
                             <div className="form-group">
+                                <label>Description</label>
                                 <textarea
-                                    placeholder="Description de la compétence"
                                     value={newSkill.description}
-                                    onChange={(e) => setNewSkill({...newSkill, description: e.target.value})}
+                                    onChange={(e) => setNewSkill(prev => ({ ...prev, description: e.target.value }))}
+                                    placeholder="Description de la compétence..."
                                     rows="2"
                                 />
                             </div>
-                            <div className="skill-actions">
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
-                                    onClick={() => setShowCreateSkill(false)}
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn-primary"
-                                    onClick={handleCreateSkill}
-                                >
-                                    Créer
-                                </button>
-                            </div>
+
+                            <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={handleCreateSkill}
+                            >
+                                Créer la compétence
+                            </button>
                         </div>
                     )}
                     

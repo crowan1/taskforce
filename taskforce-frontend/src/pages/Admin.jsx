@@ -125,7 +125,16 @@ const Admin = () => {
     };
 
     const handleProjectChange = (projectId) => {
-        setSelectedProject(projectId);
+        if (projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                setSelectedProject(project);
+                localStorage.setItem('adminSelectedProject', JSON.stringify(project));
+            }
+        } else {
+            setSelectedProject(null);
+            localStorage.removeItem('adminSelectedProject');
+        }
         setActiveTab('overview');
     };
 
@@ -145,14 +154,14 @@ const Admin = () => {
     const handleTaskCreated = async () => {
         setShowCreateTaskModal(false);
         if (selectedProject) {
-            await fetchProjectData(selectedProject);
+            await fetchProjectData(selectedProject.id);
         }
     };
 
     const handleUserAdded = async () => {
         setShowAddUserModal(false);
         if (selectedProject) {
-            await fetchProjectData(selectedProject);
+            await fetchProjectData(selectedProject.id);
         }
     };
 
@@ -160,13 +169,13 @@ const Admin = () => {
         setShowReassignModal(false);
         setSelectedTaskForReassign(null);
         if (selectedProject) {
-            await fetchProjectData(selectedProject);
+            await fetchProjectData(selectedProject.id);
         }
     };
 
     const handleUserUpdated = async () => {
         if (selectedProject) {
-            await fetchProjectData(selectedProject);
+            await fetchProjectData(selectedProject.id);
         }
     };
 
@@ -232,7 +241,7 @@ const Admin = () => {
                 <AdminCreateTaskModal
                     isOpen={showCreateTaskModal}
                     onClose={() => setShowCreateTaskModal(false)}
-                    projectId={selectedProject}
+                    projectId={selectedProject.id}
                     onTaskCreated={handleTaskCreated}
                     projectUsers={projectUsers}
                     projectTasks={projectTasks}
@@ -243,7 +252,7 @@ const Admin = () => {
                 <AddUserModal
                     isOpen={showAddUserModal}
                     onClose={() => setShowAddUserModal(false)}
-                    projectId={selectedProject}
+                    projectId={selectedProject.id}
                     onUserAdded={handleUserAdded}
                 />
             )}
