@@ -170,7 +170,8 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
         try {
             const response = await dashboardServices.uploadTaskImage(task.id, file);
             if (response.success) {
-                setImages(prev => [...prev, response.image]);
+                const imagePath = typeof response.image === 'object' ? response.image.path || response.image.filename : response.image;
+                setImages(prev => [...prev, imagePath]);
                 setMessage('Image ajoutée avec succès');
                 setTimeout(() => setMessage(''), 3000);
             }
@@ -183,10 +184,11 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
         }
     };
 
-    const deleteImage = async (imageId) => {
+    const deleteImage = async (imageIndex) => {
         try {
-            await dashboardServices.deleteTaskImage(task.id, imageId);
-            setImages(prev => prev.filter(img => img.id !== imageId));
+            const imagePath = images[imageIndex];
+            await dashboardServices.deleteTaskImage(task.id, imagePath);
+            setImages(prev => prev.filter((_, index) => index !== imageIndex));
             setMessage('Image supprimée avec succès');
             setTimeout(() => setMessage(''), 3000);
         } catch (error) {
@@ -465,80 +467,104 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                         </div>
                     </form>
                 ) : (
-                    <div className="modal-body">
-                        <div className="task-info">
-                            <div className="task-description">
-                                <h3>{task.title}</h3>
-                                <p>{task.description || 'Aucune description'}</p>
-                            </div>
+                    <div className="modal-form">
+                        <div className="form-group">
+                            <label>Titre</label>
+                            <div className="task-display-value">{task.title}</div>
+                        </div>
 
-                            <div className="task-details-grid">
-                            <div className="detail-item">
-                                <span className="detail-label">Statut</span>
-                                <span className="detail-value status-badge">{task.status || 'Non défini'}</span>
+                        <div className="form-group">
+                            <label>Description</label>
+                            <div className="task-display-value">{task.description || 'Aucune description'}</div>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Priorité</label>
+                                <div className="task-display-value">
+                                    <span 
+                                        className="priority-badge"
+                                        style={{ backgroundColor: getPriorityColor(task.priority) }}
+                                    >
+                                        {getPriorityLabel(task.priority)}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="detail-item">
-                                <span className="detail-label">Priorité</span>
-                                <span 
-                                    className="detail-value priority-badge"
-                                    style={{ backgroundColor: getPriorityColor(task.priority) }}
-                                >
-                                    {getPriorityLabel(task.priority)}
-                                </span>
+                            <div className="form-group">
+                                <label>Statut</label>
+                                <div className="task-display-value">{task.status || 'Non défini'}</div>
                             </div>
-                            <div className="detail-item">
-                                <span className="detail-label">Niveau</span>
-                                <span className="detail-value level-badge">{getLevelLabel(task.level)}</span>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Niveau requis</label>
+                                <div className="task-display-value">
+                                    <span className="level-badge">{getLevelLabel(task.level)}</span>
+                                </div>
                             </div>
-                            <div className="detail-item">
-                                <span className="detail-label">Heures estimées</span>
-                                <span className="detail-value hours-badge">{task.estimatedHours || 1}h</span>
+                            <div className="form-group">
+                                <label>Heures estimées</label>
+                                <div className="task-display-value">
+                                    <span className="hours-badge">{task.estimatedHours || 1}h</span>
+                                </div>
                             </div>
-                            <div className="detail-item">
-                                <span className="detail-label">Créé le</span>
-                                <span className="detail-value">{formatDate(task.createdAt)}</span>
+                        </div>
+
+                        <div className="form-row">
+                            <div className="form-group">
+                                <label>Créé le</label>
+                                <div className="task-display-value">{formatDate(task.createdAt)}</div>
                             </div>
                             {task.assignedTo && (
-                                <div className="detail-item">
-                                    <span className="detail-label">Assignée à</span>
-                                    <span className="detail-value">
+                                <div className="form-group">
+                                    <label>Assignée à</label>
+                                    <div className="task-display-value">
                                         {typeof task.assignedTo === 'object' 
                                             ? `${task.assignedTo.firstname} ${task.assignedTo.lastname}`
                                             : task.assignedTo
                                         }
-                                    </span>
+                                    </div>
                                 </div>
                             )}
                         </div>
 
-                        {task.requiredSkills && task.requiredSkills.length > 0 && (
-                            <div className="task-skills">
-                                <h4>Compétences requises</h4>
-                                <div className="skills-container">
+                        <div className="form-group">
+                            <label>Compétences requises</label>
+                            {task.requiredSkills && task.requiredSkills.length > 0 ? (
+                                <div className="skills-labels-container">
                                     {task.requiredSkills.map(skill => (
-                                        <span key={skill.id} className="skill-tag">
-                                            {skill.name}
-                                        </span>
+                                        <div
+                                            key={skill.id}
+                                            className={`skill-label selected ${skill.type === 'project_skill' ? 'project-skill' : 'user-skill'}`}
+                                        >
+                                            <span className="skill-label-name">{skill.name}</span>
+                                            {skill.type === 'project_skill' && (
+                                                <span className="skill-type-badge">Projet</span>
+                                            )}
+                                            <span className="skill-label-check">✓</span>
+                                        </div>
                                     ))}
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="task-display-value">Aucune compétence requise</div>
+                            )}
                         </div>
 
-                        <div className="task-images">
-                            <h4>Images</h4>
+                        <div className="form-group">
+                            <label>Images</label>
                             {images.length > 0 ? (
                                 <div className="images-grid">
-                                    {images.map(image => (
-                                        <div key={image.id} className="image-item">
+                                    {images.filter(image => image && typeof image === 'string').map((imagePath, index) => (
+                                        <div key={`image-${index}`} className="image-item">
                                             <img 
-                                                src={image.url} 
+                                                src={`http://localhost:8000/${imagePath}`} 
                                                 alt="Task image"
-                                                onClick={() => setSelectedImage(image.url)}
+                                                onClick={() => setSelectedImage(`http://localhost:8000/${imagePath}`)}
                                             />
                                             <button 
                                                 className="delete-image-btn"
-                                                onClick={() => deleteImage(image.id)}
+                                                onClick={() => deleteImage(index)}
                                                 title="Supprimer cette image"
                                             >
                                                 ×
@@ -547,7 +573,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                                     ))}
                                 </div>
                             ) : (
-                                <p>Aucune image</p>
+                                <div className="task-display-value">Aucune image</div>
                             )}
                             
                             <div className="upload-section">
