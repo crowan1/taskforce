@@ -47,7 +47,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'updated_at')]
     private ?\DateTimeImmutable $updatedAt = null;
 
-
+    #[ORM\Column(type: 'float', nullable: false)]
+    #[Assert\Positive(message: 'La charge de travail maximale doit être positive')]
+    private ?float $maxWorkloadHours = 40.0;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: ProjectUser::class, orphanRemoval: true)]
     private Collection $projectUsers;
@@ -162,6 +164,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    public function getMaxWorkloadHours(): ?float
+    {
+        return $this->maxWorkloadHours;
+    }
+
+    public function setMaxWorkloadHours(float $maxWorkloadHours): static
+    {
+        $this->maxWorkloadHours = $maxWorkloadHours;
         return $this;
     }
 

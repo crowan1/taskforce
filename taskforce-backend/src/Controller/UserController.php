@@ -30,6 +30,7 @@ class UserController extends AbstractController
                 'firstname' => $user->getFirstname(),
                 'lastname' => $user->getLastname(),
                 'email' => $user->getEmail(),
+                'maxWorkloadHours' => $user->getMaxWorkloadHours(),
                 'createdAt' => $user->getCreatedAt()->format('Y-m-d H:i:s')
             ];
         }, $users);

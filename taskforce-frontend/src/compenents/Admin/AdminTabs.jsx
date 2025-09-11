@@ -9,7 +9,10 @@ const AdminTabs = ({
     projectTasks, 
     projectUsers, 
     onCreateTask, 
-    onReassignTask, 
+    onEditTask,
+    onShowTaskDetail,
+    onReassignTask,
+    onDeleteTask,
     onAddUser, 
     onUserUpdated,
     onNavigateToDashboard,
@@ -53,7 +56,10 @@ const AdminTabs = ({
                     <TasksTab 
                         projectTasks={projectTasks}
                         onCreateTask={onCreateTask}
+                        onEditTask={onEditTask}
+                        onShowTaskDetail={onShowTaskDetail}
                         onReassignTask={onReassignTask}
+                        onDeleteTask={onDeleteTask}
                     />
                 )}
 

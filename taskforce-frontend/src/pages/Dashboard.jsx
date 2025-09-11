@@ -443,6 +443,7 @@ const Dashboard = () => {
                 onUpdateTask={handleUpdateTask}
                 onUserUpdated={() => fetchProjects()}
                 onDeleteProject={handleDeleteProject}
+                onDeleteTask={handleDeleteTask}
                 handleUpdateColumn={handleUpdateColumn}
                 handleTaskDetailUpdate={handleTaskDetailUpdate}
                 fetchProjects={fetchProjects}

@@ -31,6 +31,10 @@ const Header = () => {
         checkAuth();
     }, [location.pathname]);
 
+    useEffect(() => {
+        setIsMenuOpen(false);
+    }, [location.pathname]);
+
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
@@ -58,6 +62,19 @@ const Header = () => {
 
                     <nav className={`nav-links ${isMenuOpen ? 'mobile-open' : ''}`}>
                         <button className="nav-link">Fonctionnalités</button>
+                        {isAuthenticated && (
+                            <>
+                                <button className="nav-link" onClick={() => navigate('/dashboard')}>
+                                    Mes Tableaux
+                                </button>
+                                <button className="nav-link" onClick={() => navigate('/admin')}>
+                                    Admin
+                                </button>
+                                <button className="nav-link" onClick={() => navigate('/my-account')}>
+                                    Mon Compte
+                                </button>
+                            </>
+                        )}
                     </nav>
                 </div>
 

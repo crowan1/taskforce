@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import UserProfileModal from './UserProfileModal';
+import WorkloadBar from './WorkloadBar';
 import '../../assets/styles/compenents/admin/UserProfileModal.scss';
+import '../../assets/styles/compenents/admin/WorkloadBar.scss';
 
 const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, selectedProject }) => {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -24,6 +26,15 @@ const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, select
             default:
                 return roleStr;
         }
+    };
+
+    const getWorkloadForUser = (userId) => {
+        return projectTasks
+            .filter(task => 
+                task.assignedTo && 
+                (typeof task.assignedTo === 'object' ? task.assignedTo.id === userId : task.assignedTo === userId)
+            )
+            .reduce((total, task) => total + (task.estimatedHours || 1), 0);
     };
 
     return (
@@ -109,6 +120,15 @@ const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, select
                                                 <p className="no-skills">Aucune compétence définie</p>
                                             )}
                                         </div>
+                                    </div>
+                                    
+                                    <div className="user-section">
+                                        <h5>Charge de travail</h5>
+                                        <WorkloadBar 
+                                            currentHours={getWorkloadForUser(user.id)}
+                                            maxHours={user.maxWorkloadHours || 40}
+                                            user={user}
+                                        />
                                     </div>
                                     
                                     <div className="user-section">

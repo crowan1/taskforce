@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
 import '../../../../assets/styles/Dashboard.scss';
 
-const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
+const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUsers, projectTasks, autoAssign = false }) => {
     const isSubmitting = useRef(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -10,7 +10,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
         priority: 'medium',
         status: '',
         skillIds: [],
-        level: 'intermediate'
+        level: 'intermediate',
+        estimatedHours: 1
     });
     const [skills, setSkills] = useState([]);
     const [columns, setColumns] = useState([]);
@@ -71,9 +72,16 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
                 return;
             }
 
+            let assignedUserId = null;
+            if (autoAssign && projectUsers && projectTasks) {
+                const autoAssignedUser = getAutoAssignment(projectTasks, projectUsers, formData.skillIds, formData.estimatedHours);
+                assignedUserId = autoAssignedUser ? autoAssignedUser.id : null;
+            }
+
             const taskData = {
                 ...formData,
-                projectId: parseInt(projectId)
+                projectId: parseInt(projectId),
+                assignedTo: assignedUserId
             };
             
             const response = await dashboardServices.createTask(taskData);
@@ -86,7 +94,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
                     priority: 'medium',
                     status: '',
                     skillIds: [],
-                    level: 'intermediate'
+                    level: 'intermediate',
+                    estimatedHours: 1
                 });
                 onClose();
             } else {
@@ -198,6 +207,106 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
         return skill.type === 'project_skill' && skill.createdBy.id === currentUser.id;
     };
 
+    const getAutoAssignment = (tasks, users, requiredSkills = [], newTaskHours = 1) => {
+        if (!users || users.length === 0) return null;
+        
+        const collaborators = users.filter(user => 
+            user.role === 'collaborateur' || user.role === 'Collaborateur'
+        );
+        
+        if (collaborators.length === 0) return null;
+        
+        const availableCollaborators = collaborators.filter(user => {
+            const currentWorkload = getWorkloadForUser(tasks, user.id);
+            const maxWorkload = user.maxWorkloadHours;
+            return (currentWorkload + newTaskHours) <= maxWorkload;
+        });
+        
+        if (availableCollaborators.length === 0) {
+            return getAssignmentByWorkload(tasks, collaborators);
+        }
+        
+        if (!requiredSkills || requiredSkills.length === 0) {
+            return getAssignmentByWorkload(tasks, availableCollaborators);
+        }
+        
+        let bestMatch = null;
+        let bestScore = -1;
+        
+        availableCollaborators.forEach(user => {
+            const skillScore = calculateSkillMatch(user, requiredSkills);
+            
+            const currentWorkload = getWorkloadForUser(tasks, user.id);
+            const maxWorkload = user.maxWorkloadHours;
+            const workloadPercentage = (currentWorkload + newTaskHours) / maxWorkload;
+            
+            let workloadScore = 0;
+            if (workloadPercentage >= 1.0) {
+                workloadScore = 0.0;
+            } else if (workloadPercentage >= 0.9) {
+                workloadScore = 0.1;
+            } else if (workloadPercentage >= 0.75) {
+                workloadScore = 0.3;
+            } else if (workloadPercentage >= 0.5) {
+                workloadScore = 0.6;
+            } else {
+                workloadScore = 1.0;
+            }
+            
+            const totalScore = (skillScore * 0.6) + (workloadScore * 0.4);
+            
+            if (totalScore > bestScore) {
+                bestScore = totalScore;
+                bestMatch = user;
+            }
+        });
+        
+        return bestMatch || availableCollaborators[0];
+    };
+
+    const calculateSkillMatch = (user, requiredSkills) => {
+        if (!user.skills || !requiredSkills || requiredSkills.length === 0) return 0.5;
+        
+        let matchCount = 0;
+        
+        requiredSkills.forEach(requiredSkillId => {
+            const userSkill = user.skills.find(skill => skill.id === requiredSkillId);
+            if (userSkill) {
+                matchCount++;
+            }
+        });
+        
+        return matchCount / requiredSkills.length;
+    };
+
+    const getWorkloadForUser = (tasks, userId) => {
+        return tasks
+            .filter(task => 
+                task.assignedTo && 
+                (typeof task.assignedTo === 'object' ? task.assignedTo.id === userId : task.assignedTo === userId)
+            )
+            .reduce((total, task) => total + (task.estimatedHours || 0), 0);
+    };
+
+    const getAssignmentByWorkload = (tasks, collaborators) => {
+        const workload = {};
+        collaborators.forEach(user => {
+            workload[user.id] = getWorkloadForUser(tasks, user.id);
+        });
+        
+        let minWorkload = Infinity;
+        let selectedUser = null;
+        
+        Object.entries(workload).forEach(([userId, count]) => {
+            if (count < minWorkload) {
+                minWorkload = count;
+                selectedUser = collaborators.find(u => u.id == userId);
+            }
+        });
+        
+        return selectedUser || collaborators[0];
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -264,22 +373,40 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId }) => {
                         </div>
                     </div>
 
-                    <div className="form-group">
-                        <label htmlFor="status">Statut</label>
-                        <select
-                            id="status"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            required
-                        >
-                            {Array.isArray(columns) && columns.map(column => (
-                                <option key={column.id} value={column.identifier}>
-                                    {column.name}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="estimatedHours">Heures estimées *</label>
+                            <input
+                                type="number"
+                                id="estimatedHours"
+                                name="estimatedHours"
+                                min="0.5"
+                                max="200"
+                                step="0.5"
+                                value={formData.estimatedHours}
+                                onChange={handleChange}
+                                required
+                                placeholder="Ex: 8"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="status">Statut</label>
+                            <select
+                                id="status"
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                required
+                            >
+                                {Array.isArray(columns) && columns.map(column => (
+                                    <option key={column.id} value={column.identifier}>
+                                        {column.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
+
 
                     <div className="form-group">
                         <label>Compétences requises</label>

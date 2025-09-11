@@ -1,6 +1,8 @@
 .header {
   background: white;
   border-bottom: 1px solid #e5e7eb;
+  position: relative;
+  z-index: 100;
 
   .header-container {
     max-width: 1200px;
@@ -54,6 +56,10 @@
           color: #3b82f6;
           background: #f3f4f6;
         }
+        
+        &:not(:first-child) {
+          display: none;
+        }
       }
     }
   }
@@ -62,6 +68,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-shrink: 0;
 
     .btn-login {
       background: none;
@@ -151,6 +158,7 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         flex-direction: column;
         padding: 1rem 0;
+        z-index: 1000;
 
         &.mobile-open {
           display: flex;
@@ -161,6 +169,7 @@
           text-align: left;
           padding: 1rem 2rem;
           border-radius: 0;
+          display: block !important;
 
           &:hover {
             background: #f3f4f6;
@@ -170,8 +179,11 @@
     }
 
     .header-right {
+      gap: 0.5rem;
+      
       .btn-login,
-      .btn-signup {
+      .btn-signup,
+      .btn-admin {
         display: none;
       }
 

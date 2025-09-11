@@ -6,18 +6,16 @@ import { dashboardServices } from '../services/dashboard/dashboardServices';
 import authService from '../services/authServices';
 import ProjectSelector from '../compenents/Admin/ProjectSelector';
 import AdminTabs from '../compenents/Admin/AdminTabs';
-import AdminCreateTaskModal from '../compenents/Admin/AdminCreateTaskModal';
+import CreateTaskModal from '../compenents/dashboard/modal/tasks/CreateTaskModal';
+import TaskModal from '../compenents/dashboard/modal/tasks/TaskModal';
 import AddUserModal from '../compenents/Admin/AddUserModal';
 import ReassignTaskModal from '../compenents/Admin/ReassignTaskModal';
 
-
-//Styless
 import '../assets/styles/compenents/admin/ProjectSelector.scss';
 import '../assets/styles/compenents/admin/AdminTabs.scss';
 import '../assets/styles/compenents/admin/OverviewTab.scss';
 import '../assets/styles/compenents/admin/TasksTab.scss';
 import '../assets/styles/compenents/admin/UsersTab.scss';
-import '../assets/styles/compenents/admin/AdminCreateTaskModal.scss';
 import '../assets/styles/compenents/admin/AddUserModal.scss';
 import '../assets/styles/compenents/admin/ReassignTaskModal.scss';
 import '../assets/styles/Admin.scss';
@@ -35,6 +33,10 @@ const Admin = () => {
     const [projectUsers, setProjectUsers] = useState([]);
     
     const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+    const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+    const [selectedTaskForEdit, setSelectedTaskForEdit] = useState(null);
+    const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
+    const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null);
     const [showReassignModal, setShowReassignModal] = useState(false);
     const [selectedTaskForReassign, setSelectedTaskForReassign] = useState(null);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -96,7 +98,10 @@ const Admin = () => {
                     title: task.title || 'Sans titre',
                     description: task.description || '',
                     priority: task.priority || 'medium',
+                    level: task.level || 'intermediate',
+                    estimatedHours: task.estimatedHours || 1,
                     assignedTo: task.assignedTo || null,
+                    requiredSkills: task.requiredSkills || [],
                     createdAt: task.createdAt || new Date().toISOString()
                 }));
                 
@@ -173,9 +178,38 @@ const Admin = () => {
         }
     };
 
+    const handleEditTask = (task) => {
+        setSelectedTaskForEdit(task);
+        setShowEditTaskModal(true);
+    };
+
+    const handleShowTaskDetail = (task) => {
+        setSelectedTaskForDetail(task);
+        setShowTaskDetailModal(true);
+    };
+
+    const handleTaskUpdated = async () => {
+        setShowEditTaskModal(false);
+        setSelectedTaskForEdit(null);
+        if (selectedProject) {
+            await fetchProjectData(selectedProject.id);
+        }
+    };
+
     const handleUserUpdated = async () => {
         if (selectedProject) {
             await fetchProjectData(selectedProject.id);
+        }
+    };
+
+    const handleDeleteTask = async (taskId) => {
+        try {
+            await dashboardServices.deleteTask(taskId);
+            if (selectedProject) {
+                await fetchProjectData(selectedProject.id);
+            }
+        } catch (err) {
+            setError(err.message);
         }
     };
 
@@ -224,7 +258,10 @@ const Admin = () => {
                                 projectTasks={projectTasks}
                                 projectUsers={projectUsers}
                                 onCreateTask={handleCreateTask}
+                                onEditTask={handleEditTask}
+                                onShowTaskDetail={handleShowTaskDetail}
                                 onReassignTask={handleReassignTask}
+                                onDeleteTask={handleDeleteTask}
                                 onAddUser={handleAddUser}
                                 onUserUpdated={handleUserUpdated}
                                 onNavigateToDashboard={() => navigate(`/dashboard?project=${selectedProject}`)}
@@ -238,13 +275,14 @@ const Admin = () => {
             <Footer />
 
             {showCreateTaskModal && selectedProject && (
-                <AdminCreateTaskModal
+                <CreateTaskModal
                     isOpen={showCreateTaskModal}
                     onClose={() => setShowCreateTaskModal(false)}
                     projectId={selectedProject.id}
                     onTaskCreated={handleTaskCreated}
                     projectUsers={projectUsers}
                     projectTasks={projectTasks}
+                    autoAssign={true}
                 />
             )}
 
@@ -265,6 +303,48 @@ const Admin = () => {
                     projectUsers={projectUsers}
                     projectTasks={projectTasks}
                     onTaskReassigned={handleTaskReassigned}
+                />
+            )}
+
+            {showEditTaskModal && selectedTaskForEdit && selectedProject && (
+                <TaskModal
+                    isOpen={showEditTaskModal}
+                    onClose={() => {
+                        setShowEditTaskModal(false);
+                        setSelectedTaskForEdit(null);
+                    }}
+                    onTaskUpdate={async (taskId, taskData) => {
+                        try {
+                            await dashboardServices.updateTask(taskId, taskData);
+                            await handleTaskUpdated();
+                        } catch (err) {
+                            console.error('Erreur lors de la mise à jour de la tâche:', err);
+                        }
+                    }}
+                    task={selectedTaskForEdit}
+                    project={selectedProject}
+                    mode="edit"
+                />
+            )}
+
+            {showTaskDetailModal && selectedTaskForDetail && selectedProject && (
+                <TaskModal
+                    isOpen={showTaskDetailModal}
+                    onClose={() => {
+                        setShowTaskDetailModal(false);
+                        setSelectedTaskForDetail(null);
+                    }}
+                    onTaskUpdate={async (taskId, taskData) => {
+                        try {
+                            await dashboardServices.updateTask(taskId, taskData);
+                            await handleTaskUpdated();
+                        } catch (err) {
+                            console.error('Erreur lors de la mise à jour de la tâche:', err);
+                        }
+                    }}
+                    task={selectedTaskForDetail}
+                    project={selectedProject}
+                    mode="view"
                 />
             )}
         </div>

@@ -50,6 +50,8 @@ class TaskController extends AbstractController
                 'description' => $task->getDescription(),
                 'status' => $task->getStatus(),
                 'priority' => $task->getPriority(),
+                'level' => $task->getLevel(),
+                'estimatedHours' => $task->getEstimatedHours(),
                 'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
                 'updatedAt' => $task->getUpdatedAt()->format('Y-m-d H:i:s'),
                 'project' => [
@@ -128,6 +130,8 @@ class TaskController extends AbstractController
         $task->setDescription($data['description'] ?? null);
         $task->setStatus($data['status'] ?? 'todo');
         $task->setPriority($data['priority'] ?? 'medium');
+        $task->setLevel($data['level'] ?? 'intermediate');
+        $task->setEstimatedHours($data['estimatedHours'] ?? 1.0);
         $task->setCreatedBy($user);
         $task->setProject($project);
 
@@ -160,6 +164,8 @@ class TaskController extends AbstractController
                 'description' => $task->getDescription(),
                 'status' => $task->getStatus(),
                 'priority' => $task->getPriority(),
+                'level' => $task->getLevel(),
+                'estimatedHours' => $task->getEstimatedHours(),
                 'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
                 'project' => [
                     'id' => $task->getProject()->getId(),
@@ -231,6 +237,14 @@ class TaskController extends AbstractController
             $task->setPriority($data['priority']);
         }
 
+        if (isset($data['level'])) {
+            $task->setLevel($data['level']);
+        }
+
+        if (isset($data['estimatedHours'])) {
+            $task->setEstimatedHours($data['estimatedHours']);
+        }
+
         if (isset($data['assignedTo'])) {
             if ($data['assignedTo']) {
                 $assignedUser = $this->entityManager->getRepository(User::class)->find($data['assignedTo']);
@@ -267,6 +281,8 @@ class TaskController extends AbstractController
                 'description' => $task->getDescription(),
                 'status' => $task->getStatus(),
                 'priority' => $task->getPriority(),
+                'level' => $task->getLevel(),
+                'estimatedHours' => $task->getEstimatedHours(),
                 'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
                 'updatedAt' => $task->getUpdatedAt()->format('Y-m-d H:i:s'),
                 'project' => [

@@ -1,6 +1,6 @@
 import React from 'react';
 import CreateTaskModal from './tasks/CreateTaskModal';
-import EditTaskModal from './tasks/EditTaskModal';
+import TaskModal from './tasks/TaskModal';
 import CreateProjectModal from './project/CreateProjectModal';
 import DeleteProjectModal from './project/DeleteProjectModal';
 import CreateColumnModal from './columns/CreateColumnModal';
@@ -43,14 +43,15 @@ const ModalManager = ({
             )}
 
             {showEditTask && selectedTask && (
-                <EditTaskModal 
+                <TaskModal 
                     onClose={() => {
                         setShowEditTask(false);
                         setSelectedTask(null);
                     }}
-                    onUpdateTask={onUpdateTask}
+                    onTaskUpdate={onUpdateTask}
                     task={selectedTask}
                     project={selectedProject}
+                    mode="edit"
                 />
             )}
 

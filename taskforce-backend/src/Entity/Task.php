@@ -36,6 +36,11 @@ class Task
     #[ORM\Column(length: 20)]
     private ?string $level = 'intermediate';
 
+    #[ORM\Column(type: 'float', nullable: false)]
+    #[Assert\NotBlank(message: 'Les heures estimées sont requises')]
+    #[Assert\Positive(message: 'Les heures estimées doivent être positives')]
+    private ?float $estimatedHours = 1.0;
+
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -142,7 +147,27 @@ class Task
         return $this;
     }
 
+    public function getLevel(): ?string
+    {
+        return $this->level;
+    }
 
+    public function setLevel(string $level): static
+    {
+        $this->level = $level;
+        return $this;
+    }
+
+    public function getEstimatedHours(): ?float
+    {
+        return $this->estimatedHours;
+    }
+
+    public function setEstimatedHours(float $estimatedHours): static
+    {
+        $this->estimatedHours = $estimatedHours;
+        return $this;
+    }
 
     public function getCreatedAt(): ?\DateTimeImmutable
     {

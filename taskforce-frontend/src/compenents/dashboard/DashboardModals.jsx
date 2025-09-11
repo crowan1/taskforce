@@ -1,7 +1,7 @@
 import React from 'react';
 import ModalManager from './modal/ModalManager';
 import AddSkillsModal from './modal/tasks/AddSkillsModal';
-import TaskDetailModal from './modal/tasks/TaskDetailModal';
+import TaskModal from './modal/tasks/TaskModal';
 import ProjectInfoModal from './modal/project/DescriptionModal';
 import SelectColumnToDeleteModal from './modal/columns/SelectColumnToDeleteModal';
 import SelectColumnToEditModal from './modal/columns/SelectColumnToEditModal';
@@ -38,6 +38,7 @@ const DashboardModals = ({
     onUpdateTask,
     onUserUpdated,
     onDeleteProject,
+    onDeleteTask,
     handleUpdateColumn,
     handleTaskDetailUpdate,
     fetchProjects
@@ -102,6 +103,7 @@ const DashboardModals = ({
                             <button 
                                 className="btn-confirm-delete"
                                 onClick={() => { 
+                                    onDeleteTask(taskToDelete.id);
                                     setShowDeleteModal(false);
                                     setTaskToDelete(null);
                                 }}
@@ -190,7 +192,7 @@ const DashboardModals = ({
             )}
 
             {showTaskDetailModal && selectedTaskForDetail && (
-                <TaskDetailModal 
+                <TaskModal 
                     task={selectedTaskForDetail}
                     isOpen={showTaskDetailModal}
                     onClose={() => {
@@ -198,6 +200,8 @@ const DashboardModals = ({
                         setSelectedTaskForDetail(null);
                     }}
                     onTaskUpdate={handleTaskDetailUpdate}
+                    project={selectedProject}
+                    mode="view"
                 />
             )}
 

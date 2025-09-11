@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const TasksTab = ({ projectTasks, onCreateTask, onReassignTask }) => {
+const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onShowTaskDetail, onDeleteTask }) => {
+    const [expandedTasks, setExpandedTasks] = useState(new Set());
+    
+    const toggleTaskExpansion = (taskId) => {
+        const newExpanded = new Set(expandedTasks);
+        if (newExpanded.has(taskId)) {
+            newExpanded.delete(taskId);
+        } else {
+            newExpanded.add(taskId);
+        }
+        setExpandedTasks(newExpanded);
+    };
+    
     return (
         <div className="tasks-tab">
             <div className="tab-header">
@@ -22,10 +34,24 @@ const TasksTab = ({ projectTasks, onCreateTask, onReassignTask }) => {
                         {projectTasks.map(task => (
                             <div key={task.id} className="task-item">
                                 <div className="task-header">
-                                    <h5>{task.title}</h5>
-                                    <span className={`priority priority-${task.priority || 'medium'}`}>
-                                        {task.priority || 'medium'}
-                                    </span>
+                                    <div className="task-title-section" onClick={() => onShowTaskDetail && onShowTaskDetail(task)}>
+                                        <h5>{task.title}</h5>
+                                    </div>
+                                    <div className="task-header-right">
+                                        <span className={`priority priority-${task.priority || 'medium'}`}>
+                                            {task.priority || 'medium'}
+                                        </span>
+                                        <button 
+                                            className="btn-toggle-actions"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleTaskExpansion(task.id);
+                                            }}
+                                            title="Afficher/Masquer les actions"
+                                        >
+                                            {expandedTasks.has(task.id) ? '−' : '+'}
+                                        </button>
+                                    </div>
                                 </div>
                                 <p className="task-description">{task.description || 'Aucune description'}</p>
                                 <div className="task-meta">
@@ -35,14 +61,55 @@ const TasksTab = ({ projectTasks, onCreateTask, onReassignTask }) => {
                                     <span className="created-at">
                                         Créée le: {new Date(task.createdAt).toLocaleDateString('fr-FR')}
                                     </span>
+                                    <span className="estimated-hours">
+                                        Heures estimées: {task.estimatedHours || 1}h
+                                    </span>
+                                    <span className="task-level">
+                                        Niveau: {task.level || 'intermediate'}
+                                    </span>
                                 </div>
-                                <div className="task-actions">
+                                <div className={`task-actions ${expandedTasks.has(task.id) ? 'expanded' : 'collapsed'}`}>
+                                    <button 
+                                        className="btn-view"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onShowTaskDetail && onShowTaskDetail(task);
+                                        }}
+                                        title="Voir les détails de cette tâche"
+                                    >
+                                        Voir
+                                    </button>
+                                    <button 
+                                        className="btn-edit"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditTask && onEditTask(task);
+                                        }}
+                                        title="Modifier cette tâche"
+                                    >
+                                        Modifier
+                                    </button>
                                     <button 
                                         className="btn-reassign"
-                                        onClick={() => onReassignTask(task)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onReassignTask(task);
+                                        }}
                                         title="Réassigner cette tâche"
                                     >
-                                     Réassigner
+                                        Réassigner
+                                    </button>
+                                    <button 
+                                        className="btn-delete"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+                                                onDeleteTask && onDeleteTask(task.id);
+                                            }
+                                        }}
+                                        title="Supprimer cette tâche"
+                                    >
+                                        Supprimer
                                     </button>
                                 </div>
                             </div>

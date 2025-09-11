@@ -30,9 +30,24 @@ class TaskAssignmentService
 
         $bestUser = null;
         $bestScore = 0;
+        $taskHours = $task->getEstimatedHours() ?? 1.0;
 
+        $availableUsers = [];
         foreach ($projectUsers as $projectUser) {
             $user = $projectUser->getUser();
+            $currentWorkload = $this->getCurrentWorkloadHours($user, $project);
+            $maxWorkload = $user->getMaxWorkloadHours() ?? 40.0;
+            
+            if (($currentWorkload + $taskHours) <= $maxWorkload) {
+                $availableUsers[] = $user;
+            }
+        }
+
+        if (empty($availableUsers)) {
+            $availableUsers = array_map(fn($pu) => $pu->getUser(), $projectUsers);
+        }
+
+        foreach ($availableUsers as $user) {
             $score = $this->calculateAssignmentScore($task, $user);
             
             if ($score > $bestScore) {
@@ -78,9 +93,8 @@ class TaskAssignmentService
     {
         $skillScore = $this->calculateSkillMatchScore($task, $user);
         $workloadScore = $this->calculateWorkloadScore($user, $task->getProject());
-        $priorityBonus = $this->calculatePriorityBonus($task);
 
-        $totalScore = ($skillScore * 0.6) + ($workloadScore * 0.3) + ($priorityBonus * 0.1);
+        $totalScore = ($skillScore * 0.6) + ($workloadScore * 0.4);
         
         return round($totalScore, 2);
     }
@@ -122,16 +136,24 @@ class TaskAssignmentService
             'project' => $project
         ]);
 
-        $taskCount = count($assignedTasks);
+        $totalHours = 0;
+        foreach ($assignedTasks as $task) {
+            $totalHours += $task->getEstimatedHours() ?? 1.0;
+        }
+
+        $maxWorkload = $user->getMaxWorkloadHours() ?? 40.0;
+        $workloadPercentage = $totalHours / $maxWorkload;
         
-        if ($taskCount === 0) {
-            return 1.0;
-        } elseif ($taskCount <= 3) {
-            return 0.8;
-        } elseif ($taskCount <= 5) {
+        if ($workloadPercentage >= 1.0) {
+            return 0.0;
+        } elseif ($workloadPercentage >= 0.9) {
+            return 0.1;
+        } elseif ($workloadPercentage >= 0.75) {
+            return 0.3;
+        } elseif ($workloadPercentage >= 0.5) {
             return 0.6;
         } else {
-            return 0.3;
+            return 1.0;
         }
     }
 
@@ -165,21 +187,49 @@ class TaskAssignmentService
                 'project' => $project
             ]);
 
+            $totalHours = 0;
+            foreach ($assignedTasks as $task) {
+                $totalHours += $task->getEstimatedHours() ?? 1.0;
+            }
+
+            $maxWorkload = $user->getMaxWorkloadHours() ?? 40.0;
+            $workloadPercentage = $maxWorkload > 0 ? ($totalHours / $maxWorkload) * 100 : 0;
+
             $workloads[] = [
                 'userId' => $user->getId(),
                 'userName' => $user->getFirstname() . ' ' . $user->getLastname(),
                 'taskCount' => count($assignedTasks),
+                'totalHours' => $totalHours,
+                'maxWorkloadHours' => $maxWorkload,
+                'workloadPercentage' => round($workloadPercentage, 1),
+                'isOverloaded' => $totalHours > $maxWorkload,
                 'tasks' => array_map(function($task) {
                     return [
                         'id' => $task->getId(),
                         'title' => $task->getTitle(),
                         'priority' => $task->getPriority(),
-                        'status' => $task->getStatus()
+                        'status' => $task->getStatus(),
+                        'estimatedHours' => $task->getEstimatedHours()
                     ];
                 }, $assignedTasks)
             ];
         }
 
         return $workloads;
+    }
+
+    private function getCurrentWorkloadHours(User $user, Project $project): float
+    {
+        $assignedTasks = $this->taskRepository->findBy([
+            'assignedTo' => $user,
+            'project' => $project
+        ]);
+
+        $totalHours = 0;
+        foreach ($assignedTasks as $task) {
+            $totalHours += $task->getEstimatedHours() ?? 1.0;
+        }
+
+        return $totalHours;
     }
 }

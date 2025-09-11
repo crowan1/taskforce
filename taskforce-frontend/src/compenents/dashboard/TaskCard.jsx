@@ -65,7 +65,6 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
                             }}
                             title="Modifier la tâche"
                         >
-                            ✏️
                         </button>
                     )}
                     {['responsable_projet', 'manager'].includes(currentUserRole) && (

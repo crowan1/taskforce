@@ -1,0 +1,80 @@
+.workload-bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0;
+    
+    .workload-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        
+        .user-name {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .workload-hours {
+            color: #6B7280;
+            font-weight: 500;
+        }
+    }
+    
+    .workload-bar {
+        width: 100%;
+        height: 8px;
+        background-color: #E5E7EB;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        
+        .workload-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+            
+            &::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+                animation: shimmer 2s infinite;
+            }
+        }
+    }
+    
+    .workload-percentage {
+        text-align: right;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6B7280;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.workload-bar-container {
+    &.overloaded {
+        .workload-bar {
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+        }
+    }
+    
+    &.warning {
+        .workload-bar {
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+    }
+}
