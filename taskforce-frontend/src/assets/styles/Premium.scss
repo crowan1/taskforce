@@ -1,0 +1,269 @@
+.premium-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+}
+
+.premium-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.premium-content {
+    max-width: 500px;
+    width: 100%;
+}
+
+.premium-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #000000;
+
+    h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        font-size: 1rem;
+        color: #666666;
+    }
+}
+
+.payment-modal {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    overflow: hidden;
+}
+
+.upgrade-content {
+    padding: 2.5rem;
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #000000;
+        margin: 0;
+    }
+}
+
+.payment-form-container {
+    margin-bottom: 1.5rem;
+}
+
+.payment-form {
+    .card-input {
+        margin-bottom: 1.5rem;
+        padding: 1.2rem;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        background: #ffffff;
+        min-height: 60px;
+        overflow: hidden;
+        box-sizing: border-box;
+        
+        .StripeElement {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
+}
+
+.btn-pay {
+    width: 100%;
+    padding: 1rem;
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+        background: #333333;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.error-message {
+    background: #f5f5f5;
+    color: #000000;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border: 1px solid #e5e5e5;
+    font-size: 0.9rem;
+}
+
+.security-info {
+    text-align: center;
+    color: #666666;
+
+    p {
+        margin: 0;
+        font-size: 0.8rem;
+    }
+}
+
+.already-premium,
+.success-container {
+    text-align: center;
+    color: #000000;
+    padding: 3rem 2rem;
+
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        color: #666666;
+    }
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    color: #000000;
+
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e5e5e5;
+        border-top: 4px solid #000000;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+
+    p {
+        font-size: 1rem;
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.StripeElement {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    
+    input {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    .InputElement {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+
+[data-testid="link-button"],
+.StripeElement--Link,
+.StripeElement--link,
+button[data-testid="link-button"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .premium-main {
+        padding: 1rem 0.5rem;
+    }
+
+    .premium-content {
+        max-width: 100%;
+    }
+
+    .upgrade-content {
+        padding: 1.5rem;
+    }
+
+    .premium-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .payment-form .card-input {
+        padding: 1rem;
+        min-height: 50px;
+        
+        .StripeElement {
+            font-size: 13px !important;
+        }
+    }
+
+    .btn-pay {
+        padding: 0.9rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .premium-main {
+        padding: 0.5rem;
+    }
+
+    .upgrade-content {
+        padding: 1rem;
+    }
+
+    .premium-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .premium-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .modal-header h2 {
+        font-size: 1.2rem;
+    }
+
+    .payment-form .card-input {
+        padding: 0.8rem;
+        min-height: 45px;
+        
+        .StripeElement {
+            font-size: 12px !important;
+        }
+    }
+
+    .btn-pay {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+}

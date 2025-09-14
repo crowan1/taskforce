@@ -73,6 +73,17 @@ class ProjectController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+         
+        if (!$user->isPremium()) {
+            $userProjects = $this->projectRepository->countByUser($user->getId());
+            if ($userProjects >= 2) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Limite de 2 projets atteinte. Passez au plan Premium pour créer plus de projets !',
+                    'upgrade_required' => true
+                ], 403);
+            }
+        }
         
         $data = json_decode($request->getContent(), true);
         

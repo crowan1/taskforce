@@ -14,7 +14,8 @@ const Header = () => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                if (authService.hasToken()) {
+                const isAuth = await authService.isAuthenticated();
+                if (isAuth) {
                     const userProfile = await profileService.getProfile();
                     setIsAuthenticated(true);
                     setUser(userProfile);

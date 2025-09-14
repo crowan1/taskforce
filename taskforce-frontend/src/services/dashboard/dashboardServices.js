@@ -21,7 +21,11 @@ const apiCall = async (url, options = {}) => {
             errorData,
             body: options.body
         });
-        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+        
+        const error = new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
+        error.status = response.status;
+        error.errorData = errorData;
+        throw error;
     }
     
     return response.json();

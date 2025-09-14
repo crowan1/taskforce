@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import MyAccount from './pages/MyAccount';
 import Admin from './pages/Admin';
+import Upgrade from './pages/Upgrade';
+import NotFound from './pages/NotFound';
 import './App.css';
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/account" element={<MyAccount />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/upgrade" element={<Upgrade />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </Router>

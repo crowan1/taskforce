@@ -7,12 +7,14 @@ import UserSkillsManager from "../compenents/myAccount/UserSkillsManager";
 import UserTasksManager from "../compenents/myAccount/UserTasksManager";
 import profileService from '../services/profil/profileService';
 import authService from '../services/authServices';
+import stripeService from '../services/stripeService';
 import '../assets/styles/compenents/MyAccount/MyAccount.scss';
 
 const MyAccount = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [subscriptionStatus, setSubscriptionStatus] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -21,6 +23,14 @@ const MyAccount = () => {
                 setLoading(true);
                 const userData = await profileService.getProfile();
                 setUser(userData);
+                 
+                try {
+                    const subscription = await stripeService.getSubscriptionStatus();
+                    setSubscriptionStatus(subscription);
+                } catch (subscriptionError) {
+                    console.error('Error fetching subscription:', subscriptionError);
+                    setSubscriptionStatus({ is_premium: false });
+                }
             } catch (err) {
                 setError('Erreur lors du chargement du profil');
                 console.error('Error fetching profile:', err);
@@ -29,11 +39,16 @@ const MyAccount = () => {
             }
         };
 
-        if (authService.hasToken()) {
-            fetchUserProfile();
-        } else {
-            navigate('/login');
-        }
+        const checkAuth = async () => {
+            const isAuth = await authService.isAuthenticated();
+            if (isAuth) {
+                await fetchUserProfile();
+            } else {
+                navigate('/login');
+            }
+        };
+        
+        checkAuth();
     }, [navigate]);
 
     const handleLogout = () => {
@@ -83,7 +98,7 @@ const MyAccount = () => {
                         <p>Gérez vos informations personnelles</p>
                     </div>
 
-                    <ProfileInfo user={user} onUpdate={handleProfileUpdate} />
+                    <ProfileInfo user={user} onUpdate={handleProfileUpdate} subscriptionStatus={subscriptionStatus} />
 
                     <UserSkillsManager />
 
@@ -100,8 +115,15 @@ const MyAccount = () => {
                                 <span className="stat-label">Rôle</span>
                                 <span className="stat-value">{user?.roles?.includes('ROLE_ADMIN') ? 'Administrateur' : 'Utilisateur'}</span>
                             </div>
+                            <div className="stat-item">
+                                <span className="stat-label">Plan</span>
+                                <span className="stat-value">
+                                    {subscriptionStatus?.is_premium ? 'Premium' : 'Gratuit (2 projets max)'}
+                                </span>
+                            </div>
                         </div>
                     </div>
+
 
                     <div className="logout-section">
                         <button className="btn-logout" onClick={handleLogout}>

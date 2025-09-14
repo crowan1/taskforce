@@ -38,4 +38,5 @@ security:
         - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
         - { path: ^/api/skills, roles: PUBLIC_ACCESS }
         - { path: ^/api/tasks/simple-upload, roles: PUBLIC_ACCESS }
+        - { path: ^/api/stripe, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

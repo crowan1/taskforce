@@ -54,6 +54,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: ProjectUser::class, orphanRemoval: true)]
     private Collection $projectUsers;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Subscription::class)]
+    private Collection $subscriptions;
+
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserSkill::class, orphanRemoval: true)]
     private Collection $userSkills;
 
@@ -62,6 +65,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->roles = ['ROLE_USER'];
         $this->projectUsers = new ArrayCollection();
         $this->userSkills = new ArrayCollection();
+        $this->subscriptions = new ArrayCollection();
     }
 
     #[ORM\PrePersist]
@@ -181,6 +185,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // Nettoyer les données sensibles temporaires
+    }
+
+    public function isPremium(): bool
+    { 
+        error_log('User ' . $this->getId() . ' has ' . $this->subscriptions->count() . ' subscriptions');
+         
+        foreach ($this->subscriptions as $subscription) {
+            error_log('Subscription: status=' . $subscription->getStatus() . ', plan=' . $subscription->getPlan());
+            if ($subscription->isActive() && $subscription->getPlan() === 'premium') {
+                error_log('User is premium!');
+                return true;
+            }
+        }
+        error_log('User is NOt premium');
+        return false;
     }
 
 

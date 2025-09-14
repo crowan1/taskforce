@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -100,11 +101,41 @@ class AuthController extends AbstractController
 
         $token = $this->jwtManager->create($user);
 
-        return new JsonResponse([
+        $cookie = Cookie::create('auth_token')
+            ->withValue($token)
+            ->withExpires(new \DateTime('+24 hours'))
+            ->withPath('/')
+            ->withSecure(true)
+            ->withHttpOnly(true)
+            ->withSameSite('Strict');
+
+        $response = new JsonResponse([
             'message' => 'Connexion réussie',
             'token' => $token,
             'user' => $this->formatUserResponse($user)
         ]);
+
+        $response->headers->setCookie($cookie);
+        return $response;
+    }
+
+    #[Route('/logout', name: 'logout', methods: ['POST'])]
+    public function logout(): JsonResponse
+    {
+        $cookie = Cookie::create('auth_token')
+            ->withValue('')
+            ->withExpires(new \DateTime('-1 hour'))
+            ->withPath('/')
+            ->withSecure(true)
+            ->withHttpOnly(true)
+            ->withSameSite('Strict');
+
+        $response = new JsonResponse([
+            'message' => 'Déconnexion réussie'
+        ]);
+
+        $response->headers->setCookie($cookie);
+        return $response;
     }
 
     #[Route('/user', name: 'user_profile', methods: ['GET'])]

@@ -26,6 +26,16 @@ class ProjectRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function countByUser(int $userId): int
+    {
+        return $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->andWhere('p.createdBy = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function findActiveProjects(): array
     {
         return $this->createQueryBuilder('p')

@@ -44,12 +44,17 @@ const Admin = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!authService.hasToken()) {
-            navigate('/login');
-            return;
-        }
-        fetchData();
-    }, []);
+        const checkAuth = async () => {
+            const isAuth = await authService.isAuthenticated();
+            if (!isAuth) {
+                navigate('/login');
+                return;
+            }
+            await fetchData();
+        };
+        
+        checkAuth();
+    }, [navigate]);
  
     useEffect(() => {
         if (selectedProject) {

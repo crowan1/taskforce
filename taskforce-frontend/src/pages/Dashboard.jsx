@@ -6,6 +6,7 @@ import KanbanBoard from '../compenents/dashboard/KanbanBoard';
 import KanbanHeader from '../compenents/dashboard/KanbanHeader';
 import ProjectSidebar from '../compenents/dashboard/ProjectSidebar';
 import DashboardModals from '../compenents/dashboard/DashboardModals';
+import UpgradeModal from '../compenents/dashboard/modal/UpgradeModal';
 
 import { dashboardServices } from '../services/dashboard/dashboardServices';
 
@@ -22,6 +23,7 @@ import '../assets/styles/compenents/Dashboard/includes/buttons.scss';
 import '../assets/styles/compenents/Dashboard/modal/tasks/task-modals.scss';
 import '../assets/styles/compenents/Dashboard/modal/project/project-modals.scss';
 import '../assets/styles/compenents/Dashboard/modal/columns/column-modals.scss';
+import '../assets/styles/compenents/Dashboard/UpgradeModal.scss';
 
 const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
@@ -44,6 +46,7 @@ const Dashboard = () => {
     const [showDeleteProjectModal, setShowDeleteProjectModal] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [showDeleteColumnModal, setShowDeleteColumnModal] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [columnToDelete, setColumnToDelete] = useState(null);
     const [showEditColumnModal, setShowEditColumnModal] = useState(false);
     const [columnToEdit, setColumnToEdit] = useState(null);
@@ -156,7 +159,12 @@ const Dashboard = () => {
             setSelectedProject(data.project);
             setShowCreateProject(false);
         } catch (err) {
-            setError(err.message || 'Erreur lors de la création du projet');
+            if (err.status === 403 && err.errorData?.upgrade_required) {
+                setShowUpgradeModal(true);
+                setShowCreateProject(false);
+            } else {
+                setError(err.message || 'Erreur lors de la création du projet');
+            }
         }
     };
 
@@ -449,7 +457,10 @@ const Dashboard = () => {
                 fetchProjects={fetchProjects}
             />
 
-
+            <UpgradeModal 
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+            />
 
         <Footer />
     </div>
