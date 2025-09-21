@@ -189,16 +189,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isPremium(): bool
     { 
-        error_log('User ' . $this->getId() . ' has ' . $this->subscriptions->count() . ' subscriptions');
-         
         foreach ($this->subscriptions as $subscription) {
-            error_log('Subscription: status=' . $subscription->getStatus() . ', plan=' . $subscription->getPlan());
             if ($subscription->isActive() && $subscription->getPlan() === 'premium') {
-                error_log('User is premium!');
                 return true;
             }
         }
-        error_log('User is NOt premium');
         return false;
     }
 

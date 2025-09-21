@@ -1,10 +1,43 @@
-.git
-.gitignore
-README.md
+# Dependencies
+/vendor/
+/node_modules/
+
+# Cache and logs
+/var/cache/
+/var/log/
+/var/sessions/
+
+# Environment files
+.env
 .env.local
 .env.*.local
-var/cache/*
-var/log/*
-vendor/
-node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Tests
+/tests/
+phpunit.xml.dist
+
+# Coverage
+/coverage/
+
+# Temporary files
+*.tmp
+*.temp
