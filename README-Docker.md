@@ -1,6 +1,6 @@
 # TaskForce - Démarrage Docker
 
-## 🚀 Comment démarrer le projet
+## Comment démarrer le projet
 
 ### 1. Cloner le projet
 ```bash
