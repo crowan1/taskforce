@@ -6,3 +6,6 @@ coverage/
 
 # Docker
 docker.env
+
+.idea/
+.DS_Store
