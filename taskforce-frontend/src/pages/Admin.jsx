@@ -55,6 +55,38 @@ const Admin = () => {
         
         checkAuth();
     }, [navigate]);
+
+    const [currentUserRole, setCurrentUserRole] = useState(null);
+    const [adminAccessibleProjects, setAdminAccessibleProjects] = useState([]);
+
+    // Vérifier les permissions admin globalement
+    useEffect(() => {
+        if (projects.length > 0 && currentUser) {
+            // Vérif si utilisateur est responsable ou manager a un projet
+            const canAccess = authService.canAccessAdminGlobally(projects, currentUser.id);
+            
+            if (!canAccess) {
+                setError('Accès refusé : Vous devez être manager ou responsable de projet sur au moins un projet pour accéder à la section Admin.');
+                setLoading(false);
+                return;
+            }
+
+            // Filtrer les projets accessible
+            const accessibleProjects = authService.getAdminAccessibleProjects(projects, currentUser.id);
+            setAdminAccessibleProjects(accessibleProjects);
+            
+            if (accessibleProjects.length > 0 && !selectedProject) {
+                setSelectedProject(accessibleProjects[0]);
+            }
+        }
+    }, [projects, currentUser, selectedProject]);
+ 
+    useEffect(() => {
+        if (selectedProject && currentUser) {
+            const userRole = authService.getUserRoleInProject(selectedProject, currentUser.id);
+            setCurrentUserRole(userRole);
+        }
+    }, [selectedProject, currentUser]);
  
     useEffect(() => {
         if (selectedProject) {
@@ -238,7 +270,11 @@ const Admin = () => {
                 <div className="admin-content">
                     <div className="error-message">
                         <p>Erreur: {error}</p>
-                        <button onClick={fetchData}>Réessayer</button>
+                        {error.includes('Accès refusé') ? (
+                            <p className="error-redirect">Redirection vers le tableau de bord dans 3 secondes...</p>
+                        ) : (
+                            <button onClick={fetchData}>Réessayer</button>
+                        )}
                     </div>
                 </div>
                 <Footer />
@@ -251,7 +287,7 @@ const Admin = () => {
             <Header />
             <div className="admin-content">
                 <ProjectSelector 
-                    projects={projects}
+                    projects={adminAccessibleProjects}
                     selectedProject={selectedProject}
                     onProjectChange={handleProjectChange}
                 />
@@ -262,7 +298,9 @@ const Admin = () => {
                                 setActiveTab={setActiveTab}
                                 projectTasks={projectTasks}
                                 projectUsers={projectUsers}
-                                onCreateTask={handleCreateTask}
+                        selectedProject={selectedProject}
+                        currentUserRole={currentUserRole}
+                        onCreateTask={handleCreateTask}
                                 onEditTask={handleEditTask}
                                 onShowTaskDetail={handleShowTaskDetail}
                                 onReassignTask={handleReassignTask}
@@ -273,7 +311,8 @@ const Admin = () => {
                             />
                 ) : (
                     <div className="no-project-selected">
-                        <p>Veuillez sélectionner un projet ci-dessus pour commencer.</p>
+                        <h2>Aucun projet accessible</h2>
+                        <p>Vous devez être manager ou responsable de projet pour accéder à l'administration.</p>
                     </div>
                 )}
             </div>

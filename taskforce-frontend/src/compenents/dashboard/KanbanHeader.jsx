@@ -14,7 +14,9 @@ const KanbanHeader = ({
     handleAssignAllTasks,
     isManager,
     canDeleteColumns,
-    canDeleteProject
+    canDeleteProject,
+    canCreateTasks,
+    canAssignTasks
 }) => {
     if (!selectedProject) {
         return (
@@ -62,7 +64,7 @@ const KanbanHeader = ({
             </div>
             
             <div className="kanban-actions">
-                {isManager(currentUserRole) && (
+                {canDeleteColumns(currentUserRole) && (
                     <div className="column-actions-dropdown">
                         <button 
                             className="btn-column-actions"
@@ -91,23 +93,22 @@ const KanbanHeader = ({
                                 >
                                     Modifier une Colonne
                                 </button>
-                                {canDeleteColumns(currentUserRole) && (
-                                    <button 
-                                        className="menu-item delete-columns"
-                                        onClick={() => {
-                                            setShowColumnActionsMenu(false);
-                                            setShowSelectColumnToDeleteModal(true);
-                                        }}
-                                    >
-                                        Supprimer une Colonne
-                                    </button>
-                                )}
+                                <button 
+                                    className="menu-item delete-columns"
+                                    onClick={() => {
+                                        setShowColumnActionsMenu(false);
+                                        setShowSelectColumnToDeleteModal(true);
+                                    }}
+                                >
+                                    Supprimer une Colonne
+                                </button>
                             </div>
                         )}
                     </div>
                 )}
                 
-                {isManager(currentUserRole) && (
+                
+                {canAssignTasks(currentUserRole) && (
                     <button 
                         className="btn-assign-all"
                         onClick={handleAssignAllTasks}
@@ -126,7 +127,8 @@ const KanbanHeader = ({
                         Supprimer Projet
                     </button>
                 )}
-                {isManager(currentUserRole) && (
+                
+                {canCreateTasks(currentUserRole) && (
                     <button 
                         className="btn-create-task"
                         onClick={() => setShowCreateTask(true)}

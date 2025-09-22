@@ -112,9 +112,12 @@ api.interceptors.response.use(
             case 401:
                 console.warn('Token expiré ou invalide');
                 SecurityUtils.clearStorage();
+                 
+                const publicPaths = ['/login', '/register', '/', '/home'];
+                const currentPath = window.location.pathname;
                 
-                if (!window.location.pathname.includes('/login')) {
-                    sessionStorage.setItem('returnUrl', window.location.pathname);
+                if (!publicPaths.some(path => currentPath.includes(path))) {
+                    sessionStorage.setItem('returnUrl', currentPath);
                     window.location.replace('/login');
                 }
                 break;
@@ -149,6 +152,14 @@ const authService = {
             
             if (userData.password.length < 8) {
                 throw new Error('Le mot de passe doit contenir au moins 8 caractères');
+            }
+            
+            if (!/[A-Z]/.test(userData.password)) {
+                throw new Error('Le mot de passe doit contenir au moins une majuscule');
+            }
+            
+            if (!/[0-9]/.test(userData.password)) {
+                throw new Error('Le mot de passe doit contenir au moins un chiffre');
             }
             
             const sanitizedData = {
@@ -289,6 +300,70 @@ const authService = {
             console.error('Erreur parsing utilisateur:', error);
             localStorage.removeItem('user');
             return null;
+        }
+    },
+
+    canAccessAdmin: (userRole) => {
+        return userRole && (userRole === 'manager' || userRole === 'responsable_projet');
+    },
+
+    canModifyTasks: (userRole) => {
+        return userRole === 'responsable_projet';
+    },
+
+    canManageUsers: (userRole) => {
+        return userRole === 'responsable_projet';
+    },
+
+    canManageProject: (userRole) => {
+        return userRole === 'responsable_projet';
+    },
+
+    isManager: (userRole) => {
+        return userRole === 'manager';
+    },
+
+    isResponsableProjet: (userRole) => {
+        return userRole === 'responsable_projet';
+    },
+
+    isCollaborateur: (userRole) => {
+        return userRole === 'collaborateur';
+    },
+
+    canAccessAdminGlobally: (projects, userId) => {
+        if (!projects || !Array.isArray(projects) || !userId) return false;
+        
+        return projects.some(project => {
+            const userRole = authService.getUserRoleInProject(project, userId);
+            return userRole === 'manager' || userRole === 'responsable_projet';
+        });
+    },
+
+    getAdminAccessibleProjects: (projects, userId) => {
+        if (!projects || !Array.isArray(projects) || !userId) return [];
+        
+        return projects.filter(project => {
+            const userRole = authService.getUserRoleInProject(project, userId);
+            return userRole === 'manager' || userRole === 'responsable_projet';
+        });
+    },
+
+    getUserRoleInProject: (project, userId) => {
+        if (!project || !project.users || !userId) return null;
+        const userInProject = project.users.find(u => u.id === userId);
+        return userInProject?.role || null;
+    },
+
+    getCurrentUserRole: () => {
+        return localStorage.getItem('currentUserRole');
+    },
+
+    setCurrentUserRole: (role) => {
+        if (role) {
+            localStorage.setItem('currentUserRole', role);
+        } else {
+            localStorage.removeItem('currentUserRole');
         }
     },
 

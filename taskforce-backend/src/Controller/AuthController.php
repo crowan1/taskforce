@@ -141,6 +141,7 @@ class AuthController extends AbstractController
     #[Route('/user', name: 'user_profile', methods: ['GET'])]
     public function getUserProfile(): JsonResponse
     {
+        /** @var User $user */
         $user = $this->getUser();
 
         if (!$user) {
@@ -153,6 +154,7 @@ class AuthController extends AbstractController
     #[Route('/user', name: 'update_user_profile', methods: ['PUT'])]
     public function updateUserProfile(Request $request): JsonResponse
     {
+        /** @var User $user */
         $user = $this->getUser();
 
         if (!$user) {
@@ -220,23 +222,30 @@ class AuthController extends AbstractController
 
     private function validateUser(User $user): ?array
     {
-        $errors = $this->validator->validate($user);
-        if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
+        $violations = $this->validator->validate($user);
+        
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
             }
-            return $errorMessages;
+            return $errors;
         }
+        
         return null;
     }
 
-    private function errorResponse(string $message, int $statusCode, array $details = []): JsonResponse
+    private function errorResponse(string $message, int $status, ?array $errors = null): JsonResponse
     {
-        $response = ['error' => $message];
-        if (!empty($details)) {
-            $response['details'] = $details;
+        $response = [
+            'error' => $message,
+            'message' => $message
+        ];
+        
+        if ($errors) {
+            $response['errors'] = $errors;
         }
-        return new JsonResponse($response, $statusCode);
+        
+        return new JsonResponse($response, $status);
     }
 }

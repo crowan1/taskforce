@@ -22,8 +22,9 @@ class ProjectUser
     #[ORM\JoinColumn(nullable: false)]
     private ?User $user = null;
 
-    #[ORM\Column(length: 50)]
-    private ?string $role = null;
+    #[ORM\ManyToOne(targetEntity: Role::class, inversedBy: 'projectUsers')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Role $role = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $joinedAt = null;
@@ -60,12 +61,12 @@ class ProjectUser
         return $this;
     }
 
-    public function getRole(): ?string
+    public function getRole(): ?Role
     {
         return $this->role;
     }
 
-    public function setRole(?string $role): static
+    public function setRole(?Role $role): static
     {
         $this->role = $role;
         return $this;
@@ -73,47 +74,42 @@ class ProjectUser
 
     public function getRoleIdentifier(): ?string
     {
-        return $this->role;
+        return $this->role?->getIdentifier();
     }
 
     public function getRoleDisplayName(): ?string
     {
-        return match($this->role) {
-            'ROLE_COLLABORATOR' => 'Collaborateur',
-            'ROLE_MANAGER' => 'Manager',
-            'ROLE_PROJECT_MANAGER' => 'Responsable de Projet',
-            default => $this->role
-        };
+        return $this->role?->getDisplayName();
     }
 
     public function isResponsableProjet(): bool
     {
-        return $this->role === 'ROLE_PROJECT_MANAGER';
+        return $this->role?->getIdentifier() === 'responsable_projet';
     }
 
     public function isManager(): bool
     {
-        return $this->role === 'ROLE_MANAGER';
+        return $this->role?->getIdentifier() === 'manager';
     }
 
     public function isCollaborateur(): bool
     {
-        return $this->role === 'ROLE_COLLABORATOR';
+        return $this->role?->getIdentifier() === 'collaborateur';
     }
 
     public function canManageProject(): bool
     {
-        return in_array($this->role, ['ROLE_PROJECT_MANAGER', 'ROLE_MANAGER']);
+        return in_array($this->role?->getIdentifier(), ['responsable_projet', 'manager'], true);
     }
 
     public function canAssignTasks(): bool
     {
-        return in_array($this->role, ['ROLE_PROJECT_MANAGER', 'ROLE_MANAGER']);
+        return in_array($this->role?->getIdentifier(), ['responsable_projet', 'manager'], true);
     }
 
     public function canViewReports(): bool
     {
-        return in_array($this->role, ['ROLE_PROJECT_MANAGER', 'ROLE_MANAGER']);
+        return in_array($this->role?->getIdentifier(), ['responsable_projet', 'manager'], true);
     }
 
     public function getJoinedAt(): ?\DateTimeImmutable

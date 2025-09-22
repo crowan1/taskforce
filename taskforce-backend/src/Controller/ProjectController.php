@@ -39,13 +39,13 @@ class ProjectController extends AbstractController
                 'name' => $project->getName(),
                 'description' => $project->getDescription(),
                 'status' => $project->getStatus(),
-                'createdAt' => $project->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $project->getUpdatedAt()->format('Y-m-d H:i:s'),
+                'createdAt' => $project->getCreatedAt() ? $project->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                'updatedAt' => $project->getUpdatedAt() ? $project->getUpdatedAt()->format('Y-m-d H:i:s') : null,
                 'createdBy' => [
-                    'id' => $project->getCreatedBy()->getId(),
-                    'firstname' => $project->getCreatedBy()->getFirstname(),
-                    'lastname' => $project->getCreatedBy()->getLastname(),
-                    'email' => $project->getCreatedBy()->getEmail()
+                    'id' => $project->getCreatedBy() ? $project->getCreatedBy()->getId() : null,
+                    'firstname' => $project->getCreatedBy() ? $project->getCreatedBy()->getFirstname() : null,
+                    'lastname' => $project->getCreatedBy() ? $project->getCreatedBy()->getLastname() : null,
+                    'email' => $project->getCreatedBy() ? $project->getCreatedBy()->getEmail() : null
                 ],
                 'users' => array_map(function($projectUser) {
                     return [
@@ -54,7 +54,7 @@ class ProjectController extends AbstractController
                         'lastname' => $projectUser->getUser()->getLastname(),
                         'email' => $projectUser->getUser()->getEmail(),
                         'role' => $projectUser->getRoleIdentifier(),
-                        'joinedAt' => $projectUser->getJoinedAt()->format('Y-m-d H:i:s')
+                        'joinedAt' => $projectUser->getJoinedAt() ? $projectUser->getJoinedAt()->format('Y-m-d H:i:s') : null
                     ];
                 }, $project->getProjectUsers()->toArray()),
                 'taskCount' => $project->getTasks()->count()
@@ -112,7 +112,7 @@ class ProjectController extends AbstractController
         $projectUser->setProject($project);
         $projectUser->setUser($user);
         $roleRepository = $this->entityManager->getRepository(Role::class);
-        $responsableRole = $roleRepository->findByIdentifier('responsable_projet');
+        $responsableRole = $roleRepository->findOneBy(['identifier' => 'responsable_projet']);
         $projectUser->setRole($responsableRole);
 
         $this->entityManager->persist($project);
@@ -177,7 +177,7 @@ class ProjectController extends AbstractController
         }
  
         $roleRepository = $this->entityManager->getRepository(Role::class);
-        $roleEntity = $roleRepository->findByIdentifier($role);
+        $roleEntity = $roleRepository->findOneBy(['identifier' => $role]);
         if (!$roleEntity) {
             return $this->json(['error' => 'Rôle invalide'], 400);
         }
@@ -241,7 +241,7 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'userId et role requis'], 400);
         }
 
-        $roleEntity = $this->entityManager->getRepository(Role::class)->findByIdentifier($role);
+        $roleEntity = $this->entityManager->getRepository(Role::class)->findOneBy(['identifier' => $role]);
         if (!$roleEntity) {
             return $this->json(['error' => 'Rôle invalide'], 400);
         }

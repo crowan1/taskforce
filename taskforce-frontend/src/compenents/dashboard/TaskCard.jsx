@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import authService from '../../services/authServices';
 
 const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole, onShowTaskDetail }) => {
     const [showDetails, setShowDetails] = useState(false);
@@ -44,7 +45,8 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
             <div className="task-header">
                 <h4 className="task-title">{task.title}</h4>
                 <div className="task-actions">
-                    {!task.assignedTo && ['responsable_projet', 'manager'].includes(currentUserRole) && (
+                    
+                    {!task.assignedTo && authService.canAccessAdmin(currentUserRole) && (
                         <button 
                             className="btn-assign"
                             onClick={(e) => {
@@ -56,7 +58,7 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
                             🎯
                         </button>
                     )}
-                    {['responsable_projet', 'manager'].includes(currentUserRole) && (
+                    {authService.canModifyTasks(currentUserRole) && (
                         <button 
                             className="btn-edit"
                             onClick={(e) => {
@@ -65,9 +67,10 @@ const TaskCard = ({ task, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTa
                             }}
                             title="Modifier la tâche"
                         >
+                            ✏️
                         </button>
                     )}
-                    {['responsable_projet', 'manager'].includes(currentUserRole) && (
+                    {authService.canModifyTasks(currentUserRole) && (
                         <button 
                             className="btn-delete"
                             onClick={(e) => {

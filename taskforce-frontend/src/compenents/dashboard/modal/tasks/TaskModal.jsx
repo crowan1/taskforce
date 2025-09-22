@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
+import authService from '../../../../services/authServices';
 import '../../../../assets/styles/Dashboard.scss';
 
-const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view' }) => {
+const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view', currentUserRole }) => {
     const [isEditing, setIsEditing] = useState(mode === 'edit');
     const [formData, setFormData] = useState({
         title: '',
@@ -245,7 +246,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                 <div className="modal-header">
                     <h2>{isEditing ? 'Modifier la tâche' : 'Détails de la tâche'}</h2>
                     <div className="header-actions">
-                        {!isEditing && (
+                        {!isEditing && authService.canModifyTasks(currentUserRole) && (
                             <button 
                                 className="btn-edit"
                                 onClick={() => setIsEditing(true)}

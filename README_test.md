@@ -11,5 +11,3 @@ npm test -- --coverage --watchAll=false
 cd taskforce-backend
 XDEBUG_MODE=coverage php bin/phpunit --coverage-text
 ```
-
- 

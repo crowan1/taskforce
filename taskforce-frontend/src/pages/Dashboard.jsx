@@ -9,6 +9,7 @@ import DashboardModals from '../compenents/dashboard/DashboardModals';
 import UpgradeModal from '../compenents/dashboard/modal/UpgradeModal';
 
 import { dashboardServices } from '../services/dashboard/dashboardServices';
+import authService from '../services/authServices';
 
 // styles
 import '../assets/styles/compenents/Dashboard/CreateTaskProjectModal.scss';
@@ -158,13 +159,15 @@ const Dashboard = () => {
             setProjects(prev => [...prev, data.project]);
             setSelectedProject(data.project);
             setShowCreateProject(false);
-        } catch (err) {
-            if (err.status === 403 && err.errorData?.upgrade_required) {
+        } catch (err) {            
+            if (err.status === 403) {
+  
                 setShowUpgradeModal(true);
                 setShowCreateProject(false);
-            } else {
-                setError(err.message || 'Erreur lors de la création du projet');
+                return;
             }
+            
+            setError(err.message || 'Erreur lors de la création du projet');
         }
     };
 
@@ -256,10 +259,12 @@ const Dashboard = () => {
         return currentUser && project.createdBy && project.createdBy.id === currentUser.id;
     };
 
-    const isAdmin = role => role === 'responsable_projet';
-    const isManager = role => ['responsable_projet', 'manager'].includes(role);
-    const canDeleteColumns = role => role === 'responsable_projet' || role === 'manager';
-    const canDeleteProject = role => role === 'responsable_projet';
+    const isAdmin = role => authService.isResponsableProjet(role);
+    const isManager = role => authService.canAccessAdmin(role);  
+    const canDeleteColumns = role => authService.canModifyTasks(role); 
+    const canDeleteProject = role => authService.canManageProject(role); 
+    const canCreateTasks = role => authService.canModifyTasks(role); 
+    const canAssignTasks = role => authService.canAccessAdmin(role);  
 
     const handleEditTask = (task) => {
         setSelectedTask(task);
@@ -309,9 +314,12 @@ const Dashboard = () => {
             const currentUser = JSON.parse(localStorage.getItem('user'));
             if (currentUser) {
                 const currentUserInProject = selectedProject.users?.find(u => u.id === currentUser.id);
-                setCurrentUserRole(currentUserInProject?.role);
+                const role = currentUserInProject?.role;
+                setCurrentUserRole(role);
+                authService.setCurrentUserRole(role);
             } else {
                 setCurrentUserRole(null);
+                authService.setCurrentUserRole(null);
             }
         }
     }, [selectedProject]);
@@ -394,6 +402,8 @@ const Dashboard = () => {
                         isManager={isManager}
                         canDeleteColumns={canDeleteColumns}
                         canDeleteProject={canDeleteProject}
+                        canCreateTasks={canCreateTasks}
+                        canAssignTasks={canAssignTasks}
                     />
 
                 {selectedProject && (
@@ -444,6 +454,7 @@ const Dashboard = () => {
                 selectedTaskForDetail={selectedTaskForDetail} setSelectedTaskForDetail={setSelectedTaskForDetail}
                  
                 columns={columns}
+                currentUserRole={currentUserRole}
                  
                 onCreateTask={handleCreateTask}
                 onCreateProject={handleCreateProject}

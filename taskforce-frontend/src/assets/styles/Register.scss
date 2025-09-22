@@ -258,4 +258,71 @@
       }
     }
   }
+ 
+  .field-error {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &:before {
+      content: '⚠️';
+      font-size: 10px;
+    }
+  }
+
+  .form-group input.error {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+
+  .form-group input.error:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+  }
+
+  // Styles pour les exigences du mot de passe
+  .password-requirements {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    
+    .requirement {
+      font-size: 12px;
+      margin: 2px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      &.valid {
+        color: #059669;
+        
+        &:before {
+          content: '';
+          width: 4px;
+          height: 4px;
+          background: #059669;
+          border-radius: 50%;
+          display: inline-block;
+        }
+      }
+      
+      &.invalid {
+        color: #dc2626;
+        
+        &:before {
+          content: '';
+          width: 4px;
+          height: 4px;
+          background: #dc2626;
+          border-radius: 50%;
+          display: inline-block;
+        }
+      }
+    }
+  }
 }

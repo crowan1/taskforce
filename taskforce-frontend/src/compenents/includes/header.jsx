@@ -8,6 +8,7 @@ const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState(null);
+    const [canAccessAdmin, setCanAccessAdmin] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -19,13 +20,25 @@ const Header = () => {
                     const userProfile = await profileService.getProfile();
                     setIsAuthenticated(true);
                     setUser(userProfile);
+                     
+                    try {
+                        const { dashboardServices } = await import('../../services/dashboard/dashboardServices');
+                        const projectsData = await dashboardServices.getProjects();
+                        const hasAdminAccess = authService.canAccessAdminGlobally(projectsData.projects, userProfile.id);
+                        setCanAccessAdmin(hasAdminAccess);
+                    } catch (error) {
+                        console.error('Erreur lors de la vérification des permissions admin:', error);
+                        setCanAccessAdmin(false);
+                    }
                 } else {
                     setIsAuthenticated(false);
                     setUser(null);
+                    setCanAccessAdmin(false);
                 }
             } catch (error) {
                 setIsAuthenticated(false);
                 setUser(null);
+                setCanAccessAdmin(false);
             }
         };
 
@@ -35,6 +48,7 @@ const Header = () => {
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location.pathname]);
+
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -68,9 +82,11 @@ const Header = () => {
                                 <button className="nav-link" onClick={() => navigate('/dashboard')}>
                                     Mes Tableaux
                                 </button>
-                                <button className="nav-link" onClick={() => navigate('/admin')}>
-                                    Admin
-                                </button>
+                                {canAccessAdmin && (
+                                    <button className="nav-link" onClick={() => navigate('/admin')}>
+                                        Admin
+                                    </button>
+                                )}
                                 <button className="nav-link" onClick={() => navigate('/my-account')}>
                                     Mon Compte
                                 </button>
@@ -85,9 +101,11 @@ const Header = () => {
                             <button className="btn-login" onClick={() => navigate('/dashboard')}>
                                 Mes Tableaux
                             </button>
-                            <button className="btn-admin" onClick={() => navigate('/admin')}>
-                                Admin
-                            </button>
+                            {canAccessAdmin && (
+                                <button className="btn-admin" onClick={() => navigate('/admin')}>
+                                    Admin
+                                </button>
+                            )}
                             <button className="btn-signup" onClick={() => navigate('/account')}>
                                 Mon Compte
                             </button>

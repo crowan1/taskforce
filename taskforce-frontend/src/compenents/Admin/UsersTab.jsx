@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import UserProfileModal from './UserProfileModal';
 import WorkloadBar from './WorkloadBar';
+import authService from '../../services/authServices';
 import '../../assets/styles/compenents/admin/UserProfileModal.scss';
 import '../../assets/styles/compenents/admin/WorkloadBar.scss';
+import '../../assets/styles/compenents/admin/AdminPermissions.scss';
 
-const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, selectedProject }) => {
+const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, selectedProject, currentUserRole }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showUserProfile, setShowUserProfile] = useState(false);
 
@@ -42,12 +44,19 @@ const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, select
             <div className="tab-header">
                 <h3>Gestion des Utilisateurs</h3>
                 <div className="tab-actions">
-                    <button 
-                        className="btn-primary"
-                        onClick={onAddUser}
-                    >
-                        + Ajouter un utilisateur
-                    </button>
+                    {authService.canManageUsers(currentUserRole) && (
+                        <button 
+                            className="btn-primary"
+                            onClick={onAddUser}
+                        >
+                            + Ajouter un utilisateur
+                        </button>
+                    )}
+                    {authService.isManager(currentUserRole) && (
+                        <div className="manager-info">
+                            <span className="info-text">Mode consultation uniquement</span>
+                        </div>
+                    )}
                 </div>
             </div>
             
@@ -60,12 +69,15 @@ const UsersTab = ({ projectUsers, projectTasks, onAddUser, onUserUpdated, select
                                                             {projectUsers.map(user => (
                                         <div 
                                             key={user.id} 
-                                            className="user-detailed-item clickable"
-                                            onClick={() => {
+                                            className={`user-detailed-item ${authService.canManageUsers(currentUserRole) ? 'clickable' : 'readonly'}`}
+                                            onClick={authService.canManageUsers(currentUserRole) ? () => {
                                                 setSelectedUser(user);
                                                 setShowUserProfile(true);
-                                            }}
-                                            title="Cliquer pour voir le profil détaillé"
+                                            } : undefined}
+                                            title={authService.canManageUsers(currentUserRole) ? 
+                                                "Cliquer pour voir le profil détaillé" : 
+                                                "Mode consultation uniquement - Modification non autorisée"
+                                            }
                                         >
                                 <div className="user-header">
                                     <div className="user-info">

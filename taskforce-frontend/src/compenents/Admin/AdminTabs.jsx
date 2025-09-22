@@ -16,7 +16,8 @@ const AdminTabs = ({
     onAddUser, 
     onUserUpdated,
     onNavigateToDashboard,
-    selectedProject
+    selectedProject,
+    currentUserRole
 }) => {
     return (
         <>
@@ -49,6 +50,7 @@ const AdminTabs = ({
                         onCreateTask={onCreateTask}
                         onAddUser={onAddUser}
                         onNavigateToDashboard={onNavigateToDashboard}
+                        currentUserRole={currentUserRole}
                     />
                 )}
 
@@ -60,18 +62,20 @@ const AdminTabs = ({
                         onShowTaskDetail={onShowTaskDetail}
                         onReassignTask={onReassignTask}
                         onDeleteTask={onDeleteTask}
+                        currentUserRole={currentUserRole}
                     />
                 )}
 
-                                            {activeTab === 'users' && (
-                                <UsersTab
-                                    projectUsers={projectUsers}
-                                    projectTasks={projectTasks}
-                                    onAddUser={onAddUser}
-                                    onUserUpdated={onUserUpdated}
-                                    selectedProject={selectedProject}
-                                />
-                            )}
+                {activeTab === 'users' && (
+                    <UsersTab
+                        projectUsers={projectUsers}
+                        projectTasks={projectTasks}
+                        onAddUser={onAddUser}
+                        onUserUpdated={onUserUpdated}
+                        selectedProject={selectedProject}
+                        currentUserRole={currentUserRole}
+                    />
+                )}
             </div>
         </>
     );

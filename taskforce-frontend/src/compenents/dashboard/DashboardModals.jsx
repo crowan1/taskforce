@@ -31,6 +31,7 @@ const DashboardModals = ({
     selectedTaskForDetail, setSelectedTaskForDetail,
      
     columns,
+    currentUserRole,
      
     onCreateTask,
     onCreateProject,
@@ -202,6 +203,7 @@ const DashboardModals = ({
                     onTaskUpdate={handleTaskDetailUpdate}
                     project={selectedProject}
                     mode="view"
+                    currentUserRole={currentUserRole}
                 />
             )}
 

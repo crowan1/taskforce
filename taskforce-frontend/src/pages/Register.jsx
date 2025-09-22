@@ -15,14 +15,46 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordValidation, setPasswordValidation] = useState({
+        length: false,
+        uppercase: false,
+        number: false
+    });
 
     const navigate = useNavigate();
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+ 
+        if (name === 'password') {
+            const validation = {
+                length: value.length >= 8,
+                uppercase: /[A-Z]/.test(value),
+                number: /[0-9]/.test(value)
+            };
+            
+            setPasswordValidation(validation);
+            
+            if (value.length > 0) {
+                const errors = [];
+                if (!validation.length) errors.push('8 caractères minimum');
+                if (!validation.uppercase) errors.push('une majuscule');
+                if (!validation.number) errors.push('un chiffre');
+                
+                if (errors.length > 0) {
+                    setPasswordError(`Le mot de passe doit contenir : ${errors.join(', ')}`);
+                } else {
+                    setPasswordError('');
+                }
+            } else {
+                setPasswordError('');
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -30,18 +62,46 @@ const Register = () => {
         setLoading(true);
         setError('');
         setSuccess('');
+        setPasswordError('');
+ 
+        const hasUppercase = /[A-Z]/.test(formData.password);
+        const hasNumber = /[0-9]/.test(formData.password);
+        const hasMinLength = formData.password.length >= 8;
+        
+        if (!hasMinLength || !hasUppercase || !hasNumber) {
+            const errors = [];
+            if (!hasMinLength) errors.push('8 caractères minimum');
+            if (!hasUppercase) errors.push('une majuscule');
+            if (!hasNumber) errors.push('un chiffre');
+            
+            setPasswordError(`Le mot de passe doit contenir : ${errors.join(', ')}`);
+            setLoading(false);
+            return;
+        }
 
         try {
             await authService.register(formData);
+            setSuccess('Inscription réussie ! Redirection vers la page de connexion...');
             setFormData({
                 email: '',
                 password: '',
                 firstname: '',
                 lastname: ''
             });
-            navigate("/dashboard");
+             
+            setTimeout(() => {
+                navigate("/login");
+            }, 2000);
         } catch (error) {
-            setError('Erreur lors de l\'inscription');
+            console.error('Erreur inscription:', error);
+             
+            if (error.message && error.message.includes('mot de passe')) {
+                setPasswordError(error.message);
+            } else if (error.message) {
+                setError(error.message);
+            } else {
+                setError('Erreur lors de l\'inscription. Veuillez réessayer.');
+            }
         } finally {
             setLoading(false);
         }
@@ -163,8 +223,28 @@ const Register = () => {
                                     onChange={handleChange}
                                     placeholder="Créez un mot de passe sécurisé"
                                     required
+                                    className={passwordError ? 'error' : ''}
                                 />
                             </div>
+                            {passwordError && (
+                                <div className="field-error">
+                                    {passwordError}
+                                </div>
+                            )}
+                            
+                            {formData.password.length > 0 && (
+                                <div className="password-requirements">
+                                    <div className={`requirement ${passwordValidation.length ? 'valid' : 'invalid'}`}>
+                                        {passwordValidation.length ? '✓' : '✗'} 8 caractères minimum
+                                    </div>
+                                    <div className={`requirement ${passwordValidation.uppercase ? 'valid' : 'invalid'}`}>
+                                        {passwordValidation.uppercase ? '✓' : '✗'} Une majuscule
+                                    </div>
+                                    <div className={`requirement ${passwordValidation.number ? 'valid' : 'invalid'}`}>
+                                        {passwordValidation.number ? '✓' : '✗'} Un chiffre
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <button

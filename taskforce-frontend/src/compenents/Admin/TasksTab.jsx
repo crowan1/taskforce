@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import authService from '../../services/authServices';
+import '../../assets/styles/compenents/admin/AdminPermissions.scss';
 
-const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onShowTaskDetail, onDeleteTask }) => {
+const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onShowTaskDetail, onDeleteTask, currentUserRole }) => {
     const [expandedTasks, setExpandedTasks] = useState(new Set());
     
     const toggleTaskExpansion = (taskId) => {
@@ -17,12 +19,21 @@ const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onSh
         <div className="tasks-tab">
             <div className="tab-header">
                 <h3>Gestion des Tâches</h3>
-                <button 
-                    className="btn-primary"
-                    onClick={onCreateTask}
-                >
-                    Créer une nouvelle tâche
-                </button>
+                <div className="tab-actions">
+                    {authService.canModifyTasks(currentUserRole) && (
+                        <button 
+                            className="btn-primary"
+                            onClick={onCreateTask}
+                        >
+                            Créer une nouvelle tâche
+                        </button>
+                    )}
+                    {authService.isManager(currentUserRole) && (
+                        <div className="manager-info">
+                            <span className="info-text">👁️ Mode consultation uniquement</span>
+                        </div>
+                    )}
+                </div>
             </div>
             
             <div className="project-tasks">
@@ -79,38 +90,42 @@ const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onSh
                                     >
                                         Voir
                                     </button>
-                                    <button 
-                                        className="btn-edit"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onEditTask && onEditTask(task);
-                                        }}
-                                        title="Modifier cette tâche"
-                                    >
-                                        Modifier
-                                    </button>
-                                    <button 
-                                        className="btn-reassign"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onReassignTask(task);
-                                        }}
-                                        title="Réassigner cette tâche"
-                                    >
-                                        Réassigner
-                                    </button>
-                                    <button 
-                                        className="btn-delete"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (window.confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
-                                                onDeleteTask && onDeleteTask(task.id);
-                                            }
-                                        }}
-                                        title="Supprimer cette tâche"
-                                    >
-                                        Supprimer
-                                    </button>
+                                    {authService.canModifyTasks(currentUserRole) && (
+                                        <>
+                                            <button 
+                                                className="btn-edit"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEditTask && onEditTask(task);
+                                                }}
+                                                title="Modifier cette tâche"
+                                            >
+                                                Modifier
+                                            </button>
+                                            <button 
+                                                className="btn-reassign"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onReassignTask(task);
+                                                }}
+                                                title="Réassigner cette tâche"
+                                            >
+                                                Réassigner
+                                            </button>
+                                            <button 
+                                                className="btn-delete"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+                                                        onDeleteTask && onDeleteTask(task.id);
+                                                    }
+                                                }}
+                                                title="Supprimer cette tâche"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))}
