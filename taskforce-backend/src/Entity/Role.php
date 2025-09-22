@@ -79,7 +79,7 @@ class Role
     {
         if (!$this->projectUsers->contains($projectUser)) {
             $this->projectUsers->add($projectUser);
-            $projectUser->setRole($this);
+            $projectUser->setRole($this->getIdentifier());
         }
         return $this;
     }
@@ -87,7 +87,7 @@ class Role
     public function removeProjectUser(ProjectUser $projectUser): static
     {
         if ($this->projectUsers->removeElement($projectUser)) {
-            if ($projectUser->getRole() === $this) {
+            if ($projectUser->getRole() === $this->getIdentifier()) {
                 $projectUser->setRole(null);
             }
         }

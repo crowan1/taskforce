@@ -1,0 +1,91 @@
+services:
+  # Base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: taskforce_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: taskforce
+      MYSQL_USER: taskforce_user
+      MYSQL_PASSWORD: taskforce_password
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "3333:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./taskforce-backend/docker/mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - taskforce_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # phpMyAdmin pour l'administration de la base de données
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: taskforce_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8088:80"
+    depends_on:
+      - mysql
+    networks:
+      - taskforce_network
+
+  # Backend Symfony
+  backend:
+    build:
+      context: ./taskforce-backend
+      dockerfile: Dockerfile
+    container_name: taskforce_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./taskforce-backend:/var/www/html
+      - backend_vendor:/var/www/html/vendor
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=mysql://taskforce_user:taskforce_password@mysql:3306/taskforce
+      - JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+      - JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+      - JWT_PASSPHRASE=your_jwt_passphrase_here
+    depends_on:
+      - mysql
+    networks:
+      - taskforce_network
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./taskforce-frontend
+      dockerfile: Dockerfile
+    container_name: taskforce_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./taskforce-frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    networks:
+      - taskforce_network
+    command: npm start
+
+volumes:
+  mysql_data:
+  backend_vendor:
+  frontend_node_modules:
+
+networks:
+  taskforce_network:
+    driver: bridge

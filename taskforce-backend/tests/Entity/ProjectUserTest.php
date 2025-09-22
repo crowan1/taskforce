@@ -39,24 +39,22 @@ class ProjectUserTest extends TestCase
 
     public function testRole(): void
     {
-        $role = $this->createMock(Role::class);
-        $this->projectUser->setRole($role);
-        $this->assertEquals($role, $this->projectUser->getRole());
+        $this->projectUser->setRole('ROLE_MANAGER');
+        $this->assertEquals('ROLE_MANAGER', $this->projectUser->getRole());
     }
 
     public function testProjectUserBasic(): void
     {
         $project = $this->createMock(Project::class);
         $user = $this->createMock(User::class);
-        $role = $this->createMock(Role::class);
         
         $this->projectUser->setProject($project);
         $this->projectUser->setUser($user);
-        $this->projectUser->setRole($role);
+        $this->projectUser->setRole('ROLE_COLLABORATOR');
         
         $this->assertEquals($project, $this->projectUser->getProject());
         $this->assertEquals($user, $this->projectUser->getUser());
-        $this->assertEquals($role, $this->projectUser->getRole());
+        $this->assertEquals('ROLE_COLLABORATOR', $this->projectUser->getRole());
     }
 
     public function testProjectUserId(): void
