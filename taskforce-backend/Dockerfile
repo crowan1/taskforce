@@ -39,7 +39,7 @@ RUN composer dump-autoload --optimize
 RUN mkdir -p var/cache var/log var/sessions \
     && chown -R www-data:www-data var/cache var/log var/sessions
 
-# Configuration JWT (si nécessaire)
+# Configuration JWT  
 RUN mkdir -p config/jwt \
     && if [ ! -f config/jwt/private.pem ]; then \
         openssl genrsa -out config/jwt/private.pem 2048; \
