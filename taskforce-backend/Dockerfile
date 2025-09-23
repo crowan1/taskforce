@@ -41,12 +41,8 @@ RUN mkdir -p var/cache var/log var/sessions \
 
 # Configuration JWT  
 RUN mkdir -p config/jwt \
-    && if [ ! -f config/jwt/private.pem ]; then \
-        openssl genrsa -out config/jwt/private.pem 2048; \
-    fi \
-    && if [ ! -f config/jwt/public.pem ]; then \
-        openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem; \
-    fi
+    && openssl genrsa -out config/jwt/private.pem 2048 \
+    && openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem
 RUN chown -R www-data:www-data config/jwt \
     && chmod 600 config/jwt/private.pem \
     && chmod 644 config/jwt/public.pem
@@ -58,23 +54,7 @@ RUN echo 'server { \
     root /var/www/html/public; \
     index index.php; \
     \
-    # Configuration CORS \
-    add_header Access-Control-Allow-Origin "http://localhost:3000" always; \
-    add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always; \
-    add_header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With" always; \
-    add_header Access-Control-Allow-Credentials "true" always; \
-    \
-    # Gestion des requêtes OPTIONS (preflight) \
     location / { \
-        if ($request_method = OPTIONS) { \
-            add_header Access-Control-Allow-Origin "http://localhost:3000"; \
-            add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"; \
-            add_header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"; \
-            add_header Access-Control-Allow-Credentials "true"; \
-            add_header Content-Length 0; \
-            add_header Content-Type text/plain; \
-            return 204; \
-        } \
         try_files $uri $uri/ /index.php$is_args$args; \
     } \
     \
@@ -95,7 +75,7 @@ EXPOSE 8000
 
 # Script de démarrage
 RUN echo '#!/bin/bash\n\
-service php8.3-fpm start\n\
+php-fpm -D\n\
 nginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
 
 # Commande par défaut

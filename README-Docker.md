@@ -19,7 +19,7 @@ Accédez à votre application :
 - **Application** : http://localhost:3000
 - **API Backend** : http://localhost:8000
 - **Base de données** : http://localhost:8088 (phpMyAdmin)
-- **MySQL direct** : localhost:3333
+- **MySQL direct** : localhost:2920
 
 
 ### Nettoyer et redémarrer

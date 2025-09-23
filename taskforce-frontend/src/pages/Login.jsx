@@ -12,7 +12,6 @@ const Login = () => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -83,13 +82,17 @@ const Login = () => {
                         </div>
 
                         {error && (
-                            <div className="error-message">{error}</div>
+                            <div className="error-message" role="alert" aria-live="polite">
+                                {error}
+                            </div>
                         )}
 
                         <form onSubmit={handleSubmit} className="login-form-container">
                             <div className="input-group">
+                                <label htmlFor="email" className="visually-hidden">Email</label>
                                 <div className="input-wrapper">
                                     <input
+                                        id="email"
                                         type="email"
                                         name="email"
                                         value={formData.email}
@@ -97,19 +100,26 @@ const Login = () => {
                                         required
                                         placeholder="Nom d'utilisateur ou email"
                                         className="form-input"
+                                        aria-describedby="email-help"
+                                        autoComplete="email"
                                     />
-                                    <div className="input-icon">
+                                    <div className="input-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                                         </svg>
                                     </div>
                                 </div>
+                                <div id="email-help" className="visually-hidden">
+                                    Saisissez votre adresse email
+                                </div>
                             </div>
 
                             <div className="input-group">
+                                <label htmlFor="password" className="visually-hidden">Mot de passe</label>
                                 <div className="input-wrapper">
                                     <input
+                                        id="password"
                                         type="password"
                                         name="password"
                                         value={formData.password}
@@ -117,13 +127,18 @@ const Login = () => {
                                         required
                                         placeholder="Mot de passe"
                                         className="form-input"
+                                        aria-describedby="password-help"
+                                        autoComplete="current-password"
                                     />
-                                    <div className="input-icon">
+                                    <div className="input-icon" aria-hidden="true">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                                   d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                         </svg>
                                     </div>
+                                </div>
+                                <div id="password-help" className="visually-hidden">
+                                    Saisissez votre mot de passe
                                 </div>
                             </div>
 
@@ -150,9 +165,14 @@ const Login = () => {
 
                         <p className="login-footer">
                             Nouveau ici ?{' '}
-                            <span onClick={handleRegister}>
-                            Créer un compte
-                        </span>
+                            <button 
+                                type="button"
+                                className="link-button"
+                                onClick={handleRegister}
+                                aria-label="Créer un nouveau compte"
+                            >
+                                Créer un compte
+                            </button>
                         </p>
                     </div>
                 </div>

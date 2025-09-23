@@ -7,7 +7,6 @@ import '../../assets/styles/compenents/includes/header.scss';
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState(null);
     const [canAccessAdmin, setCanAccessAdmin] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,7 +18,6 @@ const Header = () => {
                 if (isAuth) {
                     const userProfile = await profileService.getProfile();
                     setIsAuthenticated(true);
-                    setUser(userProfile);
                      
                     try {
                         const { dashboardServices } = await import('../../services/dashboard/dashboardServices');
@@ -32,12 +30,10 @@ const Header = () => {
                     }
                 } else {
                     setIsAuthenticated(false);
-                    setUser(null);
                     setCanAccessAdmin(false);
                 }
             } catch (error) {
                 setIsAuthenticated(false);
-                setUser(null);
                 setCanAccessAdmin(false);
             }
         };
@@ -57,7 +53,6 @@ const Header = () => {
     const handleLogout = () => {
         authService.logout();
         setIsAuthenticated(false);
-        setUser(null);
         navigate('/');
     };
 
@@ -121,7 +116,12 @@ const Header = () => {
                         </>
                     )}
 
-                    <button className="mobile-menu-toggle" onClick={toggleMenu}>
+                    <button 
+                        className="mobile-menu-toggle" 
+                        onClick={toggleMenu}
+                        aria-label="Toggle mobile menu"
+                        aria-expanded={isMenuOpen}
+                    >
                         <span></span>
                         <span></span>
                         <span></span>

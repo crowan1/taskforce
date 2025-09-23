@@ -1,0 +1,135 @@
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+ 
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+ 
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+ 
+.link-button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  margin: 0;
+  
+  &:hover {
+    color: #2563eb;
+    text-decoration: none;
+  }
+  
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}
+ 
+[role="alert"] {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #ef4444;
+  background-color: #fef2f2;
+  color: #dc2626;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+button, 
+[role="button"],
+a {
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.mobile-menu-toggle {
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}
+
+[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #3b82f6;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  
+  &:focus {
+    top: 6px;
+  }
+}
+
+.task-card {
+  &:focus-within {
+    box-shadow: 0 0 0 2px #3b82f6;
+    outline: none;
+  }
+}
+
+.sr-only {
+  @extend .visually-hidden;
+}
+
+input[aria-invalid="true"] {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --focus-color: #60a5fa;
+    --error-color: #f87171;
+    --success-color: #34d399;
+  }
+  
+  *:focus-visible {
+    outline-color: var(--focus-color);
+  }
+  
+  [role="alert"] {
+    background-color: #7f1d1d;
+    color: var(--error-color);
+    border-left-color: var(--error-color);
+  }
+}
+

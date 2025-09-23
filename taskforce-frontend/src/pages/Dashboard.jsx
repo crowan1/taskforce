@@ -120,12 +120,6 @@ const Dashboard = () => {
         }
     };
 
-    // Edit d'une colonne
-    const handleEditColumn = (column) => {
-        setColumnToEdit(column);
-        setShowEditColumnModal(true);
-    };
-
 
 
     const handleUpdateColumn = async (columnId, columnData) => {
@@ -203,7 +197,7 @@ const Dashboard = () => {
                 return;
             }
 
-            const response = await dashboardServices.assignAllProjectTasks(selectedProject.id);
+            await dashboardServices.assignAllProjectTasks(selectedProject.id);
             
             await fetchTasks(selectedProject.id);
         } catch (err) {
@@ -259,7 +253,6 @@ const Dashboard = () => {
         return currentUser && project.createdBy && project.createdBy.id === currentUser.id;
     };
 
-    const isAdmin = role => authService.isResponsableProjet(role);
     const isManager = role => authService.canAccessAdmin(role);  
     const canDeleteColumns = role => authService.canModifyTasks(role); 
     const canDeleteProject = role => authService.canManageProject(role); 
@@ -273,7 +266,7 @@ const Dashboard = () => {
 
     const handleUpdateTask = async (taskId, taskData) => {
         try {
-            const data = await dashboardServices.updateTask(taskId, taskData);
+            await dashboardServices.updateTask(taskId, taskData);
             
             await fetchTasks(selectedProject.id);
             setShowEditTask(false);
@@ -406,7 +399,7 @@ const Dashboard = () => {
                         canAssignTasks={canAssignTasks}
                     />
 
-                {selectedProject && (
+                {selectedProject ? (
                     <KanbanBoard 
                         columns={columns}
                         tasks={tasks}
@@ -426,6 +419,26 @@ const Dashboard = () => {
                         onReorderColumns={handleReorderColumns}
                         onShowTaskDetail={handleShowTaskDetail}
                     />
+                ) : !loading && (
+                    <div className="no-projects-message">
+                        <div className="no-projects-content">
+                            <div className="no-projects-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="9" cy="9" r="2"/>
+                                    <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                                </svg>
+                            </div>
+                            <h3>Aucun projet disponible</h3>
+                            <p>Vous n'avez pas encore de projets en tant que responsable projet.</p>
+                            <button 
+                                className="btn-create-project"
+                                onClick={() => setShowCreateProject(true)}
+                            >
+                                Créer mon premier projet
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
