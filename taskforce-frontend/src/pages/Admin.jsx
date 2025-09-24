@@ -18,6 +18,7 @@ import '../assets/styles/compenents/admin/TasksTab.scss';
 import '../assets/styles/compenents/admin/UsersTab.scss';
 import '../assets/styles/compenents/admin/AddUserModal.scss';
 import '../assets/styles/compenents/admin/ReassignTaskModal.scss';
+import '../assets/styles/compenents/admin/AlertsTab.scss';
 import '../assets/styles/Admin.scss';
 
 const Admin = () => {

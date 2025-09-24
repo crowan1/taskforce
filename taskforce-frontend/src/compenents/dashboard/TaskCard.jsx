@@ -1,7 +1,7 @@
 import React from 'react';
 import authService from '../../services/authServices';
 
-const TaskCard = ({ task, onShowDeleteModal, onEditTask, onAssignTask, currentUserRole, onShowTaskDetail }) => {
+const TaskCard = ({ task, onShowDeleteModal, onEditTask, currentUserRole, onShowTaskDetail }) => {
 
     const handleDragStart = (e) => {
         e.dataTransfer.setData('taskId', task.id);
@@ -45,19 +45,6 @@ const TaskCard = ({ task, onShowDeleteModal, onEditTask, onAssignTask, currentUs
                 <h4 className="task-title">{task.title}</h4>
                 <div className="task-actions">
                     
-                    {!task.assignedTo && authService.canAccessAdmin(currentUserRole) && (
-                        <button 
-                            className="btn-assign"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onAssignTask(task.id);
-                            }}
-                            aria-label="Assigner automatiquement cette tâche"
-                            title="Assigner automatiquement"
-                        >
-                            <span aria-hidden="true">🎯</span>
-                        </button>
-                    )}
                     {authService.canModifyTasks(currentUserRole) && (
                         <button 
                             className="btn-delete"

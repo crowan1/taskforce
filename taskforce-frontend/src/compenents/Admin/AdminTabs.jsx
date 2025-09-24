@@ -1,4 +1,5 @@
 import React from 'react';
+import AlertsTab from './OverviewTab';
 import OverviewTab from './OverviewTab';
 import TasksTab from './TasksTab';
 import UsersTab from './UsersTab';
@@ -40,6 +41,12 @@ const AdminTabs = ({
                 >
                     Gestion des Utilisateurs
                 </button>
+                <button 
+                    className={`tab-button ${activeTab === 'alerts' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('alerts')}
+                >
+                    Alertes & Notifications
+                </button>
             </div>
 
             <div className="tab-content">
@@ -50,7 +57,7 @@ const AdminTabs = ({
                         onCreateTask={onCreateTask}
                         onAddUser={onAddUser}
                         onNavigateToDashboard={onNavigateToDashboard}
-                        currentUserRole={currentUserRole}
+                        selectedProject={selectedProject}
                     />
                 )}
 
@@ -74,6 +81,18 @@ const AdminTabs = ({
                         onUserUpdated={onUserUpdated}
                         selectedProject={selectedProject}
                         currentUserRole={currentUserRole}
+                    />
+                )}
+
+                {activeTab === 'alerts' && (
+                    <OverviewTab 
+                        projectTasks={projectTasks}
+                        projectUsers={projectUsers}
+                        onCreateTask={onCreateTask}
+                        onAddUser={onAddUser}
+                        onNavigateToDashboard={onNavigateToDashboard}
+                        selectedProject={selectedProject}
+                        mode="alerts"
                     />
                 )}
             </div>

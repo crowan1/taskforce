@@ -1,6 +1,29 @@
 const API_BASE_URL = 'http://localhost:8000/api';
 
 class StripeService {
+    async createCheckoutSession() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/stripe/create-checkout-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Request-ID': `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                }
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || 'Erreur lors de la création de la session Checkout');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erreur Stripe:', error);
+            throw error;
+        }
+    }
     async createPaymentIntent(amount = 999) {
         try {
             const token = localStorage.getItem('token');
@@ -92,6 +115,30 @@ class StripeService {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Erreur lors de l\'annulation de l\'abonnement');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Erreur Stripe:', error);
+            throw error;
+        }
+    }
+
+    async syncSubscription() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/stripe/sync-subscription`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-Request-ID': `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Erreur lors de la synchronisation de l\'abonnement');
             }
 
             return await response.json();

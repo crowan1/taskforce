@@ -1,99 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import stripeService from '../services/stripeService';
 import authService from '../services/authServices';
 import '../assets/styles/Premium.scss';
 
-const stripePromise = loadStripe('pk_test_51SAT2E1nyjlp4LhARtIKKbtM4WKBgoleeFXjsU4dTbnaQ2TSHJZWk7pX7IyQuWQWUpRFIvCd2zF5PocPIQHPQCm500pbdSlmYm');
-
-const CheckoutForm = ({ onSuccess, onError }) => {
-    const stripe = useStripe();
-    const elements = useElements();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-
-        if (!stripe || !elements) {
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const cardElement = elements.getElement(CardElement);
-            const { error, paymentMethod } = await stripe.createPaymentMethod({
-                type: 'card',
-                card: cardElement,
-            });
-
-            if (error) {
-                setError(error.message);
-                setLoading(false);
-                return;
-            }
-
-            const result = await stripeService.createSubscription(paymentMethod.id);
-            
-            if (result.subscription_id) {
-                onSuccess(result);
-            } else {
-                setError('Erreur lors de la création de l\'abonnement');
-            }
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="payment-form">
-            <div className="card-input">
-                <CardElement
-                    options={{
-                        style: {
-                            base: {
-                                fontSize: '14px',
-                                color: '#000000',
-                                fontFamily: 'system-ui, -apple-system, sans-serif',
-                                '::placeholder': {
-                                    color: '#999999',
-                                },
-                            },
-                            invalid: {
-                                color: '#dc2626',
-                            },
-                        },
-                        hidePostalCode: true,
-                        disableLink: true,
-                    }}
-                />
-            </div>
-            
-            {error && <div className="error-message">{error}</div>}
-            
-            <button 
-                type="submit" 
-                disabled={!stripe || loading}
-                className="btn-pay"
-            >
-                {loading ? 'Traitement...' : 'Payer 10.00€'}
-            </button>
-        </form>
-    );
-};
-
 const Upgrade = () => {
     const [subscriptionStatus, setSubscriptionStatus] = useState(null);
     const [loading, setLoading] = useState(true);
     const [success, setSuccess] = useState(false);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -107,6 +24,26 @@ const Upgrade = () => {
         };
         
         checkAuth();
+    }, [navigate]);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') === 'true') {
+            const sync = async () => {
+                try {
+                    await stripeService.syncSubscription();
+                } catch (e) {
+                }
+                setSuccess(true);
+                await fetchSubscriptionStatus();
+                setTimeout(() => {
+                    navigate('/dashboard');
+                }, 3000);
+            };
+            sync();
+        } else if (params.get('canceled') === 'true') {
+            setError('Paiement annulé.');
+        }
     }, [navigate]);
 
     const fetchSubscriptionStatus = async () => {
@@ -129,6 +66,16 @@ const Upgrade = () => {
 
     const handleError = (error) => {
         console.error('Erreur de paiement:', error);
+    };
+
+    const handleCheckout = () => {
+        setError(null);
+        const paymentLinkUrl = process.env.REACT_APP_STRIPE_PAYMENT_LINK_URL;
+        if (!paymentLinkUrl) {
+            setError('Définir REACT_APP_STRIPE_PAYMENT_LINK_URL.');
+            return;
+        }
+        window.location.href = paymentLinkUrl;
     };
 
     if (loading) {
@@ -190,14 +137,13 @@ const Upgrade = () => {
                                 <h2>Paiement</h2>
                             </div>
 
-                                        <div className="payment-form-container">
-                                            <Elements stripe={stripePromise}>
-                                                <CheckoutForm 
-                                                    onSuccess={handleSuccess}
-                                                    onError={handleError}
-                                                />
-                                            </Elements>
-                                        </div>
+                            {error && <div className="error-message">{error}</div>}
+
+                            <div className="payment-form-container" style={{ textAlign: 'center' }}>
+                                <button onClick={handleCheckout} className="btn-pay">
+                                    Passer au paiement sécurisé
+                                </button>
+                            </div>
 
                             <div className="security-info">
                                 <p>Paiement sécurisé par Stripe</p>

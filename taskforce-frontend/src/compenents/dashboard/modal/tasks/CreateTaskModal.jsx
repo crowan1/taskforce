@@ -11,7 +11,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUse
         status: '',
         skillIds: [],
         level: 'intermediate',
-        estimatedHours: 1
+        estimatedHours: 1,
+        dueDate: ''
     });
     const [skills, setSkills] = useState([]);
     const [columns, setColumns] = useState([]);
@@ -95,7 +96,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUse
                     status: '',
                     skillIds: [],
                     level: 'intermediate',
-                    estimatedHours: 1
+                    estimatedHours: 1,
+                    dueDate: ''
                 });
                 onClose();
             } else {
@@ -387,6 +389,16 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUse
                                 onChange={handleChange}
                                 required
                                 placeholder="Ex: 8"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="dueDate">Échéance</label>
+                            <input
+                                type="datetime-local"
+                                id="dueDate"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleChange}
                             />
                         </div>
                         <div className="form-group">

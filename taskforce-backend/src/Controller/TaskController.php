@@ -52,6 +52,8 @@ class TaskController extends AbstractController
                 'priority' => $task->getPriority(),
                 'level' => $task->getLevel(),
                 'estimatedHours' => $task->getEstimatedHours(),
+                'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d H:i:s') : null,
+                'isFinished' => $task->isFinished(),
                 'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
                 'updatedAt' => $task->getUpdatedAt()->format('Y-m-d H:i:s'),
                 'project' => [
@@ -132,6 +134,12 @@ class TaskController extends AbstractController
         $task->setPriority($data['priority'] ?? 'medium');
         $task->setLevel($data['level'] ?? 'intermediate');
         $task->setEstimatedHours($data['estimatedHours'] ?? 1.0);
+        if (!empty($data['dueDate'])) {
+            try {
+                $task->setDueDate(new \DateTimeImmutable($data['dueDate']));
+            } catch (\Exception $e) {
+            }
+        }
         $task->setCreatedBy($user);
         $task->setProject($project);
 
@@ -166,6 +174,8 @@ class TaskController extends AbstractController
                 'priority' => $task->getPriority(),
                 'level' => $task->getLevel(),
                 'estimatedHours' => $task->getEstimatedHours(),
+                'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d H:i:s') : null,
+                'isFinished' => $task->isFinished(),
                 'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
                 'project' => [
                     'id' => $task->getProject()->getId(),
@@ -245,6 +255,17 @@ class TaskController extends AbstractController
             $task->setEstimatedHours($data['estimatedHours']);
         }
 
+        if (array_key_exists('dueDate', $data)) {
+            if ($data['dueDate']) {
+                try {
+                    $task->setDueDate(new \DateTimeImmutable($data['dueDate']));
+                } catch (\Exception $e) {
+                }
+            } else {
+                $task->setDueDate(null);
+            }
+        }
+
         if (isset($data['assignedTo'])) {
             if ($data['assignedTo']) {
                 $assignedUser = $this->entityManager->getRepository(User::class)->find($data['assignedTo']);
@@ -283,6 +304,8 @@ class TaskController extends AbstractController
                 'priority' => $task->getPriority(),
                 'level' => $task->getLevel(),
                 'estimatedHours' => $task->getEstimatedHours(),
+                'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d H:i:s') : null,
+                'isFinished' => $task->isFinished(),
                 'createdAt' => $task->getCreatedAt()->format('Y-m-d H:i:s'),
                 'updatedAt' => $task->getUpdatedAt()->format('Y-m-d H:i:s'),
                 'project' => [
@@ -310,6 +333,62 @@ class TaskController extends AbstractController
                 }, $task->getRequiredSkills()->toArray())
             ]
         ]);
+    }
+
+    #[Route('/project/{projectId}/alerts', name: 'get_project_alerts', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function getProjectAlerts(int $projectId): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $project = $this->projectRepository->find($projectId);
+        if (!$project) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Projet non trouvé'
+            ], 404);
+        }
+
+        $projectUser = $this->entityManager->getRepository('App\\Entity\\ProjectUser')
+            ->findOneBy(['project' => $project, 'user' => $user]);
+        if (!$projectUser) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès non autorisé'
+            ], 403);
+        }
+
+        $now = new \DateTimeImmutable();
+        $overdueTasks = $this->taskRepository->findOverdueTasks($projectId, $now);
+        
+        $overdue = [];
+        foreach ($overdueTasks as $task) {
+            
+            $overdue[] = [
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'dueDate' => $task->getDueDate()->format('Y-m-d H:i:s'),
+                'assignedTo' => $task->getAssignedTo() ? [
+                    'id' => $task->getAssignedTo()->getId(),
+                    'firstname' => $task->getAssignedTo()->getFirstname(),
+                    'lastname' => $task->getAssignedTo()->getLastname(),
+                ] : null,
+                'status' => $task->getStatus(),
+                'priority' => $task->getPriority(),
+            ];
+        }
+
+        $workload = $this->taskAssignmentService->getWorkloadByUser($project);
+        $overloaded = array_values(array_filter($workload, fn($w) => !empty($w['isOverloaded'])));
+
+        $result = [
+            'success' => true,
+            'overdueTasks' => $overdue,
+            'overloadedUsers' => $overloaded,
+        ];
+        
+        return $this->json($result);
     }
 
     #[Route('/{id}', name: 'delete_task', methods: ['DELETE'])]
@@ -607,6 +686,45 @@ class TaskController extends AbstractController
                 'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    #[Route('/{id}/finish', name: 'finish_task', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function finishTask(int $id): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        
+        $task = $this->taskRepository->find($id);
+        if (!$task) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Tâche non trouvée'
+            ], 404);
+        }
+
+        $projectUser = $this->entityManager->getRepository('App\\Entity\\ProjectUser')
+            ->findOneBy(['project' => $task->getProject(), 'user' => $user]);
+        if (!$projectUser) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès non autorisé'
+            ], 403);
+        }
+
+        $task->setIsFinished(true);
+        $task->setAssignedTo(null);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Tâche terminée avec succès',
+            'task' => [
+                'id' => $task->getId(),
+                'isFinished' => $task->isFinished(),
+                'assignedTo' => null
+            ]
+        ]);
     }
     
 }

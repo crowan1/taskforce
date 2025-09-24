@@ -61,4 +61,19 @@ class TaskRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function findOverdueTasks(int $projectId, \DateTimeImmutable $now): array
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.project = :projectId')
+            ->andWhere('t.dueDate IS NOT NULL')
+            ->andWhere('t.dueDate < :now')
+            ->andWhere('t.isFinished = :isFinished')
+            ->setParameter('projectId', $projectId)
+            ->setParameter('now', $now)
+            ->setParameter('isFinished', false)
+            ->orderBy('t.dueDate', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

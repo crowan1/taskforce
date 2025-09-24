@@ -76,6 +76,12 @@ class Task
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $images = [];
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $dueDate = null;
+
+    #[ORM\Column(type: 'boolean')]
+    private bool $isFinished = false;
+
     public function __construct()
     {
         $this->status = 'backlog';
@@ -310,6 +316,28 @@ class Task
             unset($this->images[$key]);
             $this->images = array_values($this->images);
         }
+        return $this;
+    }
+
+    public function getDueDate(): ?\DateTimeImmutable
+    {
+        return $this->dueDate;
+    }
+
+    public function setDueDate(?\DateTimeImmutable $dueDate): static
+    {
+        $this->dueDate = $dueDate;
+        return $this;
+    }
+
+    public function isFinished(): bool
+    {
+        return $this->isFinished;
+    }
+
+    public function setIsFinished(bool $isFinished): static
+    {
+        $this->isFinished = $isFinished;
         return $this;
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import TaskColumn from './TaskColumn';
 
-const KanbanBoard = ({ columns, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole, onReorderColumns, onShowTaskDetail }) => {
+const KanbanBoard = ({ columns, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, currentUserRole, onReorderColumns, onShowTaskDetail }) => {
     const getTasksForColumn = (column) => {
         return tasks.filter(task => task.column?.id === column.id || task.status === column.identifier);
     };
@@ -19,7 +19,6 @@ const KanbanBoard = ({ columns, tasks, onUpdateTaskStatus, onDeleteTask, onShowD
                         onShowDeleteModal={onShowDeleteModal}
                         onAddSkills={onAddSkills}
                         onEditTask={onEditTask}
-                        onAssignTask={onAssignTask}
                         currentUserRole={currentUserRole}
                         onReorder={onReorderColumns}
                         onShowTaskDetail={onShowTaskDetail}

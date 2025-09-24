@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import KanbanBoard from '../compenents/dashboard/KanbanBoard';
@@ -11,20 +12,7 @@ import UpgradeModal from '../compenents/dashboard/modal/UpgradeModal';
 import { dashboardServices } from '../services/dashboard/dashboardServices';
 import authService from '../services/authServices';
 
-// styles
-import '../assets/styles/compenents/Dashboard/CreateTaskProjectModal.scss';
-import '../assets/styles/compenents/Dashboard/ModalDelete.scss';
-import '../assets/styles/compenents/Dashboard/TaskCard.scss';
-import '../assets/styles/compenents/Dashboard/TaskDetailModal.scss';
-import '../assets/styles/Dashboard.scss';
-import '../assets/styles/compenents/Dashboard/includes/kanban.scss';
-import '../assets/styles/compenents/Dashboard/includes/project-sidebar.scss';
-import '../assets/styles/compenents/Dashboard/includes/task-columns.scss';
-import '../assets/styles/compenents/Dashboard/includes/buttons.scss';
-import '../assets/styles/compenents/Dashboard/modal/tasks/task-modals.scss';
-import '../assets/styles/compenents/Dashboard/modal/project/project-modals.scss';
-import '../assets/styles/compenents/Dashboard/modal/columns/column-modals.scss';
-import '../assets/styles/compenents/Dashboard/UpgradeModal.scss';
+import '../styles/dashboard.scss';
 
 const Dashboard = () => {
     const [tasks, setTasks] = useState([]);
@@ -165,45 +153,7 @@ const Dashboard = () => {
         }
     };
 
-    const handleAssignTask = async (taskId) => {
-        if (!selectedProject) return;
-        
-        try {
-            const projectUsers = await dashboardServices.getProjectUsers(selectedProject.id);
-            if (!projectUsers || projectUsers.length === 0) {
-                setError('Aucun collaborateur n\'est ajouté à ce projet. Veuillez d\'abord ajouter des utilisateurs au projet avant de pouvoir assigner des tâches automatiquement.');
-                return;
-            }
 
-            const response = await dashboardServices.assignTaskAutomatically(taskId);
-            
-            setTasks(prev => prev.map(task => 
-                task.id === taskId 
-                    ? { ...task, assignedTo: response.assignedTo }
-                    : task
-            ));
-        } catch (err) {
-            setError(err.message || 'Erreur lors de l\'assignation de la tâche');
-        }
-    };
-
-    const handleAssignAllTasks = async () => {
-        if (!selectedProject) return;
-        
-        try {
-            const projectUsers = await dashboardServices.getProjectUsers(selectedProject.id);
-            if (!projectUsers || projectUsers.length === 0) {
-                setError('Aucun collaborateur n\'est ajouté à ce projet. Veuillez d\'abord ajouter des utilisateurs au projet avant de pouvoir assigner des tâches automatiquement.');
-                return;
-            }
-
-            await dashboardServices.assignAllProjectTasks(selectedProject.id);
-            
-            await fetchTasks(selectedProject.id);
-        } catch (err) {
-            setError(err.message || 'Erreur lors de l\'assignation des tâches');
-        }
-    };
 
     const handleCreateColumn = async (columnData) => {
         try {
@@ -257,7 +207,6 @@ const Dashboard = () => {
     const canDeleteColumns = role => authService.canModifyTasks(role); 
     const canDeleteProject = role => authService.canManageProject(role); 
     const canCreateTasks = role => authService.canModifyTasks(role); 
-    const canAssignTasks = role => authService.canAccessAdmin(role);  
 
     const handleEditTask = (task) => {
         setSelectedTask(task);
@@ -281,20 +230,27 @@ const Dashboard = () => {
         setShowTaskDetailModal(true);
     };
 
-    const handleTaskDetailUpdate = async () => {
-        if (selectedProject) {
-            await fetchTasks(selectedProject.id);
-            await fetchColumns(selectedProject.id);
+    const handleTaskDetailUpdate = async (taskId, taskData) => {
+        try {
+            if (taskId && taskData) {
+                await dashboardServices.updateTask(taskId, taskData);
+            }
             
-            if (selectedTaskForDetail) {
-                const updatedTasks = await dashboardServices.getTasks(selectedProject.id);
-                if (updatedTasks && Array.isArray(updatedTasks)) {
+            if (selectedProject) {
+                await fetchTasks(selectedProject.id);
+                await fetchColumns(selectedProject.id);
+                
+                if (selectedTaskForDetail) {
+                    const updatedTasksData = await dashboardServices.getTasks(selectedProject.id);
+                    const updatedTasks = updatedTasksData?.tasks || [];
                     const updatedTask = updatedTasks.find(t => t.id === selectedTaskForDetail.id);
                     if (updatedTask) {
                         setSelectedTaskForDetail(updatedTask);
                     }
                 }
             }
+        } catch (err) {
+            setError(err.message || 'Erreur lors de la mise à jour de la tâche');
         }
     };
 
@@ -302,25 +258,24 @@ const Dashboard = () => {
         fetchProjects();
     }, []);
 
+    const [currentUser] = useLocalStorage('user');
+    const userRole = useMemo(() => {
+        if (!selectedProject || !currentUser) return null;
+        const currentUserInProject = selectedProject.users?.find(u => u.id === currentUser.id);
+        return currentUserInProject?.role || null;
+    }, [selectedProject, currentUser]);
+
     useEffect(() => {
-        if (selectedProject) {
-            const currentUser = JSON.parse(localStorage.getItem('user'));
-            if (currentUser) {
-                const currentUserInProject = selectedProject.users?.find(u => u.id === currentUser.id);
-                const role = currentUserInProject?.role;
-                setCurrentUserRole(role);
-                authService.setCurrentUserRole(role);
-            } else {
-                setCurrentUserRole(null);
-                authService.setCurrentUserRole(null);
-            }
-        }
-    }, [selectedProject]);
+        setCurrentUserRole(userRole);
+        authService.setCurrentUserRole(userRole);
+    }, [userRole]);
 
     useEffect(() => {
         if (selectedProject) {
-            fetchTasks(selectedProject.id);
-            fetchColumns(selectedProject.id);
+            Promise.all([
+                fetchTasks(selectedProject.id),
+                fetchColumns(selectedProject.id)
+            ]).catch(() => {});
         }
     }, [selectedProject]);
 
@@ -391,12 +346,10 @@ const Dashboard = () => {
                         setShowDeleteProjectModal={setShowDeleteProjectModal}
                         setShowCreateTask={setShowCreateTask}
                         setShowDescriptionModal={setShowDescriptionModal}
-                        handleAssignAllTasks={handleAssignAllTasks}
                         isManager={isManager}
                         canDeleteColumns={canDeleteColumns}
                         canDeleteProject={canDeleteProject}
                         canCreateTasks={canCreateTasks}
-                        canAssignTasks={canAssignTasks}
                     />
 
                 {selectedProject ? (
@@ -414,7 +367,6 @@ const Dashboard = () => {
                             setShowAddSkills(true);
                         }}
                         onEditTask={handleEditTask}
-                        onAssignTask={handleAssignTask}
                         currentUserRole={currentUserRole}
                         onReorderColumns={handleReorderColumns}
                         onShowTaskDetail={handleShowTaskDetail}

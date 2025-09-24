@@ -12,6 +12,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
         status: '',
         level: 'intermediate',
         estimatedHours: 1,
+        dueDate: '',
         skillIds: []
     });
     const [skills, setSkills] = useState([]);
@@ -35,6 +36,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                 status: task.status || '',
                 level: task.level || 'intermediate',
                 estimatedHours: task.estimatedHours || 1,
+                dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : '',
                 skillIds: skillIds
             });
             setImages(Array.isArray(task?.images) ? task.images : []);
@@ -199,6 +201,33 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
         }
     };
 
+    const handleFinishTask = async () => {
+        if (!window.confirm('Êtes-vous sûr de vouloir terminer cette tâche ? Elle sera désassignée et ne comptera plus dans la charge de travail.')) {
+            return;
+        }
+
+        try {
+            const response = await dashboardServices.finishTask(task.id);
+            if (response.success) {
+                const updatedTask = { 
+                    ...task, 
+                    isFinished: true, 
+                    assignedTo: null 
+                };
+                onTaskUpdate(updatedTask);
+                setMessage('Tâche terminée avec succès');
+                setTimeout(() => {
+                    setMessage('');
+                    onClose();
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la finalisation de la tâche:', error);
+            setMessage('Erreur lors de la finalisation de la tâche');
+            setTimeout(() => setMessage(''), 3000);
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('fr-FR', {
@@ -248,7 +277,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                     <div className="header-actions">
                         {!isEditing && authService.canModifyTasks(currentUserRole) && (
                             <button 
-                                className="btn-edit"
+                                className="btn-edit-modern"
                                 onClick={() => setIsEditing(true)}
                                 title="Modifier cette tâche"
                             >
@@ -349,6 +378,17 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                                     placeholder="Ex: 8"
                                 />
                             </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="dueDate">Date d'échéance</label>
+                            <input
+                                type="datetime-local"
+                                id="dueDate"
+                                name="dueDate"
+                                value={formData.dueDate}
+                                onChange={handleChange}
+                            />
                         </div>
 
                         <div className="form-group">
@@ -530,6 +570,32 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                             )}
                         </div>
 
+                        {task.dueDate && (
+                            <div className="form-group">
+                                <label>Date d'échéance</label>
+                                <div className="task-display-value">
+                                    <span className="due-date-badge" style={{
+                                        backgroundColor: new Date(task.dueDate) < new Date() ? '#fef2f2' : '#f0f9ff',
+                                        color: new Date(task.dueDate) < new Date() ? '#dc2626' : '#0369a1',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        border: `1px solid ${new Date(task.dueDate) < new Date() ? '#fca5a5' : '#93c5fd'}`
+                                    }}>
+                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                        {new Date(task.dueDate) < new Date() && ' (En retard)'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="form-group">
                             <label>Compétences requises</label>
                             {task.requiredSkills && task.requiredSkills.length > 0 ? (
@@ -595,6 +661,42 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                         {message && (
                             <div className="message">
                                 {message}
+                            </div>
+                        )}
+
+                        {!task.isFinished && (
+                            <div className="modal-actions">
+                                <button 
+                                    type="button" 
+                                    onClick={handleFinishTask}
+                                    className="btn-finish"
+                                    style={{
+                                        backgroundColor: '#10b981',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '10px 20px',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        fontWeight: '600'
+                                    }}
+                                >
+                                    TERMINER
+                                </button>
+                            </div>
+                        )}
+
+                        {task.isFinished && (
+                            <div className="task-finished-badge" style={{
+                                backgroundColor: '#f3f4f6',
+                                color: '#6b7280',
+                                padding: '10px',
+                                borderRadius: '5px',
+                                textAlign: 'center',
+                                fontWeight: '600',
+                                marginTop: '15px'
+                            }}>
+                                ✓ Tâche terminée
                             </div>
                         )}
                     </div>

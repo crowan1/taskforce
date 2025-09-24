@@ -21,19 +21,15 @@ const MyAccount = () => {
         const fetchUserProfile = async () => {
             try {
                 setLoading(true);
-                const userData = await profileService.getProfile();
+                const [userData, subscription] = await Promise.all([
+                    profileService.getProfile(),
+                    stripeService.getSubscriptionStatus().catch(() => ({ is_premium: false }))
+                ]);
                 setUser(userData);
-                 
-                try {
-                    const subscription = await stripeService.getSubscriptionStatus();
-                    setSubscriptionStatus(subscription);
-                } catch (subscriptionError) {
-                    console.error('Error fetching subscription:', subscriptionError);
-                    setSubscriptionStatus({ is_premium: false });
-                }
+                setSubscriptionStatus(subscription);
             } catch (err) {
                 setError('Erreur lors du chargement du profil');
-                console.error('Error fetching profile:', err);
+                console.error('Error fetching profile/subscription:', err);
             } finally {
                 setLoading(false);
             }

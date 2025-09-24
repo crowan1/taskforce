@@ -156,6 +156,16 @@ export const dashboardServices = {
         return apiCall(`${API_BASE_URL}/tasks/project/${projectId}/workload`);
     },
 
+    getProjectAlerts: async (projectId) => {
+        return apiCall(`${API_BASE_URL}/tasks/project/${projectId}/alerts`);
+    },
+
+    finishTask: async (taskId) => {
+        return apiCall(`${API_BASE_URL}/tasks/${taskId}/finish`, {
+            method: 'POST'
+        });
+    },
+
     // COlonnes
     getColumns: async (projectId) => {
         return apiCall(`${API_BASE_URL}/columns?projectId=${projectId}`);

@@ -11,12 +11,10 @@ const KanbanHeader = ({
     setShowDeleteProjectModal,
     setShowCreateTask,
     setShowDescriptionModal,
-    handleAssignAllTasks,
     isManager,
     canDeleteColumns,
     canDeleteProject,
-    canCreateTasks,
-    canAssignTasks
+    canCreateTasks
 }) => {
     if (!selectedProject) {
         return (
@@ -107,16 +105,6 @@ const KanbanHeader = ({
                     </div>
                 )}
                 
-                
-                {canAssignTasks(currentUserRole) && (
-                    <button 
-                        className="btn-assign-all"
-                        onClick={handleAssignAllTasks}
-                        title="Assigner automatiquement toutes les tâches non assignées"
-                    >
-                         Assigner Toutes
-                    </button>
-                )}
 
                 {canDeleteProject(currentUserRole) && (
                     <button 

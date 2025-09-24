@@ -54,6 +54,9 @@ const ProfileInfo = ({ user, onUpdate, subscriptionStatus }) => {
 
     const handleCancelSubscription = async () => {
         try {
+            try {
+                await stripeService.syncSubscription();
+            } catch (_) {}
             const result = await stripeService.cancelSubscription();
             
             if (result.success) {
@@ -64,7 +67,16 @@ const ProfileInfo = ({ user, onUpdate, subscriptionStatus }) => {
             }
         } catch (error) {
             console.error('Erreur lors de l\'annulation:', error);
-            alert('Erreur lors de l\'annulation de l\'abonnement: ' + error.message);
+            alert('Erreur lors de l\'annulation de l\'abonnement: ' + (error?.message || 'Inconnue'));
+        }
+    };
+
+    const handleSyncNow = async () => {
+        try {
+            await stripeService.syncSubscription();
+            window.location.reload();
+        } catch (e) {
+            alert('Impossible d\'actualiser l\'abonnement. Réessaie après quelques secondes.');
         }
     };
 
@@ -150,12 +162,20 @@ const ProfileInfo = ({ user, onUpdate, subscriptionStatus }) => {
                                 Modifier le profil
                             </button>
                             {!subscriptionStatus?.is_premium ? (
-                                <button 
-                                    className="btn-premium" 
-                                    onClick={() => window.location.href = '/upgrade'}
-                                >
-                                    Devenir Premium
-                                </button>
+                                <>
+                                    <button 
+                                        className="btn-premium" 
+                                        onClick={() => window.location.href = '/upgrade'}
+                                    >
+                                        Devenir Premium
+                                    </button>
+                                    <button 
+                                        className="btn-save" 
+                                        onClick={handleSyncNow}
+                                    >
+                                        J'ai payé, actualiser
+                                    </button>
+                                </>
                             ) : (
                                 <button 
                                     className="btn-cancel-premium" 

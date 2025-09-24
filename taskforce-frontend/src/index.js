@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from './context/AuthContext.jsx';
+import { initPerformanceOptimizations } from './utils/performanceUtils';
 
 (async () => {
   try {
@@ -18,6 +19,8 @@ import { AuthProvider } from './context/AuthContext.jsx';
   } catch (e) {
   }
 })();
+
+initPerformanceOptimizations();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

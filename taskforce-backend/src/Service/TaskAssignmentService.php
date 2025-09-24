@@ -138,7 +138,9 @@ class TaskAssignmentService
 
         $totalHours = 0;
         foreach ($assignedTasks as $task) {
-            $totalHours += $task->getEstimatedHours() ?? 1.0;
+            if (!$task->isFinished()) {
+                $totalHours += $task->getEstimatedHours() ?? 1.0;
+            }
         }
 
         $maxWorkload = $user->getMaxWorkloadHours() ?? 40.0;
@@ -188,8 +190,14 @@ class TaskAssignmentService
             ]);
 
             $totalHours = 0;
+            $activeTasks = [];
             foreach ($assignedTasks as $task) {
-                $totalHours += $task->getEstimatedHours() ?? 1.0;
+                $status = strtolower($task->getStatus() ?? '');
+                $isCompleted = in_array($status, ['done', 'completed', 'termine', 'terminé'], true);
+                if (!$isCompleted) {
+                    $totalHours += $task->getEstimatedHours() ?? 1.0;
+                    $activeTasks[] = $task;
+                }
             }
 
             $maxWorkload = $user->getMaxWorkloadHours() ?? 40.0;
@@ -198,7 +206,8 @@ class TaskAssignmentService
             $workloads[] = [
                 'userId' => $user->getId(),
                 'userName' => $user->getFirstname() . ' ' . $user->getLastname(),
-                'taskCount' => count($assignedTasks),
+                'userEmail' => $user->getEmail(),
+                'taskCount' => count($activeTasks),   
                 'totalHours' => $totalHours,
                 'maxWorkloadHours' => $maxWorkload,
                 'workloadPercentage' => round($workloadPercentage, 1),
@@ -211,7 +220,7 @@ class TaskAssignmentService
                         'status' => $task->getStatus(),
                         'estimatedHours' => $task->getEstimatedHours()
                     ];
-                }, $assignedTasks)
+                }, $activeTasks) 
             ];
         }
 
@@ -227,7 +236,9 @@ class TaskAssignmentService
 
         $totalHours = 0;
         foreach ($assignedTasks as $task) {
-            $totalHours += $task->getEstimatedHours() ?? 1.0;
+            if (!$task->isFinished()) {
+                $totalHours += $task->getEstimatedHours() ?? 1.0;
+            }
         }
 
         return $totalHours;

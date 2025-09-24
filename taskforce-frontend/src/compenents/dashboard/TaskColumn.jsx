@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import TaskCard from './TaskCard';
 
-const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, onAssignTask, currentUserRole, onReorder, onShowTaskDetail }) => {
+const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDeleteModal, onAddSkills, onEditTask, currentUserRole, onReorder, onShowTaskDetail }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
 
@@ -96,7 +96,6 @@ const TaskColumn = ({ column, tasks, onUpdateTaskStatus, onDeleteTask, onShowDel
                             onShowDeleteModal={onShowDeleteModal}
                             onAddSkills={onAddSkills}
                             onEditTask={onEditTask}
-                            onAssignTask={onAssignTask}
                             currentUserRole={currentUserRole}
                             onShowTaskDetail={onShowTaskDetail}
                         />
