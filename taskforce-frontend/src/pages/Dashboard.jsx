@@ -198,6 +198,17 @@ const Dashboard = () => {
         }
     };
 
+    const handleDeleteColumn = async (columnId) => {
+        try {
+            await dashboardServices.deleteColumn(columnId);
+            setColumns(prev => prev.filter(column => column.id !== columnId));
+            setShowDeleteColumnModal(false);
+            setColumnToDelete(null);
+        } catch (err) {
+            setError(err.message || 'Erreur lors de la suppression de la colonne');
+        }
+    };
+
     const isCreator = (project) => {
         const currentUser = JSON.parse(localStorage.getItem('user'));
         return currentUser && project.createdBy && project.createdBy.id === currentUser.id;
@@ -429,6 +440,7 @@ const Dashboard = () => {
                 onDeleteProject={handleDeleteProject}
                 onDeleteTask={handleDeleteTask}
                 handleUpdateColumn={handleUpdateColumn}
+                handleDeleteColumn={handleDeleteColumn}
                 handleTaskDetailUpdate={handleTaskDetailUpdate}
                 fetchProjects={fetchProjects}
             />

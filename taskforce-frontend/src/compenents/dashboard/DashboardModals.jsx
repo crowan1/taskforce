@@ -41,6 +41,7 @@ const DashboardModals = ({
     onDeleteProject,
     onDeleteTask,
     handleUpdateColumn,
+    handleDeleteColumn,
     handleTaskDetailUpdate,
     fetchProjects
 }) => {
@@ -143,8 +144,7 @@ const DashboardModals = ({
                             <button 
                                 className="btn-confirm-delete"
                                 onClick={() => { 
-                                    setShowDeleteColumnModal(false);
-                                    setColumnToDelete(null);
+                                    handleDeleteColumn(columnToDelete.id);
                                 }}
                             >
                                 Supprimer la colonne
