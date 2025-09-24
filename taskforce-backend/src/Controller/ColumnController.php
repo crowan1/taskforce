@@ -44,8 +44,8 @@ class ColumnController extends AbstractController
                 'description' => $column->getDescription(),
                 'position' => $column->getPosition(),
                 'isActive' => $column->isActive(),
-                'createdAt' => $column->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $column->getUpdatedAt()->format('Y-m-d H:i:s')
+                'createdAt' => $column->getCreatedAt()?->format('Y-m-d H:i:s'),
+                'updatedAt' => $column->getUpdatedAt()?->format('Y-m-d H:i:s')
             ];
         }, $columns);
 
@@ -111,8 +111,8 @@ class ColumnController extends AbstractController
                 'description' => $column->getDescription(),
                 'position' => $column->getPosition(),
                 'isActive' => $column->isActive(),
-                'createdAt' => $column->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $column->getUpdatedAt()->format('Y-m-d H:i:s')
+                'createdAt' => $column->getCreatedAt()?->format('Y-m-d H:i:s'),
+                'updatedAt' => $column->getUpdatedAt()?->format('Y-m-d H:i:s')
             ]
         ]);
     }
@@ -162,8 +162,8 @@ class ColumnController extends AbstractController
                 'description' => $column->getDescription(),
                 'position' => $column->getPosition(),
                 'isActive' => $column->isActive(),
-                'createdAt' => $column->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $column->getUpdatedAt()->format('Y-m-d H:i:s')
+                'createdAt' => $column->getCreatedAt()?->format('Y-m-d H:i:s'),
+                'updatedAt' => $column->getUpdatedAt()?->format('Y-m-d H:i:s')
             ]
         ]);
     }

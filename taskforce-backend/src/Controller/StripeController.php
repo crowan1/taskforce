@@ -23,7 +23,7 @@ class StripeController extends AbstractController
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
-        Stripe::setApiKey($_ENV['STRIPE_SECRET_KEY']);
+        Stripe::setApiKey(getenv('STRIPE_SECRET_KEY') ?: $_ENV['STRIPE_SECRET_KEY']);
     }
 
     #[Route('/create-payment-intent', name: 'create_payment_intent', methods: ['POST'])]
@@ -36,7 +36,7 @@ class StripeController extends AbstractController
             }
 
             $data = json_decode($request->getContent(), true);
-            $amount = $data['amount'] ?? 200; //2€
+            $amount = $data['amount'] ?? 1000; //10€
 
             $paymentIntent = PaymentIntent::create([
                 'amount' => $amount,
@@ -49,7 +49,7 @@ class StripeController extends AbstractController
 
             return new JsonResponse([
                 'client_secret' => $paymentIntent->client_secret,
-                'publishable_key' => $_ENV['STRIPE_PUBLISHABLE_KEY']
+                'publishable_key' => getenv('STRIPE_PUBLISHABLE_KEY') ?: $_ENV['STRIPE_PUBLISHABLE_KEY']
             ]);
 
         } catch (ApiErrorException $e) {
@@ -84,7 +84,7 @@ class StripeController extends AbstractController
             $subscription = StripeSubscription::create([
                 'customer' => $customer->id,
                 'items' => [[
-                    'price' => 'price_1S6BN0JUQKk2FvCnHOsbdaAz',
+                    'price' => getenv('STRIPE_PRICE_ID') ?: 'price_1SAT7p1nyjlp4LhA2vqx9h5L',
                 ]],
                 'default_payment_method' => $paymentMethodId,
                 'payment_behavior' => 'default_incomplete',
@@ -96,7 +96,7 @@ class StripeController extends AbstractController
             $dbSubscription->setStripeSubscriptionId($subscription->id);
             $dbSubscription->setStatus('active');
             $dbSubscription->setPlan('premium');
-            $dbSubscription->setAmount('2.00');
+            $dbSubscription->setAmount('10.00');
             $dbSubscription->setCurrency('eur');
             if (isset($subscription->current_period_start)) {
                 $dbSubscription->setCurrentPeriodStart(new \DateTimeImmutable('@' . $subscription->current_period_start));
@@ -198,7 +198,7 @@ class StripeController extends AbstractController
     {
         $payload = $request->getContent();
         $sigHeader = $request->headers->get('stripe-signature');
-        $endpointSecret = $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '';
+        $endpointSecret = getenv('STRIPE_WEBHOOK_SECRET') ?: ($_ENV['STRIPE_WEBHOOK_SECRET'] ?? '');
 
         try {
             $event = \Stripe\Webhook::constructEvent($payload, $sigHeader, $endpointSecret);

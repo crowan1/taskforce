@@ -4,8 +4,10 @@
 coverage/
 *.lcov
 
-# Docker
+# Docker & Environment
 docker.env
+.env
+.env.local
 
 .idea/
 .DS_Store

@@ -49,12 +49,10 @@ services:
     volumes:
       - ./taskforce-backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
+    env_file:
+      - .env
     environment:
       - APP_ENV=dev
-      - DATABASE_URL=mysql://taskforce_user:taskforce_password@mysql:3306/taskforce
-      - JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
-      - JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
-      - JWT_PASSPHRASE=
     depends_on:
       - mysql
     networks:

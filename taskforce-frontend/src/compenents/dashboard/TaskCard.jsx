@@ -60,19 +60,6 @@ const TaskCard = ({ task, onShowDeleteModal, onEditTask, onAssignTask, currentUs
                     )}
                     {authService.canModifyTasks(currentUserRole) && (
                         <button 
-                            className="btn-edit"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEditTask(task);
-                            }}
-                            aria-label="Modifier cette tâche"
-                            title="Modifier la tâche"
-                        >
-                            <span aria-hidden="true">✏️</span>
-                        </button>
-                    )}
-                    {authService.canModifyTasks(currentUserRole) && (
-                        <button 
                             className="btn-delete"
                             onClick={(e) => {
                                 e.stopPropagation();

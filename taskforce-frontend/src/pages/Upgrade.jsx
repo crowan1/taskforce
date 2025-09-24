@@ -8,7 +8,7 @@ import stripeService from '../services/stripeService';
 import authService from '../services/authServices';
 import '../assets/styles/Premium.scss';
 
-const stripePromise = loadStripe('pk_test_51S6AkoJUQKk2FvCnMDbFve7QqXDzOpDX0iK1S2nV8junCmZayRzeWIWZMb8EPpfGsChriTGJtSIXnNxivo8HZXLd00TaiPyKbi');
+const stripePromise = loadStripe('pk_test_51SAT2E1nyjlp4LhARtIKKbtM4WKBgoleeFXjsU4dTbnaQ2TSHJZWk7pX7IyQuWQWUpRFIvCd2zF5PocPIQHPQCm500pbdSlmYm');
 
 const CheckoutForm = ({ onSuccess, onError }) => {
     const stripe = useStripe();
@@ -84,7 +84,7 @@ const CheckoutForm = ({ onSuccess, onError }) => {
                 disabled={!stripe || loading}
                 className="btn-pay"
             >
-                {loading ? 'Traitement...' : 'Payer 2.00€'}
+                {loading ? 'Traitement...' : 'Payer 10.00€'}
             </button>
         </form>
     );
@@ -181,7 +181,7 @@ const Upgrade = () => {
                 <div className="premium-content">
                     <div className="premium-header">
                         <h1>Premium</h1>
-                        <p>2.00€ / mois</p>
+                        <p>10.00€ / mois</p>
                     </div>
 
                     <div className="payment-modal">

@@ -24,9 +24,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copie des fichiers de configuration Composer
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
-# Installation des dépendances Composer
+# Installation des dépendances Composer (génère composer.lock automatiquement)
 RUN composer install --no-scripts --no-autoloader
 
 # Copie du reste de l'application
@@ -73,10 +73,17 @@ RUN echo 'server { \
 # Expose le port 8000
 EXPOSE 8000
 
+# Copie du script d'initialisation
+COPY docker/init.sh /init.sh
+RUN chmod +x /init.sh
+
 # Script de démarrage
 RUN echo '#!/bin/bash\n\
-php-fpm -D\n\
-nginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
+php-fpm -D &\n\
+nginx &\n\
+/init.sh\n\
+# Garder les services en vie\n\
+tail -f /dev/null' > /start.sh && chmod +x /start.sh
 
 # Commande par défaut
 CMD ["/start.sh"]

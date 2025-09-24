@@ -1,45 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import authService from "../../services/authServices";
-import profileService from "../../services/profil/profileService";
+import { useAuth } from '../../context/AuthContext.jsx';
 import '../../assets/styles/compenents/includes/header.scss';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [canAccessAdmin, setCanAccessAdmin] = useState(false);
+    const { isAuthenticated, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const isAuth = await authService.isAuthenticated();
-                if (isAuth) {
-                    const userProfile = await profileService.getProfile();
-                    setIsAuthenticated(true);
-                     
-                    try {
-                        const { dashboardServices } = await import('../../services/dashboard/dashboardServices');
-                        const projectsData = await dashboardServices.getProjects();
-                        const hasAdminAccess = authService.canAccessAdminGlobally(projectsData.projects, userProfile.id);
-                        setCanAccessAdmin(hasAdminAccess);
-                    } catch (error) {
-                        console.error('Erreur lors de la vérification des permissions admin:', error);
-                        setCanAccessAdmin(false);
-                    }
-                } else {
-                    setIsAuthenticated(false);
-                    setCanAccessAdmin(false);
-                }
-            } catch (error) {
-                setIsAuthenticated(false);
-                setCanAccessAdmin(false);
-            }
-        };
-
-        checkAuth();
-    }, [location.pathname]);
 
     useEffect(() => {
         setIsMenuOpen(false);
@@ -51,8 +20,7 @@ const Header = () => {
     };
 
     const handleLogout = () => {
-        authService.logout();
-        setIsAuthenticated(false);
+        try { logout(); } catch (_) {}
         navigate('/');
     };
 
@@ -77,11 +45,9 @@ const Header = () => {
                                 <button className="nav-link" onClick={() => navigate('/dashboard')}>
                                     Mes Tableaux
                                 </button>
-                                {canAccessAdmin && (
-                                    <button className="nav-link" onClick={() => navigate('/admin')}>
-                                        Admin
-                                    </button>
-                                )}
+                                <button className="nav-link" onClick={() => navigate('/admin')}>
+                                    Admin
+                                </button>
                                 <button className="nav-link" onClick={() => navigate('/my-account')}>
                                     Mon Compte
                                 </button>
@@ -96,11 +62,9 @@ const Header = () => {
                             <button className="btn-login" onClick={() => navigate('/dashboard')}>
                                 Mes Tableaux
                             </button>
-                            {canAccessAdmin && (
-                                <button className="btn-admin" onClick={() => navigate('/admin')}>
-                                    Admin
-                                </button>
-                            )}
+                            <button className="btn-admin" onClick={() => navigate('/admin')}>
+                                Admin
+                            </button>
                             <button className="btn-signup" onClick={() => navigate('/account')}>
                                 Mon Compte
                             </button>

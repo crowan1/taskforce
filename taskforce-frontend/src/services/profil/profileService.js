@@ -29,7 +29,15 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.replace('/login');
+            try {
+                const publicPaths = ['/login', '/register', '/', '/home'];
+                const currentPath = window.location.pathname || '';
+                const isPublic = publicPaths.some((p) => currentPath.includes(p));
+                if (!isPublic) {
+                    window.location.replace('/login');
+                }
+            } catch (_) {
+            }
         }
         return Promise.reject(error);
     }

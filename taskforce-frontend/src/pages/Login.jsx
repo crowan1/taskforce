@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import '../assets/styles/Login.scss';
 import Header from "../compenents/includes/header";
 import Footer from "../compenents/includes/footer";
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ const Login = () => {
     };
 
     const navigate = useNavigate();
+    const { refreshAuth } = useAuth();
 
     const handleRegister = () => {
         navigate("/register");
@@ -33,6 +35,7 @@ const Login = () => {
 
         try {
             await authService.login(formData);
+            await refreshAuth();
             navigate('/account');
         } catch (error) {
             console.error('Erreur de connexion:', error);

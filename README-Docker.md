@@ -15,6 +15,11 @@ docker-compose up -d
 
 ### 3. C'est tout ! 
 
+🎉 **L'initialisation se fait automatiquement** :
+- ✅ Migrations Doctrine exécutées
+- ✅ Rôles par défaut créés (Collaborateur, Manager, Responsable Projet)
+- ✅ Base de données prête à l'emplo
+
 Accédez à votre application :
 - **Application** : http://localhost:3000
 - **API Backend** : http://localhost:8000
