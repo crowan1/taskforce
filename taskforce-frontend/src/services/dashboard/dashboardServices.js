@@ -160,6 +160,13 @@ export const dashboardServices = {
         return apiCall(`${API_BASE_URL}/tasks/project/${projectId}/alerts`);
     },
 
+    dismissAlert: async (projectId, alertData) => {
+        return apiCall(`${API_BASE_URL}/tasks/project/${projectId}/alerts/dismiss`, {
+            method: 'POST',
+            body: JSON.stringify(alertData)
+        });
+    },
+
     finishTask: async (taskId) => {
         return apiCall(`${API_BASE_URL}/tasks/${taskId}/finish`, {
             method: 'POST'

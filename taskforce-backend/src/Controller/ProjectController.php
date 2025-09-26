@@ -31,7 +31,21 @@ class ProjectController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         
-        $projects = $this->projectRepository->findByUser($user->getId());
+        if (!$user) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Utilisateur non authentifié'
+            ], 401);
+        }
+        
+        try {
+            $projects = $this->projectRepository->findByUser($user->getId());
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des projets: ' . $e->getMessage()
+            ], 500);
+        }
         
         $formattedProjects = array_map(function(Project $project) {
             return [

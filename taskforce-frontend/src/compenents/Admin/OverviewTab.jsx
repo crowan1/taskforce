@@ -4,6 +4,7 @@ import { dashboardServices } from '../../services/dashboard/dashboardServices';
 const OverviewTab = ({ projectTasks, projectUsers, onCreateTask, onAddUser, onNavigateToDashboard, selectedProject, mode }) => {
     const [alerts, setAlerts] = useState({ overdueTasks: [], overloadedUsers: [] });
     const [loading, setLoading] = useState(false);
+    const [deletingAlert, setDeletingAlert] = useState(null);
 
     useEffect(() => {
         const loadAlerts = async () => {
@@ -23,6 +24,28 @@ const OverviewTab = ({ projectTasks, projectUsers, onCreateTask, onAddUser, onNa
         };
         loadAlerts();
     }, [mode, selectedProject]);
+
+    const handleDeleteAlert = async (alertId, taskId) => {
+        if (!selectedProject?.id) return;
+        
+        try {
+            setDeletingAlert(alertId);
+            await dashboardServices.dismissAlert(selectedProject.id, {
+                alertType: 'overdue_task',
+                entityId: taskId
+            });
+             
+            const data = await dashboardServices.getProjectAlerts(selectedProject.id);
+            setAlerts({
+                overdueTasks: data.overdueTasks || [],
+                overloadedUsers: data.overloadedUsers || []
+            });
+        } catch (error) {
+            console.error('Erreur lors de la suppression de l\'alerte:', error);
+        } finally {
+            setDeletingAlert(null);
+        }
+    };
 
     if (mode === 'alerts') {
         return (
@@ -53,6 +76,16 @@ const OverviewTab = ({ projectTasks, projectUsers, onCreateTask, onAddUser, onNa
                                                    minute: '2-digit'
                                                })}
                                            </div>
+                                       </div>
+                                       <div className="alert-actions">
+                                           <button 
+                                               className="btn-delete-alert"
+                                               onClick={() => handleDeleteAlert(t.alertId, t.id)}
+                                               disabled={deletingAlert === t.alertId}
+                                               title="Supprimer cette alerte"
+                                           >
+                                               {deletingAlert === t.alertId ? '...' : '✕'}
+                                           </button>
                                        </div>
                                    </div>
                                ))}

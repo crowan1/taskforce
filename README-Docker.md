@@ -20,7 +20,7 @@ docker-compose up -d
 - ✅ Rôles par défaut créés (Collaborateur, Manager, Responsable Projet)
 - ✅ Base de données prête à l'emplo
 
-Accédez à votre application :
+Accédez à votre application :don
 - **Application** : http://localhost:3000
 - **API Backend** : http://localhost:8000
 - **Base de données** : http://localhost:8088 (phpMyAdmin)

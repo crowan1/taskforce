@@ -16,9 +16,13 @@ const CreateColumnModal = ({ onClose, onCreateColumn }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        let nextValue = value;
+        if (name === 'name') {
+            nextValue = value.slice(0, 25);
+        }
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: nextValue
         }));
     };
 
@@ -41,6 +45,7 @@ const CreateColumnModal = ({ onClose, onCreateColumn }) => {
                             onChange={handleChange}
                             placeholder="Ex: En cours, Terminé..."
                             required
+                            maxLength={25}
                         />
                     </div>
 

@@ -33,7 +33,14 @@ class ColumnController extends AbstractController
             ], 400);
         }
 
-        $columns = $this->columnRepository->findByProject($projectId);
+        try {
+            $columns = $this->columnRepository->findByProject($projectId);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des colonnes: ' . $e->getMessage()
+            ], 500);
+        }
         
         $formattedColumns = array_map(function(Column $column) {
             return [
@@ -121,12 +128,24 @@ class ColumnController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function updateColumn(int $id, Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        
         $column = $this->columnRepository->find($id);
         if (!$column) {
             return $this->json([
                 'success' => false,
                 'message' => 'Colonne non trouvée'
             ], 404);
+        }
+ 
+        $projectUser = $this->entityManager->getRepository('App\\Entity\\ProjectUser')
+            ->findOneBy(['project' => $column->getProject(), 'user' => $user]);
+        if (!$projectUser) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès non autorisé à cette colonne'
+            ], 403);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -143,14 +162,34 @@ class ColumnController extends AbstractController
         if (isset($data['description'])) {
             $column->setDescription($data['description']);
         }
-        if (isset($data['position'])) {
-            $column->setPosition($data['position']);
+        if (array_key_exists('position', $data)) {
+            $position = (int) $data['position'];
+            if ($position < 0) {
+                $position = 0;
+            }
+            $column->setPosition($position);
         }
         if (isset($data['isActive'])) {
             $column->setIsActive($data['isActive']);
         }
 
-        $this->entityManager->flush();
+        try {
+            $this->entityManager->flush();
+        } catch (\Throwable $e) { 
+            if (strpos($e->getMessage(), 'constraint') !== false || 
+                strpos($e->getMessage(), 'duplicate') !== false ||
+                strpos($e->getMessage(), 'conflict') !== false) {
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Colonne mise à jour (conflit ignoré)'
+                ]);
+            }
+            
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour de la colonne: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return $this->json([
             'success' => true,

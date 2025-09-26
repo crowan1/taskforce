@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardServices } from '../../services/dashboard/dashboardServices';
+import { useAuth } from '../../context/AuthContext';
 import '../../assets/styles/compenents/MyAccount/UserTasksManager.scss';
 
 const UserTasksManager = () => {
+    const { user } = useAuth();
     const [assignedTasks, setAssignedTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [expandedProjects, setExpandedProjects] = useState({});
 
     useEffect(() => {
-        fetchAssignedTasks();
-    }, []);
+        if (user) {
+            fetchAssignedTasks();
+        }
+    }, [user]);
 
     const fetchAssignedTasks = async () => {
         try {
             setLoading(true);
             const response = await dashboardServices.getTasks();
             const tasks = response.tasks || [];
-            const assigned = tasks.filter(task => task.assignedTo);
+            const assigned = tasks.filter(task => 
+                task.assignedTo && task.assignedTo.id === user?.id
+            );
             setAssignedTasks(assigned);
             
             if (assigned.length > 0) {
@@ -122,8 +128,6 @@ const UserTasksManager = () => {
             {assignedTasks.length === 0 ? (
                 <div className="no-tasks">
                     <p>Aucune tâche ne vous a été assignée pour le moment.</p>
-                    <p>Les tâches vous seront automatiquement attribuées</p>
-                    <p>Ca va arriver bientôt !!! </p>
                 </div>
             ) : (
                 <div className="projects-list">

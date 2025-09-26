@@ -36,8 +36,7 @@ class TaskRepository extends ServiceEntityRepository
     public function findByUserAndProject(int $userId, int $projectId): array
     {
         return $this->createQueryBuilder('t')
-            ->andWhere('(t.createdBy = :userId OR t.assignedTo = :userId) AND t.project = :projectId')
-            ->setParameter('userId', $userId)
+            ->andWhere('t.project = :projectId')
             ->setParameter('projectId', $projectId)
             ->orderBy('t.createdAt', 'DESC')
             ->getQuery()

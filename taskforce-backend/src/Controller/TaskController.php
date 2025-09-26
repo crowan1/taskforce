@@ -9,6 +9,7 @@ use App\Entity\Skill;
 use App\Repository\TaskRepository;
 use App\Repository\ProjectRepository;
 use App\Service\TaskAssignmentService;
+use App\Repository\AlertTaskRepository;
 use App\Service\ImageUploadService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +26,7 @@ class TaskController extends AbstractController
         private TaskRepository $taskRepository,
         private ProjectRepository $projectRepository,
         private TaskAssignmentService $taskAssignmentService,
+        private AlertTaskRepository $alertTaskRepository,
         private ImageUploadService $imageUploadService
     ) {}
 
@@ -37,10 +39,17 @@ class TaskController extends AbstractController
         
         $projectId = $request->query->get('projectId');
         
-        if ($projectId) {
-            $tasks = $this->taskRepository->findByUserAndProject($user->getId(), $projectId);
-        } else {
-            $tasks = $this->taskRepository->findByUser($user->getId());
+        try {
+            if ($projectId) {
+                $tasks = $this->taskRepository->findByUserAndProject($user->getId(), $projectId);
+            } else {
+                $tasks = $this->taskRepository->findByUser($user->getId());
+            }
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des tâches: ' . $e->getMessage()
+            ], 500);
         }
         
         $formattedTasks = array_map(function(Task $task) {
@@ -292,6 +301,13 @@ class TaskController extends AbstractController
 
         $task->setUpdatedAt(new \DateTimeImmutable());
         $this->entityManager->flush();
+ 
+        if ($task->getDueDate() && $task->getDueDate() < new \DateTimeImmutable() && $task->getStatus() !== 'done') {
+            try {
+                $this->alertTaskRepository->storeOverdueAlert($user, $task->getProject(), $task->getId());
+            } catch (\Throwable $e) { 
+            }
+        }
 
         return $this->json([
             'success' => true,
@@ -358,27 +374,39 @@ class TaskController extends AbstractController
                 'message' => 'Accès non autorisé'
             ], 403);
         }
-
+ 
         $now = new \DateTimeImmutable();
-        $overdueTasks = $this->taskRepository->findOverdueTasks($projectId, $now);
+        $currentOverdueTasks = $this->taskRepository->findOverdueTasks($projectId, $now);
+        foreach ($currentOverdueTasks as $task) {
+            try {
+                $this->alertTaskRepository->storeOverdueAlert($user, $project, $task->getId());
+            } catch (\Throwable $e) { 
+            }
+        }
+ 
+        $storedAlerts = $this->alertTaskRepository->findOverdueAlertsForProject($project);
         
         $overdue = [];
-        foreach ($overdueTasks as $task) {
-            
-            $overdue[] = [
-                'id' => $task->getId(),
-                'title' => $task->getTitle(),
-                'dueDate' => $task->getDueDate()->format('Y-m-d H:i:s'),
-                'assignedTo' => $task->getAssignedTo() ? [
-                    'id' => $task->getAssignedTo()->getId(),
-                    'firstname' => $task->getAssignedTo()->getFirstname(),
-                    'lastname' => $task->getAssignedTo()->getLastname(),
-                ] : null,
-                'status' => $task->getStatus(),
-                'priority' => $task->getPriority(),
-            ];
+        foreach ($storedAlerts as $alert) {
+            $task = $this->taskRepository->find($alert->getAlertEntityId());
+            if ($task) {
+                $overdue[] = [
+                    'id' => $task->getId(),
+                    'title' => $task->getTitle(),
+                    'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d H:i:s') : null,
+                    'assignedTo' => $task->getAssignedTo() ? [
+                        'id' => $task->getAssignedTo()->getId(),
+                        'firstname' => $task->getAssignedTo()->getFirstname(),
+                        'lastname' => $task->getAssignedTo()->getLastname(),
+                    ] : null,
+                    'status' => $task->getStatus(),
+                    'priority' => $task->getPriority(),
+                    'alertId' => $alert->getId(), 
+                ];
+            }
         }
 
+        // Get overloaded users (calculated in real-time, not stored)
         $workload = $this->taskAssignmentService->getWorkloadByUser($project);
         $overloaded = array_values(array_filter($workload, fn($w) => !empty($w['isOverloaded'])));
 
@@ -389,6 +417,49 @@ class TaskController extends AbstractController
         ];
         
         return $this->json($result);
+    }
+
+    #[Route('/project/{projectId}/alerts/dismiss', name: 'dismiss_alert', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function dismissAlert(int $projectId, Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $project = $this->projectRepository->find($projectId);
+        if (!$project) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Projet non trouvé'
+            ], 404);
+        }
+
+        $projectUser = $this->entityManager->getRepository('App\\Entity\\ProjectUser')
+            ->findOneBy(['project' => $project, 'user' => $user]);
+        if (!$projectUser) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès non autorisé'
+            ], 403);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $alertType = $data['alertType'] ?? null;
+        $entityId = isset($data['entityId']) ? (int)$data['entityId'] : null;
+
+        if ($alertType !== 'overdue_task' || !$entityId) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Type d\'alerte non supporté ou ID manquant'
+            ], 400);
+        }
+
+        $this->alertTaskRepository->deleteOverdueAlert($project, $entityId);
+        
+        return $this->json([
+            'success' => true,
+            'message' => 'Alerte supprimée avec succès'
+        ]);
     }
 
     #[Route('/{id}', name: 'delete_task', methods: ['DELETE'])]

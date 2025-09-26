@@ -16,7 +16,7 @@ class ColumnRepository extends ServiceEntityRepository
     public function findByProject(int $projectId): array
     {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.project = :projectId')
+            ->andWhere('IDENTITY(c.project) = :projectId')
             ->andWhere('c.isActive = :isActive')
             ->setParameter('projectId', $projectId)
             ->setParameter('isActive', true)

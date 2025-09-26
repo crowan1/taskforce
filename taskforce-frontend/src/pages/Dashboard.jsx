@@ -20,7 +20,11 @@ const Dashboard = () => {
     const [columns, setColumns] = useState([]);
     const [selectedProject, setSelectedProject] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadingData, setLoadingData] = useState(false);
     const [error, setError] = useState(null);
+    const [updatingColumns, setUpdatingColumns] = useState(false);
+    const [loadingProjects, setLoadingProjects] = useState(false);
+    const [projectsCache, setProjectsCache] = useState(null);
     const [showCreateTask, setShowCreateTask] = useState(false);
     const [showCreateProject, setShowCreateProject] = useState(false);
     const [showCreateColumn, setShowCreateColumn] = useState(false);
@@ -52,40 +56,80 @@ const Dashboard = () => {
 
 
     const fetchProjects = async () => {
+        if (loadingProjects) return; 
+         
+        if (projectsCache && Date.now() - projectsCache.timestamp < 30000) {
+            setProjects(projectsCache.data);
+            if (projectsCache.data.length > 0) {
+                const firstProject = projectsCache.data[0];
+                setSelectedProject(firstProject);
+                await Promise.all([
+                    fetchTasks(firstProject.id),
+                    fetchColumns(firstProject.id)
+                ]);
+            }
+            setLoading(false);
+            return;
+        }
+        
         try {
+            setLoadingProjects(true);
             const data = await dashboardServices.getProjects();
             setProjects(data.projects);
+             
+            setProjectsCache({
+                data: data.projects,
+                timestamp: Date.now()
+            });
+            
             if (data.projects.length > 0) {
-                setSelectedProject(data.projects[0]);
+                const firstProject = data.projects[0];
+                setSelectedProject(firstProject); 
+                await Promise.all([
+                    fetchTasks(firstProject.id),
+                    fetchColumns(firstProject.id)
+                ]);
             }
             setLoading(false);
         } catch (err) {
             setError(err.message);
             setLoading(false);
+        } finally {
+            setLoadingProjects(false);
         }
     };
 
     const fetchTasks = async (projectId) => {
         try {
+            setLoadingData(true);
             const data = await dashboardServices.getTasks(projectId);
             setTasks(data.tasks);
         } catch (err) {
             setError(err.message);
+        } finally {
+            setLoadingData(false);
         }
     };
 
     const fetchColumns = async (projectId) => {
         try {
+            setLoadingData(true);
             const data = await dashboardServices.getColumns(projectId);
             setColumns(data.columns);
         } catch (err) {
             setError(err.message);
+        } finally {
+            setLoadingData(false);
         }
     };
 
-    // drag & drop des colonnes
+    // drag & drop des colonnes 
     const handleReorderColumns = async (draggedColumnId, targetColumnId) => {
+        if (updatingColumns) return; 
+        
         try {
+            setUpdatingColumns(true);
+            
             const current = [...columns];
             const draggedIndex = current.findIndex(c => c.id === draggedColumnId);
             const targetIndex = current.findIndex(c => c.id === targetColumnId);
@@ -97,14 +141,22 @@ const Dashboard = () => {
             const updated = current.map((c, idx) => ({ ...c, position: idx }));
             setColumns(updated);
 
-            await Promise.all(updated.map(c =>
-                dashboardServices.updateColumn(c.id, { position: c.position })
-            ));
+            await new Promise(resolve => setTimeout(resolve, 300));
+             
+            for (const column of updated) {
+                try {
+                    await dashboardServices.updateColumn(column.id, { position: column.position });
+                } catch (err) {
+                    console.warn(`Erreur lors de la mise à jour de la colonne ${column.id}:`, err);
+                }
+            }
         } catch (err) {
             setError(err.message || 'Erreur lors du réordonnancement des colonnes');
             if (selectedProject) {
                 fetchColumns(selectedProject.id);
             }
+        } finally {
+            setUpdatingColumns(false);
         }
     };
 
@@ -309,7 +361,7 @@ const Dashboard = () => {
                 <Header />
                 <div className="loading-spinner">
                     <div className="spinner"></div>
-                    <p>Chargement du tableau...</p>
+                    <p>Chargement...</p>
                 </div>
                 <Footer />
             </div>
@@ -364,24 +416,31 @@ const Dashboard = () => {
                     />
 
                 {selectedProject ? (
-                    <KanbanBoard 
-                        columns={columns}
-                        tasks={tasks}
-                        onUpdateTaskStatus={handleUpdateTaskStatus}
-                        onDeleteTask={handleDeleteTask}
-                        onShowDeleteModal={(task) => {
-                            setTaskToDelete(task);
-                            setShowDeleteModal(true);
-                        }}
-                        onAddSkills={(task) => {
-                            setSelectedTask(task);
-                            setShowAddSkills(true);
-                        }}
-                        onEditTask={handleEditTask}
-                        currentUserRole={currentUserRole}
-                        onReorderColumns={handleReorderColumns}
-                        onShowTaskDetail={handleShowTaskDetail}
-                    />
+                    <div className="kanban-container">
+                        {loadingData && (
+                            <div className="loading-overlay">
+                                <div className="mini-spinner"></div>
+                            </div>
+                        )}
+                        <KanbanBoard 
+                            columns={columns}
+                            tasks={tasks}
+                            onUpdateTaskStatus={handleUpdateTaskStatus}
+                            onDeleteTask={handleDeleteTask}
+                            onShowDeleteModal={(task) => {
+                                setTaskToDelete(task);
+                                setShowDeleteModal(true);
+                            }}
+                            onAddSkills={(task) => {
+                                setSelectedTask(task);
+                                setShowAddSkills(true);
+                            }}
+                            onEditTask={handleEditTask}
+                            currentUserRole={currentUserRole}
+                            onReorderColumns={handleReorderColumns}
+                            onShowTaskDetail={handleShowTaskDetail}
+                        />
+                    </div>
                 ) : !loading && (
                     <div className="no-projects-message">
                         <div className="no-projects-content">

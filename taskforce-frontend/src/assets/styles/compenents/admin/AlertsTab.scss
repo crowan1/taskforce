@@ -35,6 +35,10 @@
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
     
     &.user-overload {
       background: #fef2f2;
@@ -53,6 +57,8 @@
 
   
   .alert-content {
+    flex: 1;
+    
     .alert-title {
       font-size: 1rem;
       font-weight: 600;
@@ -67,6 +73,34 @@
     .alert-details {
       font-size: 0.875rem;
       color: #6b7280;
+    }
+  }
+
+  .alert-actions {
+    flex-shrink: 0;
+    
+    .btn-delete-alert {
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+      
+      &:hover:not(:disabled) {
+        background: #b91c1c;
+      }
+      
+      &:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
     }
   }
 }
