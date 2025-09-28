@@ -11,3 +11,6 @@ docker.env
 
 .idea/
 .DS_Store
+
+# Composer
+composer.lock
