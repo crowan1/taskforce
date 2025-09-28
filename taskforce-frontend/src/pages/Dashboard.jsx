@@ -262,7 +262,7 @@ const Dashboard = () => {
     };
 
     const isCreator = (project) => {
-        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const currentUser = JSON.parse(sessionStorage.getItem('user'));
         return currentUser && project.createdBy && project.createdBy.id === currentUser.id;
     };
 

@@ -3,7 +3,7 @@ const API_BASE_URL = 'http://localhost:8000/api';
 class StripeService {
     async createCheckoutSession() {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stripe/create-checkout-session`, {
                 method: 'POST',
                 headers: {
@@ -26,7 +26,7 @@ class StripeService {
     }
     async createPaymentIntent(amount = 999) {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stripe/create-payment-intent`, {
                 method: 'POST',
                 headers: {
@@ -50,13 +50,13 @@ class StripeService {
 
     async createSubscription(paymentMethodId) {
         try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const user = JSON.parse(sessionStorage.getItem('user') || '{}');
             const requestData = { 
                 payment_method_id: paymentMethodId,
                 user_id: user.id
             };
             
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stripe/create-subscription`, {
                 method: 'POST',
                 headers: {
@@ -80,7 +80,7 @@ class StripeService {
 
     async getSubscriptionStatus() {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stripe/subscription-status`, {
                 method: 'GET',
                 headers: {
@@ -102,7 +102,7 @@ class StripeService {
 
     async cancelSubscription() {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stripe/cancel-subscription`, {
                 method: 'POST',
                 headers: {
@@ -126,7 +126,7 @@ class StripeService {
 
     async syncSubscription() {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/stripe/sync-subscription`, {
                 method: 'POST',
                 headers: {

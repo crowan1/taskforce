@@ -31,9 +31,9 @@ const SecurityUtils = {
     },
 
     clearStorage: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('refreshToken');
         sessionStorage.clear();
         
         document.cookie.split(";").forEach(cookie => {
@@ -82,7 +82,7 @@ const loginRateLimiter = SecurityUtils.createRateLimiter(5, 300000);
 
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         
         if (token) {
             if (SecurityUtils.isValidJWT(token)) {
@@ -197,16 +197,16 @@ const authService = {
                 throw new Error('Token invalide reçu du serveur');
             }
             
-            localStorage.setItem('token', token);
+            sessionStorage.setItem('token', token);
             
             if (refreshToken && SecurityUtils.isValidJWT(refreshToken)) {
-                localStorage.setItem('refreshToken', refreshToken);
+                sessionStorage.setItem('refreshToken', refreshToken);
             }
             
             if (user) {
                 const sanitizedUser = SecurityUtils.sanitizeUserData(user);
                 if (sanitizedUser) {
-                    localStorage.setItem('user', JSON.stringify(sanitizedUser));
+                    sessionStorage.setItem('user', JSON.stringify(sanitizedUser));
                 }
             }
             
@@ -219,7 +219,7 @@ const authService = {
 
     logout: async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             
             if (token && SecurityUtils.isValidJWT(token)) {
                 await api.post('/logout');
@@ -233,12 +233,12 @@ const authService = {
     },
 
     hasToken: () => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         return token && SecurityUtils.isValidJWT(token);
     },
 
     isAuthenticated: async () => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         
         if (!token || !SecurityUtils.isValidJWT(token)) {
             SecurityUtils.clearStorage();
@@ -261,13 +261,13 @@ const authService = {
     },
 
     getToken: () => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         return SecurityUtils.isValidJWT(token) ? token : null;
     },
 
     refreshToken: async () => {
         try {
-            const refreshToken = localStorage.getItem('refreshToken');
+            const refreshToken = sessionStorage.getItem('refreshToken');
             
             if (!refreshToken || !SecurityUtils.isValidJWT(refreshToken)) {
                 throw new Error('Refresh token invalide');
@@ -280,7 +280,7 @@ const authService = {
                 throw new Error('Nouveau token invalide');
             }
             
-            localStorage.setItem('token', newToken);
+            sessionStorage.setItem('token', newToken);
             return newToken;
         } catch (error) {
             console.error('Erreur refresh token:', error);
@@ -291,14 +291,14 @@ const authService = {
 
     getCurrentUser: () => {
         try {
-            const userStr = localStorage.getItem('user');
+            const userStr = sessionStorage.getItem('user');
             if (!userStr) return null;
             
             const user = JSON.parse(userStr);
             return SecurityUtils.sanitizeUserData(user);
         } catch (error) {
             console.error('Erreur parsing utilisateur:', error);
-            localStorage.removeItem('user');
+            sessionStorage.removeItem('user');
             return null;
         }
     },
@@ -356,14 +356,14 @@ const authService = {
     },
 
     getCurrentUserRole: () => {
-        return localStorage.getItem('currentUserRole');
+        return sessionStorage.getItem('currentUserRole');
     },
 
     setCurrentUserRole: (role) => {
         if (role) {
-            localStorage.setItem('currentUserRole', role);
+            sessionStorage.setItem('currentUserRole', role);
         } else {
-            localStorage.removeItem('currentUserRole');
+            sessionStorage.removeItem('currentUserRole');
         }
     },
 

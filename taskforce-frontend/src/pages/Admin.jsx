@@ -106,7 +106,7 @@ const Admin = () => {
             setProjects(projectsData.projects || []);
             setCurrentUser(profileData.user || profileData);
             
-            const savedProject = localStorage.getItem('adminSelectedProject');
+            const savedProject = sessionStorage.getItem('adminSelectedProject');
             if (savedProject) {
                 const project = JSON.parse(savedProject);
                 const projectExists = projectsData.projects?.find(p => p.id === project.id);
@@ -115,10 +115,10 @@ const Admin = () => {
                 }
             }
             
-            if (!localStorage.getItem('adminSelectedProject') && projectsData.projects?.length > 0) {
+            if (!sessionStorage.getItem('adminSelectedProject') && projectsData.projects?.length > 0) {
                 const firstProject = projectsData.projects[0];
                 setSelectedProject(firstProject);
-                localStorage.setItem('adminSelectedProject', JSON.stringify(firstProject));
+                sessionStorage.setItem('adminSelectedProject', JSON.stringify(firstProject));
             }
         } catch (err) {
             setError(err.message);
@@ -172,11 +172,11 @@ const Admin = () => {
             const project = projects.find(p => p.id === projectId);
             if (project) {
                 setSelectedProject(project);
-                localStorage.setItem('adminSelectedProject', JSON.stringify(project));
+                sessionStorage.setItem('adminSelectedProject', JSON.stringify(project));
             }
         } else {
             setSelectedProject(null);
-            localStorage.removeItem('adminSelectedProject');
+            sessionStorage.removeItem('adminSelectedProject');
         }
         setActiveTab('overview');
     };

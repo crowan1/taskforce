@@ -44,7 +44,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
         if (isOpen) {
             fetchSkills();
             fetchColumns();
-            const user = JSON.parse(localStorage.getItem('user'));
+            const user = JSON.parse(sessionStorage.getItem('user'));
             setCurrentUser(user);
         }
     }, [task, isOpen]);

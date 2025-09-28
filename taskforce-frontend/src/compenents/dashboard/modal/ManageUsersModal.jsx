@@ -17,7 +17,7 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
         if (project) {
             setUsers(project.users || []);
             // rôle de l'utilisateur 
-            const currentUser = JSON.parse(localStorage.getItem('user'));
+            const currentUser = JSON.parse(sessionStorage.getItem('user'));
             const currentUserInProject = project.users?.find(u => u.id === currentUser.id);
             setCurrentUserRole(currentUserInProject?.role);
         }
@@ -99,7 +99,7 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
     };
 
     const isCurrentUser = (userId) => {
-        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const currentUser = JSON.parse(sessionStorage.getItem('user'));
         return currentUser && currentUser.id === userId;
     };
 

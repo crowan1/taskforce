@@ -1,7 +1,7 @@
 const API_BASE_URL = 'http://localhost:8000/api';
 
 const apiCall = async (url, options = {}) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     
     const defaultOptions = {
         headers: {
@@ -106,7 +106,7 @@ export const dashboardServices = {
     },
 
     uploadTaskImage: async (taskId, imageFile) => {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const formData = new FormData();
         formData.append('image', imageFile);
 

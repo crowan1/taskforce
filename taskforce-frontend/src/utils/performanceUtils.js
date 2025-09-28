@@ -14,20 +14,20 @@ export const cleanupStorage = () => {
             } catch (e) {}
         });
 
-        const localStorageSize = JSON.stringify(localStorage).length;
+        const sessionStorageSize = JSON.stringify(sessionStorage).length;
         
-        if (localStorageSize > 2 * 1024 * 1024) {
+        if (sessionStorageSize > 2 * 1024 * 1024) {
             const essentialKeys = ['token', 'user', 'refreshToken'];
             const backup = {};
             essentialKeys.forEach(key => {
-                if (localStorage.getItem(key)) {
-                    backup[key] = localStorage.getItem(key);
+                if (sessionStorage.getItem(key)) {
+                    backup[key] = sessionStorage.getItem(key);
                 }
             });
             
-            localStorage.clear();
+            sessionStorage.clear();
             Object.entries(backup).forEach(([key, value]) => {
-                localStorage.setItem(key, value);
+                sessionStorage.setItem(key, value);
             });
         }
         
@@ -61,7 +61,7 @@ export const throttle = (func, limit) => {
 
 export const preloadCriticalData = async () => {
     try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         if (!token) return;
         
         const { dashboardServices } = await import('../services/dashboard/dashboardServices');
