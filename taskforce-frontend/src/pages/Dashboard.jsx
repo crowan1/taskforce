@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import KanbanBoard from '../compenents/dashboard/KanbanBoard';
@@ -321,12 +320,21 @@ const Dashboard = () => {
         fetchProjects();
     }, []);
 
-    const [currentUser] = useLocalStorage('user');
+    const getCurrentUser = () => {
+        try {
+            const userStr = sessionStorage.getItem('user');
+            return userStr ? JSON.parse(userStr) : null;
+        } catch {
+            return null;
+        }
+    };
+
     const userRole = useMemo(() => {
+        const currentUser = getCurrentUser();
         if (!selectedProject || !currentUser) return null;
         const currentUserInProject = selectedProject.users?.find(u => u.id === currentUser.id);
         return currentUserInProject?.role || null;
-    }, [selectedProject, currentUser]);
+    }, [selectedProject]);
 
     useEffect(() => {
         setCurrentUserRole(userRole);

@@ -407,12 +407,24 @@ class ProjectController extends AbstractController
             return $this->json(['error' => 'Seul le créateur peut supprimer le projet'], 403);
         }
 
-        $this->entityManager->remove($project);
-        $this->entityManager->flush();
+        try { 
+            $alertRepository = $this->entityManager->getRepository(\App\Entity\AlertTask::class);
+            $alerts = $alertRepository->findBy(['project' => $project]);
+            foreach ($alerts as $alert) {
+                $this->entityManager->remove($alert);
+            }
+            $this->entityManager->remove($project);
+            $this->entityManager->flush();
 
-        return $this->json([
-            'success' => true,
-            'message' => 'Projet supprimé avec succès'
-        ]);
+            return $this->json([
+                'success' => true,
+                'message' => 'Projet supprimé avec succès'
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression du projet: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

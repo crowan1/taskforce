@@ -49,9 +49,6 @@ const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onSh
                                         <h5>{task.title}</h5>
                                     </div>
                                     <div className="task-header-right">
-                                        <span className={`priority priority-${task.priority || 'medium'}`}>
-                                            {task.priority || 'medium'}
-                                        </span>
                                         <button 
                                             className="btn-toggle-actions"
                                             onClick={(e) => {
@@ -74,9 +71,6 @@ const TasksTab = ({ projectTasks, onCreateTask, onReassignTask, onEditTask, onSh
                                     </span>
                                     <span className="estimated-hours">
                                         Heures estimées: {task.estimatedHours || 1}h
-                                    </span>
-                                    <span className="task-level">
-                                        Niveau: {task.level || 'intermediate'}
                                     </span>
                                 </div>
                                 <div className={`task-actions ${expandedTasks.has(task.id) ? 'expanded' : 'collapsed'}`}>

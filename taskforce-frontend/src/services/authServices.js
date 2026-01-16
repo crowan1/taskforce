@@ -7,7 +7,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000,
+    timeout: 15000,
 });
 const SecurityUtils = {
     isValidJWT: (token) => {
@@ -51,7 +51,7 @@ const SecurityUtils = {
             email: userData.email,
             firstname: userData.firstname?.trim(),
             lastname: userData.lastname?.trim(),
-            role: userData.role,
+            role: userData.role
         };
     },
 
@@ -78,8 +78,6 @@ const SecurityUtils = {
     }
 };
 
-const loginRateLimiter = SecurityUtils.createRateLimiter(5, 300000);
-
 api.interceptors.request.use(
     (config) => {
         const token = sessionStorage.getItem('token');
@@ -92,8 +90,6 @@ api.interceptors.request.use(
                 SecurityUtils.clearStorage();
             }
         }
-        
-        config.headers['X-Request-ID'] = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
         return config;
     },
@@ -150,6 +146,11 @@ const authService = {
                 throw new Error('Tous les champs sont requis');
             }
             
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(userData.email)) {
+                throw new Error('Format d\'email invalide');
+            }
+            
             if (userData.password.length < 8) {
                 throw new Error('Le mot de passe doit contenir au moins 8 caractères');
             }
@@ -162,6 +163,10 @@ const authService = {
                 throw new Error('Le mot de passe doit contenir au moins un chiffre');
             }
             
+            if (userData.firstname.length < 2 || userData.lastname.length < 2) {
+                throw new Error('Le prénom et le nom doivent contenir au moins 2 caractères');
+            }
+            
             const sanitizedData = {
                 email: userData.email.trim().toLowerCase(),
                 password: userData.password,
@@ -170,6 +175,13 @@ const authService = {
             };
             
             const response = await api.post('/register', sanitizedData);
+            
+            if (response.data && response.data.token) {
+                if (!SecurityUtils.isValidJWT(response.data.token)) {
+                    throw new Error('Token reçu invalide');
+                }
+            }
+            
             return response.data;
         } catch (error) {
             console.error('Erreur inscription:', error);
@@ -183,7 +195,10 @@ const authService = {
                 throw new Error('Email et mot de passe requis');
             }
             
-            loginRateLimiter(credentials.email);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(credentials.email)) {
+                throw new Error('Format d\'email invalide');
+            }
             
             const loginData = {
                 username: credentials.email.trim().toLowerCase(),
@@ -194,6 +209,7 @@ const authService = {
             const { token, user, refreshToken } = response.data;
             
             if (!token || !SecurityUtils.isValidJWT(token)) {
+                SecurityUtils.clearStorage();
                 throw new Error('Token invalide reçu du serveur');
             }
             
@@ -207,6 +223,8 @@ const authService = {
                 const sanitizedUser = SecurityUtils.sanitizeUserData(user);
                 if (sanitizedUser) {
                     sessionStorage.setItem('user', JSON.stringify(sanitizedUser));
+                } else {
+                    throw new Error('Données utilisateur invalides');
                 }
             }
             

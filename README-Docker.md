@@ -2,12 +2,6 @@
 
 ## Comment démarrer le projet
 
-### 1. Cloner le projet
-```bash
-git clone https://github.com/crowan1/taskforce
-cd taskforce
-```
-
 ### 2. Démarrer avec Docker
 ```bash
 docker-compose up -d
@@ -15,7 +9,7 @@ docker-compose up -d
 
 ### 3. C'est tout ! 
 
-🎉 **L'initialisation se fait automatiquement** :
+ **L'initialisation se fait automatiquement** :
 - ✅ Migrations Doctrine exécutées
 - ✅ Rôles par défaut créés (Collaborateur, Manager, Responsable Projet)
 - ✅ Base de données prête à l'emplo

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const apiCall = async (url, options = {}) => {
     const token = sessionStorage.getItem('token');
@@ -15,12 +15,11 @@ const apiCall = async (url, options = {}) => {
     
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('API Error:', {
-            url,
-            status: response.status,
-            errorData,
-            body: options.body
-        });
+        
+        if (response.status === 401) {
+            sessionStorage.clear();
+            window.location.href = '/login';
+        }
         
         const error = new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
         error.status = response.status;
