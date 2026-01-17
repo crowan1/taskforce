@@ -107,9 +107,7 @@ const ManageUsersModal = ({ onClose, project, onUserUpdated }) => {
         return project.createdBy && project.createdBy.id === userId;
     };
 
-    const isAdmin = currentUserRole === 'admin';
     const canManageUsers = currentUserRole && ['responsable_projet', 'manager'].includes(currentUserRole);
-    const isResponsableProjet = currentUserRole === 'responsable_projet';
 
     return (
         <div className="modal-overlay" onClick={onClose}>

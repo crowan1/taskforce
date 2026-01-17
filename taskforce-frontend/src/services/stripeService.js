@@ -103,4 +103,6 @@ class StripeService {
     }
 }
 
-export default new StripeService();
+const stripeService = new StripeService();
+
+export default stripeService;

@@ -1,5 +1,4 @@
 import React from 'react';
-import AlertsTab from './OverviewTab';
 import OverviewTab from './OverviewTab';
 import TasksTab from './TasksTab';
 import UsersTab from './UsersTab';

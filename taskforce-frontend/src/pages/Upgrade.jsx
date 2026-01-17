@@ -58,17 +58,6 @@ const Upgrade = () => {
         }
     };
 
-    const handleSuccess = (result) => {
-        setSuccess(true);
-        setTimeout(() => {
-            navigate('/dashboard');
-        }, 3000);
-    };
-
-    const handleError = (error) => {
-        console.error('Erreur de paiement:', error);
-    };
-
     const handleCheckout = () => {
         setError(null);
         const paymentLinkUrl = process.env.REACT_APP_STRIPE_PAYMENT_LINK_URL;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
 import '../../../../assets/styles/Dashboard.scss';
 
@@ -25,15 +25,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUse
     });
     const [currentUser, setCurrentUser] = useState(null);
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchData();
-            const user = JSON.parse(sessionStorage.getItem('user'));
-            setCurrentUser(user);
-        }
-    }, [isOpen, projectId]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [skillsData, columnsData] = await Promise.all([
                 dashboardServices.getAllAvailableProjectSkills(projectId),
@@ -50,7 +42,15 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUse
         } catch (err) {
             console.error('Erreur lors du chargement des données:', err);
         }
-    };
+    }, [projectId]);
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchData();
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            setCurrentUser(user);
+        }
+    }, [isOpen, fetchData]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -302,7 +302,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, projectId, projectUse
         Object.entries(workload).forEach(([userId, count]) => {
             if (count < minWorkload) {
                 minWorkload = count;
-                selectedUser = collaborators.find(u => u.id == userId);
+                selectedUser = collaborators.find(u => u.id === userId);
             }
         });
         

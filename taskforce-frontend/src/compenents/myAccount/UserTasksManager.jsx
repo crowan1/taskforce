@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { dashboardServices } from '../../services/dashboard/dashboardServices';
 import { useAuth } from '../../context/AuthContext';
 import '../../assets/styles/compenents/MyAccount/UserTasksManager.scss';
@@ -10,13 +10,7 @@ const UserTasksManager = () => {
     const [error, setError] = useState(null);
     const [expandedProjects, setExpandedProjects] = useState({});
 
-    useEffect(() => {
-        if (user) {
-            fetchAssignedTasks();
-        }
-    }, [user]);
-
-    const fetchAssignedTasks = async () => {
+    const fetchAssignedTasks = useCallback(async () => {
         try {
             setLoading(true);
             const response = await dashboardServices.getTasks();
@@ -37,7 +31,13 @@ const UserTasksManager = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        if (user) {
+            fetchAssignedTasks();
+        }
+    }, [user, fetchAssignedTasks]);
 
     const toggleProject = (projectId) => {
         setExpandedProjects(prev => ({

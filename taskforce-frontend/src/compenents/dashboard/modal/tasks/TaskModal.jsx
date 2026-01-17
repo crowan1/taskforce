@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { dashboardServices } from '../../../../services/dashboard/dashboardServices';
 import authService from '../../../../services/authServices';
 import '../../../../assets/styles/Dashboard.scss';
@@ -25,41 +25,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
     const [message, setMessage] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
 
-    useEffect(() => {
-        if (task) {
-            const skillIds = task.requiredSkills ? task.requiredSkills.map(skill => skill.id) : [];
-            
-            setFormData({
-                title: task.title || '',
-                description: task.description || '',
-                priority: task.priority || 'medium',
-                status: task.status || '',
-                level: task.level || 'intermediate',
-                estimatedHours: task.estimatedHours || 1,
-                dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : '',
-                skillIds: skillIds
-            });
-            setImages(Array.isArray(task?.images) ? task.images : []);
-        }
-        if (isOpen) {
-            fetchSkills();
-            fetchColumns();
-            const user = JSON.parse(sessionStorage.getItem('user'));
-            setCurrentUser(user);
-        }
-    }, [task, isOpen]);
-
-    useEffect(() => {
-        if (isOpen) {
-            const prevOverflow = document.body.style.overflow;
-            document.body.style.overflow = 'hidden';
-            return () => {
-                document.body.style.overflow = prevOverflow;
-            };
-        }
-    }, [isOpen]);
-
-    const fetchSkills = async () => {
+    const fetchSkills = useCallback(async () => {
         try {
             if (project && project.id) {
                 const data = await dashboardServices.getAllAvailableProjectSkills(project.id);
@@ -82,16 +48,50 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
         } catch (err) {
             console.error('Erreur lors du chargement des compétences:', err);
         }
-    };
+    }, [project, task]);
 
-    const fetchColumns = async () => {
+    const fetchColumns = useCallback(async () => {
         try {
             const data = await dashboardServices.getColumns(project.id);
             setColumns(data.columns);
         } catch (err) {
             console.error('Erreur lors du chargement des colonnes:', err);
         }
-    };
+    }, [project]);
+
+    useEffect(() => {
+        if (task) {
+            const skillIds = task.requiredSkills ? task.requiredSkills.map(skill => skill.id) : [];
+
+            setFormData({
+                title: task.title || '',
+                description: task.description || '',
+                priority: task.priority || 'medium',
+                status: task.status || '',
+                level: task.level || 'intermediate',
+                estimatedHours: task.estimatedHours || 1,
+                dueDate: task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : '',
+                skillIds: skillIds
+            });
+            setImages(Array.isArray(task?.images) ? task.images : []);
+        }
+        if (isOpen) {
+            fetchSkills();
+            fetchColumns();
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            setCurrentUser(user);
+        }
+    }, [task, isOpen, fetchSkills, fetchColumns]);
+
+    useEffect(() => {
+        if (isOpen) {
+            const prevOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = prevOverflow;
+            };
+        }
+    }, [isOpen]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -626,7 +626,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
                                         <div key={`image-${index}`} className="image-item">
                                             <img 
                                                 src={`http://localhost:8000/${imagePath}`} 
-                                                alt="Task image"
+                                                alt="Task"
                                                 onClick={() => setSelectedImage(`http://localhost:8000/${imagePath}`)}
                                             />
                                             <button 
@@ -705,7 +705,7 @@ const TaskModal = ({ task, isOpen, onClose, onTaskUpdate, project, mode = 'view'
 
             {selectedImage && (
                 <div className="image-overlay" onClick={() => setSelectedImage(null)}>
-                    <img src={selectedImage} alt="Full size" />
+                    <img src={selectedImage} alt="Full size preview" />
                 </div>
             )}
         </div>

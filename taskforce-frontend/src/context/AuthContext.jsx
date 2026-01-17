@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import authService from '../services/authServices';
 import profileService from '../services/profil/profileService';
 
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     return Boolean(serverHasAdmin || projectHasAdmin);
   };
 
-  const refreshAuth = async () => {
+  const refreshAuth = useCallback(async () => {
     try {
       const token = authService.getToken?.();
       if (!token) {
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     refreshAuth();
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     refreshAuth,
     logout,
-  }), [user, roles, isAuthenticated, canAccessAdmin, loading]);
+  }), [user, roles, isAuthenticated, canAccessAdmin, loading, refreshAuth]);
 
   return (
     <AuthContext.Provider value={value}>

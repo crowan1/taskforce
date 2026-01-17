@@ -47,7 +47,7 @@ const Home = () => {
                         </button>
                         <p className="privacy-text">
                             En saisissant mon adresse e-mail, j'accepte la{' '}
-                            <a href="#" className="privacy-link">politique de confidentialité de TaskForce</a>
+                            <a href="/privacy-policy" className="privacy-link">politique de confidentialité de TaskForce</a>
                         </p>
                     </div>
                 </div>

@@ -6,7 +6,7 @@ import logo from '../../assets/icons/Icon_TF.png';
 
 const Header = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -18,11 +18,6 @@ const Header = () => {
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
-    };
-
-    const handleLogout = () => {
-        try { logout(); } catch (_) {}
-        navigate('/');
     };
 
     return (

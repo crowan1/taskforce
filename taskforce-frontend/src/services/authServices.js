@@ -102,7 +102,6 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         const status = error.response?.status;
-        const config = error.config;
         
         switch (status) {
             case 401:

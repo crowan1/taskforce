@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import KanbanBoard from '../compenents/dashboard/KanbanBoard';
@@ -51,10 +50,7 @@ const Dashboard = () => {
     const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null);
     const [showDescriptionModal, setShowDescriptionModal] = useState(false);
-    const navigate = useNavigate();
-
-
-
+ 
     const fetchProjects = async () => {
         if (loadingProjects) return; 
          
