@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/taskforce-frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "composer"
+    directory: "/taskforce-backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
