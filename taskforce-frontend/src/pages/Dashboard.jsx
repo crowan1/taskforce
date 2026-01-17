@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import KanbanBoard from '../compenents/dashboard/KanbanBoard';
@@ -51,12 +51,12 @@ const Dashboard = () => {
     const [selectedTaskForDetail, setSelectedTaskForDetail] = useState(null);
     const [showDescriptionModal, setShowDescriptionModal] = useState(false);
  
-    const fetchProjects = async () => {
+    const fetchProjects = useCallback(async () => {
         if (loadingProjects) return; 
          
         if (projectsCache && Date.now() - projectsCache.timestamp < 30000) {
             setProjects(projectsCache.data);
-            if (projectsCache.data.length > 0) {
+            if (!selectedProject && projectsCache.data.length > 0) {
                 const firstProject = projectsCache.data[0];
                 setSelectedProject(firstProject);
                 await Promise.all([
@@ -78,7 +78,7 @@ const Dashboard = () => {
                 timestamp: Date.now()
             });
             
-            if (data.projects.length > 0) {
+            if (!selectedProject && data.projects.length > 0) {
                 const firstProject = data.projects[0];
                 setSelectedProject(firstProject); 
                 await Promise.all([
@@ -93,7 +93,7 @@ const Dashboard = () => {
         } finally {
             setLoadingProjects(false);
         }
-    };
+    }, [loadingProjects, projectsCache, selectedProject]);
 
     const fetchTasks = async (projectId) => {
         try {
@@ -185,9 +185,13 @@ const Dashboard = () => {
     const handleCreateProject = async (projectData) => {
         try {
             const data = await dashboardServices.createProject(projectData);
-
-            setProjects(prev => [...prev, data.project]);
-            setSelectedProject(data.project);
+            const newProject = data.project;
+            setProjects(prev => {
+                const nextProjects = [...prev, newProject];
+                setProjectsCache({ data: nextProjects, timestamp: Date.now() });
+                return nextProjects;
+            });
+            setSelectedProject(newProject);
             setShowCreateProject(false);
         } catch (err) {            
             if (err.status === 403) {
@@ -238,8 +242,21 @@ const Dashboard = () => {
     const handleDeleteProject = async () => {
         try {
             await dashboardServices.deleteProject(selectedProject.id);
-            setProjects(prev => prev.filter(project => project.id !== selectedProject.id));
-            setSelectedProject(null);
+            const remainingProjects = projects.filter(project => project.id !== selectedProject.id);
+            setProjects(remainingProjects);
+            setProjectsCache({ data: remainingProjects, timestamp: Date.now() });
+            if (remainingProjects.length > 0) {
+                const nextProject = remainingProjects[0];
+                setSelectedProject(nextProject);
+                await Promise.all([
+                    fetchTasks(nextProject.id),
+                    fetchColumns(nextProject.id)
+                ]);
+            } else {
+                setSelectedProject(null);
+                setTasks([]);
+                setColumns([]);
+            }
             setShowDeleteProjectModal(false);
         } catch (err) {
             setError(err.message || 'Erreur lors de la suppression du projet');
@@ -315,7 +332,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchProjects();
-    }, []);
+    }, [fetchProjects]);
 
     const getCurrentUser = () => {
         try {

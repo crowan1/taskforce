@@ -59,11 +59,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     refreshAuth();
     const onStorage = () => {
-      setCanAccessAdmin((prev) => computeAdminAccess(user, roles));
+      refreshAuth();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [refreshAuth]);
 
   useEffect(() => {
     setCanAccessAdmin(computeAdminAccess(user, roles));
