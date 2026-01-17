@@ -1,25 +1,52 @@
 jest.mock('axios', () => {
-  const client = { get: jest.fn(), put: jest.fn(), interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } } };
-  const create = jest.fn(() => client);
-  return { __esModule: true, default: { create }, __client: client };
+  const mockGet = jest.fn();
+  const mockPut = jest.fn();
+  const mockRequestUse = jest.fn();
+  const mockResponseUse = jest.fn();
+  return {
+    create: jest.fn(() => ({
+      get: mockGet,
+      put: mockPut,
+      interceptors: {
+        request: { use: mockRequestUse },
+        response: { use: mockResponseUse }
+      }
+    })),
+    __mock: {
+      mockGet,
+      mockPut,
+      mockRequestUse,
+      mockResponseUse
+    }
+  };
 });
 
-describe('profileService (unit)', () => {
-  test('getProfile returns data', async () => {
-    const axiosClient = require('axios').__client;
-    axiosClient.get.mockResolvedValueOnce({ data: { id: 1, email: 'a@a.com' } });
-    const service = require('../services/profil/profileService').default;
-    const res = await service.getProfile();
-    expect(res.email).toBe('a@a.com');
+import axios from 'axios';
+import profileService from '../services/profil/profileService';
+
+describe('profileService', () => {
+  beforeEach(() => {
+    axios.__mock.mockGet.mockReset();
+    axios.__mock.mockPut.mockReset();
   });
 
-  test('updateProfile returns user data', async () => {
-    const axiosClient = require('axios').__client;
-    axiosClient.put.mockResolvedValueOnce({ data: { user: { id: 1 } } });
-    const service = require('../services/profil/profileService').default;
-    const res = await service.updateProfile({ firstname: 'John' });
-    expect(res).toEqual({ id: 1 });
+  it('gets profile', async () => {
+    axios.__mock.mockGet.mockResolvedValueOnce({ data: { id: 1 } });
+    const result = await profileService.getProfile();
+    expect(result.id).toBe(1);
+  });
+
+  it('updates profile', async () => {
+    axios.__mock.mockPut.mockResolvedValueOnce({ data: { user: { id: 2 } } });
+    const result = await profileService.updateProfile({ firstname: 'Ada' });
+    expect(result.id).toBe(2);
+  });
+
+  it('handles profile errors', async () => {
+    axios.__mock.mockGet.mockRejectedValueOnce({ response: { data: 'bad' } });
+    await expect(profileService.getProfile()).rejects.toBe('bad');
+    axios.__mock.mockPut.mockRejectedValueOnce({ message: 'err' });
+    await expect(profileService.updateProfile({})).rejects.toBe('err');
   });
 });
-
 

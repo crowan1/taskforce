@@ -2,6 +2,12 @@
 
 ## Comment démarrer le projet
 
+### 1. Cloner le projet
+```bash
+git clone https://github.com/crowan1/taskforce
+cd taskforce
+```
+
 ### 2. Démarrer avec Docker
 ```bash
 docker-compose up -d
