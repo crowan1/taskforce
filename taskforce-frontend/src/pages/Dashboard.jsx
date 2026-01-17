@@ -7,6 +7,7 @@ import KanbanHeader from '../compenents/dashboard/KanbanHeader';
 import ProjectSidebar from '../compenents/dashboard/ProjectSidebar';
 import DashboardModals from '../compenents/dashboard/DashboardModals';
 import UpgradeModal from '../compenents/dashboard/modal/UpgradeModal';
+import Seo from '../compenents/Seo';
 
 import { dashboardServices } from '../services/dashboard/dashboardServices';
 import authService from '../services/authServices';
@@ -366,6 +367,13 @@ const Dashboard = () => {
     if (loading) {
         return (
             <div className="dashboard-container">
+                <Seo
+                    title="Tableau de bord - TaskForce"
+                    description="Accédez à votre tableau de bord TaskForce pour suivre vos tâches et vos projets."
+                    keywords="tableau de bord taskforce, suivi projet, kanban"
+                    path="/dashboard"
+                    noIndex
+                />
                 <Header />
                 <div className="loading-spinner">
                     <div className="spinner"></div>
@@ -379,6 +387,13 @@ const Dashboard = () => {
     if (error) {
         return (
             <div className="dashboard-container">
+                <Seo
+                    title="Tableau de bord - TaskForce"
+                    description="Accédez à votre tableau de bord TaskForce pour suivre vos tâches et vos projets."
+                    keywords="tableau de bord taskforce, suivi projet, kanban"
+                    path="/dashboard"
+                    noIndex
+                />
                 <Header />
                 <div className="error-container">
                     <h2>Erreur</h2>
@@ -392,6 +407,13 @@ const Dashboard = () => {
 
         return (
     <div className="dashboard-container">  
+        <Seo
+            title="Tableau de bord - TaskForce"
+            description="Accédez à votre tableau de bord TaskForce pour suivre vos tâches et vos projets."
+            keywords="tableau de bord taskforce, suivi projet, kanban"
+            path="/dashboard"
+            noIndex
+        />
         <Header />
             
             <div className="dashboard-layout">

@@ -1,3 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Disallow:
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /account
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://taskforce-app.com/sitemap.xml

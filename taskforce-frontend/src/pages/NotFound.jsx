@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../compenents/includes/header';
 import Footer from '../compenents/includes/footer';
 import '../assets/styles/NotFound.scss';
+import Seo from '../compenents/Seo';
 
 const NotFound = () => {
     const navigate = useNavigate();
@@ -17,6 +18,13 @@ const NotFound = () => {
 
     return (
         <div className="not-found-container">
+            <Seo
+                title="Page non trouvée - TaskForce"
+                description="La page demandée est introuvable. Retournez à l'accueil TaskForce."
+                keywords="erreur 404, page introuvable, taskforce"
+                path="/404"
+                noIndex
+            />
             <Header />
             <main className="not-found-main">
                 <div className="not-found-content">

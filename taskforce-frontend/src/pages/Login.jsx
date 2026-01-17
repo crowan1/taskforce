@@ -5,6 +5,7 @@ import '../assets/styles/Login.scss';
 import Header from "../compenents/includes/header";
 import Footer from "../compenents/includes/footer";
 import { useAuth } from '../context/AuthContext.jsx';
+import Seo from "../compenents/Seo";
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -47,6 +48,13 @@ const Login = () => {
 
     return (
         <div>
+            <Seo
+                title="Connexion - TaskForce"
+                description="Connectez-vous à TaskForce pour accéder à vos projets et à votre tableau de bord."
+                keywords="connexion taskforce, login gestion projet, accès tableau de bord"
+                path="/login"
+                noIndex
+            />
             <Header/>
             <div className="login-page">
                 <div className="login-container">

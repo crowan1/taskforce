@@ -3,12 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import '../assets/styles/Home.scss';
 import Header from "../compenents/includes/header";
 import Footer from "../compenents/includes/footer";
+import Seo from "../compenents/Seo";
 
 const Home = () => {
     const navigate = useNavigate();
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'TaskForce',
+        url: 'https://taskforce-app.com',
+        logo: 'https://taskforce-app.com/logo512.png',
+        description: "Plateforme intelligente de gestion de projets avec assignation automatique des tâches selon les compétences."
+    };
 
     return (
         <div className="home-container">
+            <Seo
+                title="TaskForce - Gestion de Projets Intelligente"
+                description="Organisez vos projets avec la répartition intelligente des tâches, le suivi d'équipe et un tableau de bord clair."
+                keywords="gestion projet, kanban, productivité, assignation automatique, collaboration équipe, workflow, tableau de bord"
+                path="/"
+                jsonLd={jsonLd}
+            />
             <Header/>
             <main className="main-content">
                 <div className="hero-section">

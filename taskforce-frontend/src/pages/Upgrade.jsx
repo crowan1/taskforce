@@ -5,6 +5,7 @@ import Footer from '../compenents/includes/footer';
 import stripeService from '../services/stripeService';
 import authService from '../services/authServices';
 import '../assets/styles/Premium.scss';
+import Seo from '../compenents/Seo';
 
 const Upgrade = () => {
     const [subscriptionStatus, setSubscriptionStatus] = useState(null);
@@ -77,53 +78,57 @@ const Upgrade = () => {
         }
         window.location.href = paymentLinkUrl;
     };
+    const seo = (
+        <Seo
+            title="Offre Premium - TaskForce"
+            description="Passez en Premium pour débloquer plus de projets et un meilleur suivi des tâches."
+            keywords="premium taskforce, abonnement gestion projet, paiement sécurisé stripe"
+            path="/upgrade"
+        />
+    );
+
+    const renderLayout = (content) => (
+        <div className="premium-container">
+            {seo}
+            <Header />
+            {content}
+            <Footer />
+        </div>
+    );
 
     if (loading) {
-                return (
-                    <div className="premium-container">
-                        <Header />
-                        <div className="loading-container">
-                            <div className="loading-spinner"></div>
-                            <p>Chargement...</p>
-                        </div>
-                        <Footer />
-                    </div>
-                );
+        return renderLayout(
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Chargement...</p>
+            </div>
+        );
     }
 
     if (subscriptionStatus?.is_premium) {
-        return (
-            <div className="premium-container">
-                <Header />
-                <div className="already-premium">
-                    <h1>✅ Vous êtes déjà Premium !</h1>
-                    <p>Profitez de toutes les fonctionnalités TaskForce</p>
-                    <button onClick={() => navigate('/dashboard')} className="btn-primary">
-                        Retour au Dashboard
-                    </button>
-                </div>
-                <Footer />
+        return renderLayout(
+            <div className="already-premium">
+                <h1>✅ Vous êtes déjà Premium !</h1>
+                <p>Profitez de toutes les fonctionnalités TaskForce</p>
+                <button onClick={() => navigate('/dashboard')} className="btn-primary">
+                    Retour au Dashboard
+                </button>
             </div>
         );
     }
 
     if (success) {
-        return (
-            <div className="premium-container">
-                <Header />
-                <div className="success-container">
-                    <h1>🎉 Félicitations !</h1>
-                    <p>Votre abonnement Premium est activé !</p>
-                    <p>Vous allez être redirigé vers le dashboard...</p>
-                </div>
-                <Footer />
+        return renderLayout(
+            <div className="success-container">
+                <h1>🎉 Félicitations !</h1>
+                <p>Votre abonnement Premium est activé !</p>
+                <p>Vous allez être redirigé vers le dashboard...</p>
             </div>
         );
     }
 
     return (
-        <div className="premium-container">
-            <Header />
+        renderLayout(
             <main className="premium-main">
                 <div className="premium-content">
                     <div className="premium-header">
@@ -152,8 +157,7 @@ const Upgrade = () => {
                     </div>
                 </div>
             </main>
-            <Footer />
-        </div>
+        )
     );
 };
 

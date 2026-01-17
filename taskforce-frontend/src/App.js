@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -10,21 +11,27 @@ import Upgrade from './pages/Upgrade';
 import NotFound from './pages/NotFound';
 import './App.css';
 
+const AppRoutes = () => (
+  <div className="App">
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/account" element={<MyAccount />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/upgrade" element={<Upgrade />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </div>
+);
+
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/account" element={<MyAccount />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/upgrade" element={<Upgrade />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+      <HelmetProvider>
+        <AppRoutes />
+      </HelmetProvider>
     </Router>
   );
 }

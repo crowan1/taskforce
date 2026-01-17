@@ -9,6 +9,7 @@ import profileService from '../services/profil/profileService';
 import authService from '../services/authServices';
 import stripeService from '../services/stripeService';
 import '../assets/styles/compenents/MyAccount/MyAccount.scss';
+import Seo from "../compenents/Seo";
 
 const MyAccount = () => {
     const [user, setUser] = useState(null);
@@ -60,6 +61,13 @@ const MyAccount = () => {
     if (loading) {
         return (
             <div className="my-account-container">
+                <Seo
+                    title="Mon compte - TaskForce"
+                    description="Gérez vos informations personnelles et vos préférences sur TaskForce."
+                    keywords="mon compte taskforce, profil utilisateur, gestion compte"
+                    path="/account"
+                    noIndex
+                />
                 <Header />
                 <div className="loading-container">
                     <div className="loading-spinner"></div>
@@ -73,6 +81,13 @@ const MyAccount = () => {
     if (error) {
         return (
             <div className="my-account-container">
+                <Seo
+                    title="Mon compte - TaskForce"
+                    description="Gérez vos informations personnelles et vos préférences sur TaskForce."
+                    keywords="mon compte taskforce, profil utilisateur, gestion compte"
+                    path="/account"
+                    noIndex
+                />
                 <Header />
                 <div className="error-container">
                     <h2>Erreur</h2>
@@ -86,6 +101,13 @@ const MyAccount = () => {
 
     return (
         <div className="my-account-container">
+            <Seo
+                title="Mon compte - TaskForce"
+                description="Gérez vos informations personnelles et vos préférences sur TaskForce."
+                keywords="mon compte taskforce, profil utilisateur, gestion compte"
+                path="/account"
+                noIndex
+            />
             <Header />
             <main className="my-account-main">
                 <div className="my-account-content">

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import authService from "../services/authServices";
 import Header from "../compenents/includes/header";
 import Footer from "../compenents/includes/footer";
+import Seo from "../compenents/Seo";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -109,6 +110,13 @@ const Register = () => {
 
     return (
         <div className="register-page">
+            <Seo
+                title="Créer un compte - TaskForce"
+                description="Inscrivez-vous sur TaskForce et commencez à organiser vos projets avec une gestion intelligente des tâches."
+                keywords="inscription taskforce, créer compte gestion projet, collaboration équipe"
+                path="/register"
+                noIndex
+            />
             <Header />
             <div className="register-container">
             <div className="welcome-section">

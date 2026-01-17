@@ -10,6 +10,7 @@ import CreateTaskModal from '../compenents/dashboard/modal/tasks/CreateTaskModal
 import TaskModal from '../compenents/dashboard/modal/tasks/TaskModal';
 import AddUserModal from '../compenents/Admin/AddUserModal';
 import ReassignTaskModal from '../compenents/Admin/ReassignTaskModal';
+import Seo from '../compenents/Seo';
 
 import '../assets/styles/compenents/admin/ProjectSelector.scss';
 import '../assets/styles/compenents/admin/AdminTabs.scss';
@@ -250,149 +251,158 @@ const Admin = () => {
             setError(err.message);
         }
     };
+    const seo = (
+        <Seo
+            title="Administration - TaskForce"
+            description="Administrez vos projets, utilisateurs et tâches dans TaskForce."
+            keywords="administration taskforce, gestion utilisateurs, supervision projet"
+            path="/admin"
+            noIndex
+        />
+    );
+
+    const renderLayout = (content) => (
+        <div className="admin-container">
+            {seo}
+            <Header />
+            {content}
+            <Footer />
+        </div>
+    );
 
     if (loading) {
-        return (
-            <div className="admin-container">
-                <Header />
-                <div className="admin-content">
-                    <div className="loading-spinner"></div>
-                    <p>Chargement...</p>
-                </div>
-                <Footer />
+        return renderLayout(
+            <div className="admin-content">
+                <div className="loading-spinner"></div>
+                <p>Chargement...</p>
             </div>
         );
     }
 
     if (error) {
-        return (
-            <div className="admin-container">
-                <Header />
-                <div className="admin-content">
-                    <div className="error-message">
-                        <p>Erreur: {error}</p>
-                        {error.includes('Accès refusé') ? (
-                            <p className="error-redirect">Redirection vers le tableau de bord dans 3 secondes...</p>
-                        ) : (
-                            <button onClick={fetchData}>Réessayer</button>
-                        )}
-                    </div>
+        return renderLayout(
+            <div className="admin-content">
+                <div className="error-message">
+                    <p>Erreur: {error}</p>
+                    {error.includes('Accès refusé') ? (
+                        <p className="error-redirect">Redirection vers le tableau de bord dans 3 secondes...</p>
+                    ) : (
+                        <button onClick={fetchData}>Réessayer</button>
+                    )}
                 </div>
-                <Footer />
             </div>
         );
     }
 
     return (
-        <div className="admin-container">
-            <Header />
-            <div className="admin-content">
-                <ProjectSelector 
-                    projects={adminAccessibleProjects}
-                    selectedProject={selectedProject}
-                    onProjectChange={handleProjectChange}
-                />
-
-                {selectedProject ? (
-                                                <AdminTabs
-                                activeTab={activeTab}
-                                setActiveTab={setActiveTab}
-                                projectTasks={projectTasks}
-                                projectUsers={projectUsers}
+        renderLayout(
+            <>
+                <div className="admin-content">
+                    <ProjectSelector 
+                        projects={adminAccessibleProjects}
                         selectedProject={selectedProject}
-                        currentUserRole={currentUserRole}
-                        onCreateTask={handleCreateTask}
-                                onEditTask={handleEditTask}
-                                onShowTaskDetail={handleShowTaskDetail}
-                                onReassignTask={handleReassignTask}
-                                onDeleteTask={handleDeleteTask}
-                                onAddUser={handleAddUser}
-                                onUserUpdated={handleUserUpdated}
-                                onNavigateToDashboard={() => navigate(`/dashboard?project=${selectedProject}`)}
-                            />
-                ) : (
-                    <div className="no-project-selected">
-                        <h2>Aucun projet accessible</h2>
-                        <p>Vous devez être manager ou responsable de projet pour accéder à l'administration.</p>
-                    </div>
+                        onProjectChange={handleProjectChange}
+                    />
+
+                    {selectedProject ? (
+                                                    <AdminTabs
+                                    activeTab={activeTab}
+                                    setActiveTab={setActiveTab}
+                                    projectTasks={projectTasks}
+                                    projectUsers={projectUsers}
+                            selectedProject={selectedProject}
+                            currentUserRole={currentUserRole}
+                            onCreateTask={handleCreateTask}
+                                    onEditTask={handleEditTask}
+                                    onShowTaskDetail={handleShowTaskDetail}
+                                    onReassignTask={handleReassignTask}
+                                    onDeleteTask={handleDeleteTask}
+                                    onAddUser={handleAddUser}
+                                    onUserUpdated={handleUserUpdated}
+                                    onNavigateToDashboard={() => navigate(`/dashboard?project=${selectedProject}`)}
+                                />
+                    ) : (
+                        <div className="no-project-selected">
+                            <h2>Aucun projet accessible</h2>
+                            <p>Vous devez être manager ou responsable de projet pour accéder à l'administration.</p>
+                        </div>
+                    )}
+                </div>
+                {showCreateTaskModal && selectedProject && (
+                    <CreateTaskModal
+                        isOpen={showCreateTaskModal}
+                        onClose={() => setShowCreateTaskModal(false)}
+                        projectId={selectedProject.id}
+                        onTaskCreated={handleTaskCreated}
+                        projectUsers={projectUsers}
+                        projectTasks={projectTasks}
+                        autoAssign={true}
+                    />
                 )}
-            </div>
-            <Footer />
 
-            {showCreateTaskModal && selectedProject && (
-                <CreateTaskModal
-                    isOpen={showCreateTaskModal}
-                    onClose={() => setShowCreateTaskModal(false)}
-                    projectId={selectedProject.id}
-                    onTaskCreated={handleTaskCreated}
-                    projectUsers={projectUsers}
-                    projectTasks={projectTasks}
-                    autoAssign={true}
-                />
-            )}
+                {showAddUserModal && selectedProject && (
+                    <AddUserModal
+                        isOpen={showAddUserModal}
+                        onClose={() => setShowAddUserModal(false)}
+                        projectId={selectedProject.id}
+                        onUserAdded={handleUserAdded}
+                    />
+                )}
 
-            {showAddUserModal && selectedProject && (
-                <AddUserModal
-                    isOpen={showAddUserModal}
-                    onClose={() => setShowAddUserModal(false)}
-                    projectId={selectedProject.id}
-                    onUserAdded={handleUserAdded}
-                />
-            )}
+                {showReassignModal && selectedTaskForReassign && (
+                    <ReassignTaskModal
+                        isOpen={showReassignModal}
+                        onClose={() => setShowReassignModal(false)}
+                        task={selectedTaskForReassign}
+                        projectUsers={projectUsers}
+                        projectTasks={projectTasks}
+                        onTaskReassigned={handleTaskReassigned}
+                    />
+                )}
 
-            {showReassignModal && selectedTaskForReassign && (
-                <ReassignTaskModal
-                    isOpen={showReassignModal}
-                    onClose={() => setShowReassignModal(false)}
-                    task={selectedTaskForReassign}
-                    projectUsers={projectUsers}
-                    projectTasks={projectTasks}
-                    onTaskReassigned={handleTaskReassigned}
-                />
-            )}
+                {showEditTaskModal && selectedTaskForEdit && selectedProject && (
+                    <TaskModal
+                        isOpen={showEditTaskModal}
+                        onClose={() => {
+                            setShowEditTaskModal(false);
+                            setSelectedTaskForEdit(null);
+                        }}
+                        onTaskUpdate={async (taskId, taskData) => {
+                            try {
+                                await dashboardServices.updateTask(taskId, taskData);
+                                await handleTaskUpdated();
+                            } catch (err) {
+                                console.error('Erreur lors de la mise à jour de la tâche:', err);
+                            }
+                        }}
+                        task={selectedTaskForEdit}
+                        project={selectedProject}
+                        mode="edit"
+                    />
+                )}
 
-            {showEditTaskModal && selectedTaskForEdit && selectedProject && (
-                <TaskModal
-                    isOpen={showEditTaskModal}
-                    onClose={() => {
-                        setShowEditTaskModal(false);
-                        setSelectedTaskForEdit(null);
-                    }}
-                    onTaskUpdate={async (taskId, taskData) => {
-                        try {
-                            await dashboardServices.updateTask(taskId, taskData);
-                            await handleTaskUpdated();
-                        } catch (err) {
-                            console.error('Erreur lors de la mise à jour de la tâche:', err);
-                        }
-                    }}
-                    task={selectedTaskForEdit}
-                    project={selectedProject}
-                    mode="edit"
-                />
-            )}
-
-            {showTaskDetailModal && selectedTaskForDetail && selectedProject && (
-                <TaskModal
-                    isOpen={showTaskDetailModal}
-                    onClose={() => {
-                        setShowTaskDetailModal(false);
-                        setSelectedTaskForDetail(null);
-                    }}
-                    onTaskUpdate={async (taskId, taskData) => {
-                        try {
-                            await dashboardServices.updateTask(taskId, taskData);
-                            await handleTaskUpdated();
-                        } catch (err) {
-                            console.error('Erreur lors de la mise à jour de la tâche:', err);
-                        }
-                    }}
-                    task={selectedTaskForDetail}
-                    project={selectedProject}
-                    mode="view"
-                />
-            )}
-        </div>
+                {showTaskDetailModal && selectedTaskForDetail && selectedProject && (
+                    <TaskModal
+                        isOpen={showTaskDetailModal}
+                        onClose={() => {
+                            setShowTaskDetailModal(false);
+                            setSelectedTaskForDetail(null);
+                        }}
+                        onTaskUpdate={async (taskId, taskData) => {
+                            try {
+                                await dashboardServices.updateTask(taskId, taskData);
+                                await handleTaskUpdated();
+                            } catch (err) {
+                                console.error('Erreur lors de la mise à jour de la tâche:', err);
+                            }
+                        }}
+                        task={selectedTaskForDetail}
+                        project={selectedProject}
+                        mode="view"
+                    />
+                )}
+            </>
+        )
     );
 };
 
