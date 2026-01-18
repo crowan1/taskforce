@@ -2,42 +2,37 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\ProjectSkill;
 use App\Entity\Project;
-use App\Entity\Skill;
+use App\Entity\ProjectSkill;
+use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
 class ProjectSkillTest extends TestCase
 {
-    private ProjectSkill $projectSkill;
-
-    protected function setUp(): void
+    public function testSettersAndGetters(): void
     {
-        $this->projectSkill = new ProjectSkill();
+        $projectSkill = new ProjectSkill();
+        $project = new Project();
+        $user = new User();
+        $createdAt = new \DateTimeImmutable('2024-01-01 10:00:00');
+
+        $projectSkill->setName('Design')
+            ->setDescription('Desc')
+            ->setProject($project)
+            ->setCreatedBy($user)
+            ->setCreatedAt($createdAt);
+
+        $this->assertSame('Design', $projectSkill->getName());
+        $this->assertSame('Desc', $projectSkill->getDescription());
+        $this->assertSame($project, $projectSkill->getProject());
+        $this->assertSame($user, $projectSkill->getCreatedBy());
+        $this->assertSame($createdAt, $projectSkill->getCreatedAt());
     }
 
-    public function testProjectSkillCreation(): void
+    public function testConstructorSetsCreatedAt(): void
     {
-        $this->assertInstanceOf(ProjectSkill::class, $this->projectSkill);
-        $this->assertNull($this->projectSkill->getId());
-    }
-
-    public function testProject(): void
-    {
-        $project = $this->createMock(Project::class);
-        $this->projectSkill->setProject($project);
-        $this->assertEquals($project, $this->projectSkill->getProject());
-    }
-
-    public function testProjectSkillBasic(): void
-    {
-        $project = $this->createMock(Project::class);
-        $this->projectSkill->setProject($project);
-        $this->assertEquals($project, $this->projectSkill->getProject());
-    }
-
-    public function testProjectSkillId(): void
-    {
-        $this->assertNull($this->projectSkill->getId());
+        $projectSkill = new ProjectSkill();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $projectSkill->getCreatedAt());
     }
 }
+

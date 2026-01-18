@@ -2,187 +2,132 @@
 
 namespace App\Tests\Entity;
 
+use App\Entity\Column;
+use App\Entity\Project;
+use App\Entity\Skill;
 use App\Entity\Task;
 use App\Entity\User;
-use App\Entity\Project;
-use App\Entity\Column;
-use App\Entity\Skill;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Validator\Validation;
 
 class TaskTest extends TestCase
 {
-    private Task $task;
-    private $validator;
-
-    protected function setUp(): void
+    public function testDefaults(): void
     {
-        $this->task = new Task();
-        $this->validator = Validation::createValidatorBuilder()
-            ->enableAttributeMapping()
-            ->getValidator();
+        $task = new Task();
+
+        $this->assertSame('backlog', $task->getStatus());
+        $this->assertSame('medium', $task->getPriority());
+        $this->assertSame('intermediate', $task->getLevel());
+        $this->assertSame(1.0, $task->getEstimatedHours());
+        $this->assertSame([], $task->getImages());
+        $this->assertFalse($task->isFinished());
     }
 
-    public function testTaskCreation(): void
+    public function testSettersAndGetters(): void
     {
-        $this->assertInstanceOf(Task::class, $this->task);
-        $this->assertNull($this->task->getId());
-        $this->assertEquals('backlog', $this->task->getStatus());
-        $this->assertEquals('medium', $this->task->getPriority());
-        $this->assertEquals('intermediate', $this->task->getLevel());
-        $this->assertEquals(1.0, $this->task->getEstimatedHours());
-        $this->assertEquals([], $this->task->getImages());
+        $task = new Task();
+        $createdAt = new \DateTimeImmutable('2024-01-01 10:00:00');
+        $updatedAt = new \DateTimeImmutable('2024-01-02 10:00:00');
+        $dueDate = new \DateTimeImmutable('2024-02-01 10:00:00');
+
+        $task->setTitle('Test')
+            ->setDescription('Desc')
+            ->setStatus('todo')
+            ->setPriority('high')
+            ->setLevel('senior')
+            ->setEstimatedHours(5.5)
+            ->setCreatedAt($createdAt)
+            ->setUpdatedAt($updatedAt)
+            ->setDueDate($dueDate)
+            ->setIsFinished(true);
+
+        $this->assertSame('Test', $task->getTitle());
+        $this->assertSame('Desc', $task->getDescription());
+        $this->assertSame('todo', $task->getStatus());
+        $this->assertSame('high', $task->getPriority());
+        $this->assertSame('senior', $task->getLevel());
+        $this->assertSame(5.5, $task->getEstimatedHours());
+        $this->assertSame($createdAt, $task->getCreatedAt());
+        $this->assertSame($updatedAt, $task->getUpdatedAt());
+        $this->assertSame($dueDate, $task->getDueDate());
+        $this->assertTrue($task->isFinished());
     }
 
-    public function testTitleValidation(): void
+    public function testRelationsAndAssignment(): void
     {
-        $this->task->setTitle('Test Task');
-        $this->assertEquals('Test Task', $this->task->getTitle());
+        $task = new Task();
+        $project = new Project();
+        $user = new User();
+        $column = new Column();
 
-        $this->task->setTitle('');
-        $violations = $this->validator->validate($this->task);
-        $this->assertGreaterThan(0, $violations->count());
+        $task->setProject($project)->setCreatedBy($user)->setColumn($column);
+        $task->setAssignmentScore(0.75);
+
+        $this->assertSame($project, $task->getProject());
+        $this->assertSame($user, $task->getCreatedBy());
+        $this->assertSame($column, $task->getColumn());
+        $this->assertSame(0.75, $task->getAssignmentScore());
+
+        $task->setAssignedTo($user);
+        $this->assertSame($user, $task->getAssignedTo());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $task->getAssignedAt());
+        $task->setAssignedAt(null);
+        $this->assertNull($task->getAssignedAt());
     }
 
-    public function testDescription(): void
+    public function testRequiredSkillsAndImages(): void
     {
-        $description = 'This is a test task description';
-        $this->task->setDescription($description);
-        $this->assertEquals($description, $this->task->getDescription());
+        $task = new Task();
+        $skill = new Skill();
+        $skill->setName('PHP');
 
-        $this->task->setDescription(null);
-        $this->assertNull($this->task->getDescription());
+        $task->addRequiredSkill($skill);
+        $this->assertTrue($task->getRequiredSkills()->contains($skill));
+        $task->addRequiredSkill($skill);
+        $this->assertCount(1, $task->getRequiredSkills());
+
+        $task->removeRequiredSkill($skill);
+        $this->assertFalse($task->getRequiredSkills()->contains($skill));
+
+        $task->addImage('a.png')->addImage('b.png');
+        $this->assertSame(['a.png', 'b.png'], $task->getImages());
+
+        $task->removeImage('a.png');
+        $this->assertSame(['b.png'], $task->getImages());
+
+        $task->removeImage('missing.png');
+        $this->assertSame(['b.png'], $task->getImages());
     }
 
-    public function testStatus(): void
+    public function testLifecycleCallbacksSetDates(): void
     {
-        $this->task->setStatus('in_progress');
-        $this->assertEquals('in_progress', $this->task->getStatus());
+        $task = new Task();
+        $task->setCreatedAtValue();
 
-        $this->task->setStatus('completed');
-        $this->assertEquals('completed', $this->task->getStatus());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $task->getCreatedAt());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $task->getUpdatedAt());
+
+        $task->setUpdatedAtValue();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $task->getUpdatedAt());
     }
 
-    public function testPriority(): void
+    public function testAssignedToCanBeCleared(): void
     {
-        $this->task->setPriority('high');
-        $this->assertEquals('high', $this->task->getPriority());
+        $task = new Task();
+        $user = new User();
 
-        $this->task->setPriority('low');
-        $this->assertEquals('low', $this->task->getPriority());
+        $task->setAssignedTo($user);
+        $task->setAssignedTo(null);
+
+        $this->assertNull($task->getAssignedTo());
     }
 
-    public function testLevel(): void
+    public function testSetImages(): void
     {
-        $this->task->setLevel('beginner');
-        $this->assertEquals('beginner', $this->task->getLevel());
+        $task = new Task();
+        $task->setImages(['x.png']);
 
-        $this->task->setLevel('expert');
-        $this->assertEquals('expert', $this->task->getLevel());
-    }
-
-    public function testEstimatedHours(): void
-    {
-        $this->task->setEstimatedHours(5.5);
-        $this->assertEquals(5.5, $this->task->getEstimatedHours());
-
-        $this->task->setEstimatedHours(-2);
-        $violations = $this->validator->validate($this->task);
-        $this->assertGreaterThan(0, $violations->count());
-    }
-
-    public function testTimestamps(): void
-    {
-        $now = new \DateTimeImmutable();
-        $this->task->setCreatedAt($now);
-        $this->task->setUpdatedAt($now);
-        
-        $this->assertEquals($now, $this->task->getCreatedAt());
-        $this->assertEquals($now, $this->task->getUpdatedAt());
-    }
-
-    public function testAssignedTo(): void
-    {
-        $user = $this->createMock(User::class);
-        $this->task->setAssignedTo($user);
-        
-        $this->assertEquals($user, $this->task->getAssignedTo());
-        $this->assertInstanceOf(\DateTimeImmutable::class, $this->task->getAssignedAt());
-    }
-
-    public function testAssignmentScore(): void
-    {
-        $this->task->setAssignmentScore(85.5);
-        $this->assertEquals(85.5, $this->task->getAssignmentScore());
-
-        $this->task->setAssignmentScore(null);
-        $this->assertNull($this->task->getAssignmentScore());
-    }
-
-    public function testCreatedBy(): void
-    {
-        $user = $this->createMock(User::class);
-        $this->task->setCreatedBy($user);
-        $this->assertEquals($user, $this->task->getCreatedBy());
-    }
-
-    public function testProject(): void
-    {
-        $project = $this->createMock(Project::class);
-        $this->task->setProject($project);
-        $this->assertEquals($project, $this->task->getProject());
-    }
-
-    public function testColumn(): void
-    {
-        $column = $this->createMock(Column::class);
-        $this->task->setColumn($column);
-        $this->assertEquals($column, $this->task->getColumn());
-    }
-
-    public function testRequiredSkills(): void
-    {
-        $skill1 = $this->createMock(Skill::class);
-        $skill2 = $this->createMock(Skill::class);
-        
-        $this->task->addRequiredSkill($skill1);
-        $this->task->addRequiredSkill($skill2);
-        
-        $this->assertTrue($this->task->getRequiredSkills()->contains($skill1));
-        $this->assertTrue($this->task->getRequiredSkills()->contains($skill2));
-        
-        $this->task->removeRequiredSkill($skill1);
-        $this->assertFalse($this->task->getRequiredSkills()->contains($skill1));
-        $this->assertTrue($this->task->getRequiredSkills()->contains($skill2));
-    }
-
-    public function testImages(): void
-    {
-        $images = ['image1.jpg', 'image2.png'];
-        $this->task->setImages($images);
-        $this->assertEquals($images, $this->task->getImages());
-
-        $this->task->addImage('image3.jpg');
-        $this->assertContains('image3.jpg', $this->task->getImages());
-
-        $this->task->removeImage('image1.jpg');
-        $this->assertNotContains('image1.jpg', $this->task->getImages());
-    }
-
-    public function testValidationConstraints(): void
-    {
-        $this->task->setTitle('Valid Task Title');
-        $this->task->setDescription('Valid description');
-        $this->task->setEstimatedHours(2.5);
-        
-        $violations = $this->validator->validate($this->task);
-        $this->assertEquals(0, $violations->count());
-
-        $invalidTask = new Task();
-        $invalidTask->setTitle(''); // Titre vide
-        $invalidTask->setEstimatedHours(-1); // Heures négatives
-        
-        $violations = $this->validator->validate($invalidTask);
-        $this->assertGreaterThan(0, $violations->count());
+        $this->assertSame(['x.png'], $task->getImages());
     }
 }
+

@@ -2,79 +2,110 @@
 
 namespace App\Tests\Controller;
 
+use App\Controller\SkillController;
 use App\Entity\Skill;
 use App\Entity\User;
+use App\Repository\SkillRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 class SkillControllerTest extends TestCase
 {
-    public function testSkillControllerExists(): void
+    public function testGetSkills(): void
     {
-        $this->assertTrue(class_exists('App\Controller\SkillController'));
-    }
-
-    public function testSkillEntityExists(): void
-    {
-        $this->assertTrue(class_exists('App\Entity\Skill'));
-    }
-
-    public function testSkillCreation(): void
-    {
+        $user = $this->makeUser();
         $skill = new Skill();
-        $skill->setName('PHP');
-        $skill->setDescription('PHP programming skill');
-        
-        $this->assertEquals('PHP', $skill->getName());
-        $this->assertEquals('PHP programming skill', $skill->getDescription());
+        $skill->setName('PHP')->setDescription('Backend')->setCreatedBy($user);
+        $skill->setCreatedAt(new \DateTimeImmutable('2024-01-01 10:00:00'));
+
+        $repo = $this->createMock(SkillRepository::class);
+        $repo->method('findActiveSkills')->willReturn([$skill]);
+
+        $controller = new SkillControllerStub($this->createMock(EntityManagerInterface::class), $repo);
+        $response = $controller->getSkills();
+        $payload = json_decode($response->getContent(), true);
+
+        $this->assertTrue($payload['success']);
+        $this->assertSame('PHP', $payload['skills'][0]['name']);
     }
 
-    public function testSkillIsActive(): void
+    public function testCreateSkillInvalid(): void
     {
-        $skill = new Skill();
-        $skill->setIsActive(true);
-        
-        $this->assertTrue($skill->isActive());
-        
-        $skill->setIsActive(false);
-        $this->assertFalse($skill->isActive());
+        $controller = new SkillControllerStub($this->createMock(EntityManagerInterface::class), $this->createMock(SkillRepository::class));
+        $controller->setUser($this->makeUser());
+
+        $response = $controller->createSkill(new Request([], [], [], [], [], [], json_encode([])));
+        $payload = json_decode($response->getContent(), true);
+
+        $this->assertFalse($payload['success']);
     }
 
-    public function testSkillCreatedBy(): void
+    public function testCreateSkillSuccess(): void
     {
-        $skill = new Skill();
+        $user = $this->makeUser();
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->method('persist')->willReturnCallback(function (object $entity) {
+            if (method_exists($entity, 'setCreatedAtValue')) {
+                $entity->setCreatedAtValue();
+            } elseif (method_exists($entity, 'setCreatedAt')) {
+                $entity->setCreatedAt(new \DateTimeImmutable());
+            }
+        });
+
+        $controller = new SkillControllerStub($entityManager, $this->createMock(SkillRepository::class));
+        $controller->setUser($user);
+
+        $request = new Request([], [], [], [], [], [], json_encode([
+            'name' => 'Laravel',
+            'description' => 'Framework'
+        ]));
+
+        $response = $controller->createSkill($request);
+        $payload = json_decode($response->getContent(), true);
+
+        $this->assertTrue($payload['success']);
+        $this->assertSame('Laravel', $payload['skill']['name']);
+    }
+
+    private function makeUser(): User
+    {
         $user = new User();
-        $user->setEmail('test@example.com');
-        
-        $skill->setCreatedBy($user);
-        
-        $this->assertEquals($user, $skill->getCreatedBy());
+        $user->setEmail('user@example.com')->setFirstname('John')->setLastname('Doe');
+        $user->setCreatedAt(new \DateTimeImmutable('2024-01-01 10:00:00'));
+        $user->setUpdatedAt(new \DateTimeImmutable('2024-01-02 10:00:00'));
+        $this->setId($user, 1);
+
+        return $user;
     }
 
-    public function testSkillTimestamps(): void
+    private function setId(object $entity, int $id): void
     {
-        $skill = new Skill();
-        $now = new \DateTimeImmutable();
-        
-        $skill->setCreatedAt($now);
-        $skill->setUpdatedAt($now);
-        
-        $this->assertEquals($now, $skill->getCreatedAt());
-        $this->assertEquals($now, $skill->getUpdatedAt());
-    }
-
-    public function testSkillBasic(): void
-    {
-        $skill = new Skill();
-        $skill->setName('PHP');
-        $skill->setDescription('PHP programming');
-        
-        $this->assertEquals('PHP', $skill->getName());
-        $this->assertEquals('PHP programming', $skill->getDescription());
-    }
-
-    public function testSkillId(): void
-    {
-        $skill = new Skill();
-        $this->assertNull($skill->getId());
+        $reflection = new \ReflectionClass($entity);
+        $prop = $reflection->getProperty('id');
+        $prop->setAccessible(true);
+        $prop->setValue($entity, $id);
     }
 }
+
+class SkillControllerStub extends SkillController
+{
+    private ?User $user = null;
+
+    public function setUser(?User $user): void
+    {
+        $this->user = $user;
+    }
+
+    protected function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    protected function json($data, int $status = 200, array $headers = [], array $context = []): JsonResponse
+    {
+        return new JsonResponse($data, $status, $headers);
+    }
+}
+

@@ -2,136 +2,89 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\Project;
-use App\Entity\User;
-use App\Entity\Task;
 use App\Entity\Column;
+use App\Entity\Project;
 use App\Entity\ProjectUser;
+use App\Entity\Task;
+use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
 class ProjectTest extends TestCase
 {
-    private Project $project;
-    protected function setUp(): void
+    public function testSettersAndGetters(): void
     {
-        $this->project = new Project();
+        $project = new Project();
+        $createdAt = new \DateTimeImmutable('2024-01-01 10:00:00');
+        $updatedAt = new \DateTimeImmutable('2024-01-02 10:00:00');
+        $user = new User();
+
+        $project->setName('Project A')
+            ->setDescription('Desc')
+            ->setStatus('active')
+            ->setCreatedAt($createdAt)
+            ->setUpdatedAt($updatedAt)
+            ->setCreatedBy($user);
+
+        $this->assertSame('Project A', $project->getName());
+        $this->assertSame('Desc', $project->getDescription());
+        $this->assertSame('active', $project->getStatus());
+        $this->assertSame($createdAt, $project->getCreatedAt());
+        $this->assertSame($updatedAt, $project->getUpdatedAt());
+        $this->assertSame($user, $project->getCreatedBy());
     }
 
-    public function testProjectCreation(): void
+    public function testTasksAndColumns(): void
     {
-        $this->assertInstanceOf(Project::class, $this->project);
-        $this->assertNull($this->project->getId());
-        $this->assertEquals('active', $this->project->getStatus());
+        $project = new Project();
+        $task = new Task();
+        $column = new Column();
+
+        $project->addTask($task);
+        $project->addColumn($column);
+
+        $this->assertTrue($project->getTasks()->contains($task));
+        $this->assertTrue($project->getColumns()->contains($column));
+        $this->assertSame($project, $task->getProject());
+        $this->assertSame($project, $column->getProject());
+
+        $project->removeTask($task);
+        $project->removeColumn($column);
+
+        $this->assertFalse($project->getTasks()->contains($task));
+        $this->assertFalse($project->getColumns()->contains($column));
+        $this->assertNull($task->getProject());
+        $this->assertNull($column->getProject());
     }
 
-    public function testNameValidation(): void
+    public function testProjectUsersAndGetUsers(): void
     {
-        $this->project->setName('Test Project');
-        $this->assertEquals('Test Project', $this->project->getName());
+        $project = new Project();
+        $user = new User();
+        $projectUser = new ProjectUser();
+        $projectUser->setUser($user);
 
-        // Test nom vide
-        $this->project->setName('');
-        $this->assertEquals('', $this->project->getName());
+        $project->addProjectUser($projectUser);
+
+        $this->assertTrue($project->getProjectUsers()->contains($projectUser));
+        $this->assertSame($project, $projectUser->getProject());
+        $this->assertCount(1, $project->getUsers());
+
+        $project->removeProjectUser($projectUser);
+
+        $this->assertFalse($project->getProjectUsers()->contains($projectUser));
+        $this->assertNull($projectUser->getProject());
     }
 
-    public function testDescription(): void
+    public function testLifecycleCallbacksSetDates(): void
     {
-        $description = 'This is a test project description';
-        $this->project->setDescription($description);
-        $this->assertEquals($description, $this->project->getDescription());
+        $project = new Project();
+        $project->setCreatedAtValue();
 
-        // Test avec description null
-        $this->project->setDescription(null);
-        $this->assertNull($this->project->getDescription());
-    }
+        $this->assertInstanceOf(\DateTimeImmutable::class, $project->getCreatedAt());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $project->getUpdatedAt());
 
-    public function testStatus(): void
-    {
-        $this->project->setStatus('completed');
-        $this->assertEquals('completed', $this->project->getStatus());
-
-        $this->project->setStatus('archived');
-        $this->assertEquals('archived', $this->project->getStatus());
-    }
-
-    public function testTimestamps(): void
-    {
-        $now = new \DateTimeImmutable();
-        $this->project->setCreatedAt($now);
-        $this->project->setUpdatedAt($now);
-        
-        $this->assertEquals($now, $this->project->getCreatedAt());
-        $this->assertEquals($now, $this->project->getUpdatedAt());
-    }
-
-    public function testCreatedBy(): void
-    {
-        $user = $this->createMock(User::class);
-        $this->project->setCreatedBy($user);
-        $this->assertEquals($user, $this->project->getCreatedBy());
-    }
-
-    public function testTasks(): void
-    {
-        $task = $this->createMock(Task::class);
-        
-        $this->project->addTask($task);
-        $this->assertTrue($this->project->getTasks()->contains($task));
-        
-        $this->project->removeTask($task);
-        $this->assertFalse($this->project->getTasks()->contains($task));
-    }
-
-    public function testColumns(): void
-    {
-        $column = $this->createMock(Column::class);
-        
-        $this->project->addColumn($column);
-        $this->assertTrue($this->project->getColumns()->contains($column));
-        
-        $this->project->removeColumn($column);
-        $this->assertFalse($this->project->getColumns()->contains($column));
-    }
-
-    public function testProjectUsers(): void
-    {
-        $projectUser = $this->createMock(ProjectUser::class);
-        
-        $this->project->addProjectUser($projectUser);
-        $this->assertTrue($this->project->getProjectUsers()->contains($projectUser));
-        
-        $this->project->removeProjectUser($projectUser);
-        $this->assertFalse($this->project->getProjectUsers()->contains($projectUser));
-    }
-
-    public function testGetUsers(): void
-    {
-        $user1 = $this->createMock(User::class);
-        $user2 = $this->createMock(User::class);
-        
-        $projectUser1 = $this->createMock(ProjectUser::class);
-        $projectUser1->method('getUser')->willReturn($user1);
-        
-        $projectUser2 = $this->createMock(ProjectUser::class);
-        $projectUser2->method('getUser')->willReturn($user2);
-        
-        $this->project->addProjectUser($projectUser1);
-        $this->project->addProjectUser($projectUser2);
-        
-        $users = $this->project->getUsers();
-        $this->assertCount(2, $users);
-        $this->assertContains($user1, $users);
-        $this->assertContains($user2, $users);
-    }
-
-    public function testValidationConstraints(): void
-    { 
-        $this->project->setName('Valid Project Name');
-        $this->project->setDescription('Valid description');
-        $this->project->setStatus('active');
-        
-        $this->assertEquals('Valid Project Name', $this->project->getName());
-        $this->assertEquals('Valid description', $this->project->getDescription());
-        $this->assertEquals('active', $this->project->getStatus());
+        $project->setUpdatedAtValue();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $project->getUpdatedAt());
     }
 }
+

@@ -2,54 +2,32 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\UserSkill;
-use App\Entity\User;
 use App\Entity\Skill;
+use App\Entity\User;
+use App\Entity\UserSkill;
 use PHPUnit\Framework\TestCase;
 
 class UserSkillTest extends TestCase
 {
-    private UserSkill $userSkill;
-
-    protected function setUp(): void
+    public function testSettersAndGetters(): void
     {
-        $this->userSkill = new UserSkill();
-    }
+        $userSkill = new UserSkill();
+        $user = new User();
+        $skill = new Skill();
+        $skill->setName('PHP');
+        $createdAt = new \DateTimeImmutable('2024-01-01 10:00:00');
+        $updatedAt = new \DateTimeImmutable('2024-01-02 10:00:00');
 
-    public function testUserSkillCreation(): void
-    {
-        $this->assertInstanceOf(UserSkill::class, $this->userSkill);
-        $this->assertNull($this->userSkill->getId());
-    }
+        $userSkill->setUser($user)
+            ->setSkill($skill)
+            ->setCreatedAt($createdAt)
+            ->setUpdatedAt($updatedAt);
 
-    public function testUser(): void
-    {
-        $user = $this->createMock(User::class);
-        $this->userSkill->setUser($user);
-        $this->assertEquals($user, $this->userSkill->getUser());
-    }
-
-    public function testSkill(): void
-    {
-        $skill = $this->createMock(Skill::class);
-        $this->userSkill->setSkill($skill);
-        $this->assertEquals($skill, $this->userSkill->getSkill());
-    }
-
-    public function testUserSkillBasic(): void
-    {
-        $user = $this->createMock(User::class);
-        $skill = $this->createMock(Skill::class);
-        
-        $this->userSkill->setUser($user);
-        $this->userSkill->setSkill($skill);
-        
-        $this->assertEquals($user, $this->userSkill->getUser());
-        $this->assertEquals($skill, $this->userSkill->getSkill());
-    }
-
-    public function testUserSkillId(): void
-    {
-        $this->assertNull($this->userSkill->getId());
+        $this->assertSame($user, $userSkill->getUser());
+        $this->assertSame($skill, $userSkill->getSkill());
+        $this->assertSame($createdAt, $userSkill->getCreatedAt());
+        $this->assertSame($updatedAt, $userSkill->getUpdatedAt());
+        $this->assertNull($userSkill->getId());
     }
 }
+

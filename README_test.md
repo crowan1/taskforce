@@ -3,11 +3,11 @@
 ### Front-END
 ```bash
 cd taskforce-frontend
-npm test -- --coverage --watchAll=false
+npm run test:ci
 ```
 
 ### Back-END
 ```bash
 cd taskforce-backend
-XDEBUG_MODE=coverage php bin/phpunit --coverage-text
+XDEBUG_MODE=coverage /opt/homebrew/bin/php bin/phpunit --coverage-text
 ```

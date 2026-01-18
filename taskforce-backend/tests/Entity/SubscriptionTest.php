@@ -8,53 +8,66 @@ use PHPUnit\Framework\TestCase;
 
 class SubscriptionTest extends TestCase
 {
-    private Subscription $subscription;
-
-    protected function setUp(): void
+    public function testSettersAndGetters(): void
     {
-        $this->subscription = new Subscription();
+        $subscription = new Subscription();
+        $user = new User();
+        $createdAt = new \DateTimeImmutable('2024-01-01 10:00:00');
+        $updatedAt = new \DateTimeImmutable('2024-01-02 10:00:00');
+        $periodStart = new \DateTimeImmutable('2024-01-03 10:00:00');
+        $periodEnd = new \DateTimeImmutable('2024-02-03 10:00:00');
+
+        $subscription->setUser($user)
+            ->setStripeSubscriptionId('sub_123')
+            ->setStatus('active')
+            ->setPlan('premium')
+            ->setAmount('9.99')
+            ->setCurrency('eur')
+            ->setCreatedAt($createdAt)
+            ->setUpdatedAt($updatedAt)
+            ->setCurrentPeriodStart($periodStart)
+            ->setCurrentPeriodEnd($periodEnd);
+
+        $this->assertSame($user, $subscription->getUser());
+        $this->assertSame('sub_123', $subscription->getStripeSubscriptionId());
+        $this->assertSame('active', $subscription->getStatus());
+        $this->assertSame('premium', $subscription->getPlan());
+        $this->assertSame('9.99', $subscription->getAmount());
+        $this->assertSame('eur', $subscription->getCurrency());
+        $this->assertSame($createdAt, $subscription->getCreatedAt());
+        $this->assertSame($updatedAt, $subscription->getUpdatedAt());
+        $this->assertSame($periodStart, $subscription->getCurrentPeriodStart());
+        $this->assertSame($periodEnd, $subscription->getCurrentPeriodEnd());
+        $this->assertNull($subscription->getId());
     }
 
-    public function testSubscriptionCreation(): void
+    public function testStatusHelpers(): void
     {
-        $this->assertInstanceOf(Subscription::class, $this->subscription);
-        $this->assertNull($this->subscription->getId());
+        $subscription = new Subscription();
+        $subscription->setStatus('active')->setPlan('premium');
+
+        $this->assertTrue($subscription->isActive());
+        $this->assertTrue($subscription->isPremium());
+
+        $subscription->setStatus('canceled');
+        $this->assertFalse($subscription->isActive());
+        $this->assertFalse($subscription->isPremium());
     }
 
-    public function testUser(): void
+    public function testUpdateTimestampOnUpdate(): void
     {
-        $user = $this->createMock(User::class);
-        $this->subscription->setUser($user);
-        $this->assertEquals($user, $this->subscription->getUser());
+        $subscription = new Subscription();
+        $subscription->setUpdatedAtValue();
+
+        $this->assertInstanceOf(\DateTimeImmutable::class, $subscription->getUpdatedAt());
     }
 
-    public function testPlan(): void
+    public function testConstructorSetsTimestamps(): void
     {
-        $this->subscription->setPlan('premium');
-        $this->assertEquals('premium', $this->subscription->getPlan());
-    }
+        $subscription = new Subscription();
 
-    public function testStatus(): void
-    {
-        $this->subscription->setStatus('active');
-        $this->assertEquals('active', $this->subscription->getStatus());
-    }
-
-    public function testSubscriptionBasic(): void
-    {
-        $user = $this->createMock(User::class);
-        
-        $this->subscription->setUser($user);
-        $this->subscription->setPlan('premium');
-        $this->subscription->setStatus('active');
-        
-        $this->assertEquals($user, $this->subscription->getUser());
-        $this->assertEquals('premium', $this->subscription->getPlan());
-        $this->assertEquals('active', $this->subscription->getStatus());
-    }
-
-    public function testSubscriptionId(): void
-    {
-        $this->assertNull($this->subscription->getId());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $subscription->getCreatedAt());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $subscription->getUpdatedAt());
     }
 }
+

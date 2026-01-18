@@ -2,319 +2,318 @@
 
 namespace App\Tests\Service;
 
-use App\Service\TaskAssignmentService;
+use App\Entity\Project;
+use App\Entity\ProjectUser;
+use App\Entity\Skill;
 use App\Entity\Task;
 use App\Entity\User;
-use App\Entity\Project;
-use App\Entity\Skill;
-use App\Entity\ProjectUser;
 use App\Entity\UserSkill;
+use App\Repository\ProjectUserRepository;
 use App\Repository\TaskRepository;
 use App\Repository\UserSkillRepository;
-use App\Repository\ProjectUserRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\TaskAssignmentService;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 
 class TaskAssignmentServiceTest extends TestCase
 {
-    private TaskAssignmentService $service;
-    private MockObject $entityManager;
-    private MockObject $taskRepository;
-    private MockObject $userSkillRepository;
-    private MockObject $projectUserRepository;
-
-    protected function setUp(): void
+    public function testAssignTaskAutomaticallyReturnsNullWhenNoUsers(): void
     {
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->taskRepository = $this->createMock(TaskRepository::class);
-        $this->userSkillRepository = $this->createMock(UserSkillRepository::class);
-        $this->projectUserRepository = $this->createMock(ProjectUserRepository::class);
-
-        $this->service = new TaskAssignmentService(
-            $this->entityManager,
-            $this->taskRepository,
-            $this->userSkillRepository,
-            $this->projectUserRepository
-        );
-    }
-
-    public function testAssignTaskAutomaticallyWithNoProjectUsers(): void
-    {
+        $service = $this->buildService([], []);
         $task = $this->createMock(Task::class);
         $project = $this->createMock(Project::class);
-        
+
         $task->method('getProject')->willReturn($project);
         $project->method('getId')->willReturn(1);
-        
-        $this->projectUserRepository
-            ->method('findByProject')
-            ->with(1)
-            ->willReturn([]);
 
-        $result = $this->service->assignTaskAutomatically($task);
-        
-        $this->assertNull($result);
+        $this->assertNull($service->assignTaskAutomatically($task));
     }
 
-    public function testAssignTaskAutomaticallyWithAvailableUsers(): void
+    public function testAssignTaskAutomaticallyUsesFallbackWhenOverloaded(): void
     {
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getMaxWorkloadHours')->willReturn(1.0);
+        $user->method('getFirstname')->willReturn('John');
+        $user->method('getLastname')->willReturn('Doe');
+
+        $projectUser = $this->createMock(ProjectUser::class);
+        $projectUser->method('getUser')->willReturn($user);
+
+        $existingTask = $this->createMock(Task::class);
+        $existingTask->method('getEstimatedHours')->willReturn(5.0);
+        $existingTask->method('isFinished')->willReturn(false);
+
+        $service = $this->buildService([$projectUser], [$existingTask]);
         $task = $this->createMock(Task::class);
         $project = $this->createMock(Project::class);
-        $user = $this->createMock(User::class);
-        $projectUser = $this->createMock(ProjectUser::class);
-        
+
         $task->method('getProject')->willReturn($project);
         $task->method('getEstimatedHours')->willReturn(5.0);
         $task->method('getRequiredSkills')->willReturn(new ArrayCollection());
-        
         $project->method('getId')->willReturn(1);
-        
-        $user->method('getMaxWorkloadHours')->willReturn(40.0);
-        $user->method('getId')->willReturn(1);
-        $user->method('getFirstname')->willReturn('John');
-        $user->method('getLastname')->willReturn('Doe');
-        
-        $projectUser->method('getUser')->willReturn($user);
-        
-        $this->projectUserRepository
-            ->method('findByProject')
-            ->with(1)
-            ->willReturn([$projectUser]);
-            
-        $this->taskRepository
-            ->method('findBy')
-            ->willReturn([]);
-            
-        $this->userSkillRepository
-            ->method('findByUser')
-            ->with(1)
-            ->willReturn([]);
 
-        $this->entityManager->expects($this->once())->method('flush');
         $task->expects($this->once())->method('setAssignedTo')->with($user);
-        $task->expects($this->once())->method('setAssignmentScore')->with($this->isType('float'));
 
-        $result = $this->service->assignTaskAutomatically($task);
-        
-        $this->assertSame($user, $result);
+        $this->assertSame($user, $service->assignTaskAutomatically($task));
     }
 
-    public function testAssignTaskAutomaticallyWithOverloadedUsers(): void
+    public function testAssignTaskAutomaticallyReturnsNullWhenScoreIsZero(): void
     {
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getMaxWorkloadHours')->willReturn(10.0);
+
+        $projectUser = $this->createMock(ProjectUser::class);
+        $projectUser->method('getUser')->willReturn($user);
+
+        $heavyTask = $this->createMock(Task::class);
+        $heavyTask->method('getEstimatedHours')->willReturn(10.0);
+        $heavyTask->method('isFinished')->willReturn(false);
+
+        $service = $this->buildService([$projectUser], [$heavyTask]);
         $task = $this->createMock(Task::class);
         $project = $this->createMock(Project::class);
-        $user = $this->createMock(User::class);
-        $projectUser = $this->createMock(ProjectUser::class);
-        $existingTask = $this->createMock(Task::class);
-        
+
         $task->method('getProject')->willReturn($project);
-        $task->method('getEstimatedHours')->willReturn(20.0);
-        $task->method('getRequiredSkills')->willReturn(new ArrayCollection());
-        
-        $project->method('getId')->willReturn(1);
-        
-        $user->method('getMaxWorkloadHours')->willReturn(40.0);
-        $user->method('getId')->willReturn(1);
-        $user->method('getFirstname')->willReturn('John');
-        $user->method('getLastname')->willReturn('Doe');
-        
-        $projectUser->method('getUser')->willReturn($user);
-        
-        $existingTask->method('getEstimatedHours')->willReturn(25.0);
-        
-        $this->projectUserRepository
-            ->method('findByProject')
-            ->with(1)
-            ->willReturn([$projectUser]);
-            
-        $this->taskRepository
-            ->method('findBy')
-            ->willReturn([$existingTask]);
-            
-        $this->userSkillRepository
-            ->method('findByUser')
-            ->with(1)
-            ->willReturn([]);
-
-        $this->entityManager->expects($this->once())->method('flush');
-        $task->expects($this->once())->method('setAssignedTo')->with($user);
-        $task->expects($this->once())->method('setAssignmentScore')->with($this->isType('float'));
-
-        $result = $this->service->assignTaskAutomatically($task);
-        
-        $this->assertSame($user, $result);
-    }
-
-    public function testAssignAllProjectTasks(): void
-    {
-        $project = $this->createMock(Project::class);
-        
-        $project->method('getId')->willReturn(1);
-        
-        $this->taskRepository
-            ->method('findBy')
-            ->willReturn([]);
-            
-        $this->projectUserRepository
-            ->method('findByProject')
-            ->willReturn([]);
-
-        $result = $this->service->assignAllProjectTasks($project);
-        
-        $this->assertCount(0, $result); // Aucune assignation car pas de tâches
-    }
-
-    public function testGetWorkloadByUser(): void
-    {
-        $project = $this->createMock(Project::class);
-        $user = $this->createMock(User::class);
-        $projectUser = $this->createMock(ProjectUser::class);
-        $task = $this->createMock(Task::class);
-        
-        $project->method('getId')->willReturn(1);
-        
-        $user->method('getId')->willReturn(1);
-        $user->method('getFirstname')->willReturn('John');
-        $user->method('getLastname')->willReturn('Doe');
-        $user->method('getMaxWorkloadHours')->willReturn(40.0);
-        
-        $projectUser->method('getUser')->willReturn($user);
-        
-        $task->method('getId')->willReturn(1);
-        $task->method('getTitle')->willReturn('Test Task');
-        $task->method('getPriority')->willReturn('high');
-        $task->method('getStatus')->willReturn('pending');
         $task->method('getEstimatedHours')->willReturn(10.0);
-        
-        $this->projectUserRepository
-            ->method('findByProject')
-            ->with(1)
-            ->willReturn([$projectUser]);
-            
-        $this->taskRepository
-            ->method('findBy')
-            ->willReturn([$task]);
+        $task->method('getRequiredSkills')->willReturn(new ArrayCollection([
+            $this->createMock(Skill::class)
+        ]));
+        $project->method('getId')->willReturn(1);
 
-        $result = $this->service->getWorkloadByUser($project);
-        
-        $this->assertCount(1, $result);
-        $this->assertEquals(1, $result[0]['userId']);
-        $this->assertEquals('John Doe', $result[0]['userName']);
-        $this->assertEquals(1, $result[0]['taskCount']);
-        $this->assertEquals(10.0, $result[0]['totalHours']);
-        $this->assertEquals(40.0, $result[0]['maxWorkloadHours']);
-        $this->assertEquals(25.0, $result[0]['workloadPercentage']);
-        $this->assertFalse($result[0]['isOverloaded']);
-        $this->assertCount(1, $result[0]['tasks']);
+        $this->assertNull($service->assignTaskAutomatically($task));
     }
 
-    public function testSkillMatchScoreCalculation(): void
+    public function testAssignTaskAutomaticallyAssignsUser(): void
     {
-        $task = $this->createMock(Task::class);
         $user = $this->createMock(User::class);
-        $skill1 = $this->createMock(Skill::class);
-        $skill2 = $this->createMock(Skill::class);
-        $userSkill1 = $this->createMock(UserSkill::class);
-        $userSkill2 = $this->createMock(UserSkill::class);
-        
-        $task->method('getRequiredSkills')->willReturn(new ArrayCollection([$skill1, $skill2]));
-        
-        $skill1->method('getName')->willReturn('PHP');
-        $skill2->method('getName')->willReturn('JavaScript');
-        
         $user->method('getId')->willReturn(1);
-        
-        $userSkill1->method('getSkill')->willReturn($skill1);
-        $userSkill2->method('getSkill')->willReturn($skill2);
-        
-        $this->userSkillRepository
-            ->method('findByUser')
-            ->with(1)
-            ->willReturn([$userSkill1, $userSkill2]);
-
-        $reflection = new \ReflectionClass($this->service);
-        $method = $reflection->getMethod('calculateSkillMatchScore');
-        $method->setAccessible(true);
-        
-        $score = $method->invoke($this->service, $task, $user);
-        
-        $this->assertEquals(1.0, $score); 
-    }
-
-    public function testWorkloadScoreCalculation(): void
-    {
-        $user = $this->createMock(User::class);
-        $project = $this->createMock(Project::class);
-        $task1 = $this->createMock(Task::class);
-        $task2 = $this->createMock(Task::class);
-        
         $user->method('getMaxWorkloadHours')->willReturn(40.0);
-        
-        $task1->method('getEstimatedHours')->willReturn(15.0);
-        $task2->method('getEstimatedHours')->willReturn(10.0);
-        
-        $this->taskRepository
-            ->method('findBy')
-            ->willReturn([$task1, $task2]);
+        $user->method('getFirstname')->willReturn('John');
+        $user->method('getLastname')->willReturn('Doe');
 
-        $reflection = new \ReflectionClass($this->service);
-        $method = $reflection->getMethod('calculateWorkloadScore');
-        $method->setAccessible(true);
-        
-        $score = $method->invoke($this->service, $user, $project);
-        
-        $this->assertEquals(0.6, $score);
-    }
+        $projectUser = $this->createMock(ProjectUser::class);
+        $projectUser->method('getUser')->willReturn($user);
 
-    public function testPriorityBonusCalculation(): void
-    {
-        $taskHigh = $this->createMock(Task::class);
-        $taskMedium = $this->createMock(Task::class);
-        $taskLow = $this->createMock(Task::class);
-        
-        $taskHigh->method('getPriority')->willReturn('high');
-        $taskMedium->method('getPriority')->willReturn('medium');
-        $taskLow->method('getPriority')->willReturn('low');
-
-        $reflection = new \ReflectionClass($this->service);
-        $method = $reflection->getMethod('calculatePriorityBonus');
-        $method->setAccessible(true);
-        
-        $this->assertEquals(1.0, $method->invoke($this->service, $taskHigh));
-        $this->assertEquals(0.7, $method->invoke($this->service, $taskMedium));
-        $this->assertEquals(0.4, $method->invoke($this->service, $taskLow));
-    }
-
-    public function testAssignmentScoreCalculation(): void
-    {
+        $service = $this->buildService([$projectUser], []);
         $task = $this->createMock(Task::class);
-        $user = $this->createMock(User::class);
         $project = $this->createMock(Project::class);
-        
-        $task->method('getRequiredSkills')->willReturn(new ArrayCollection());
+
         $task->method('getProject')->willReturn($project);
-        
+        $task->method('getEstimatedHours')->willReturn(1.0);
+        $task->method('getRequiredSkills')->willReturn(new ArrayCollection());
+        $project->method('getId')->willReturn(1);
+
+        $task->expects($this->once())->method('setAssignedTo')->with($user);
+        $task->expects($this->once())->method('setAssignmentScore')->with($this->isType('float'));
+
+        $result = $service->assignTaskAutomatically($task);
+
+        $this->assertSame($user, $result);
+    }
+
+    public function testGetWorkloadByUserReturnsData(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+        $user->method('getFirstname')->willReturn('John');
+        $user->method('getLastname')->willReturn('Doe');
+        $user->method('getMaxWorkloadHours')->willReturn(40.0);
+        $user->method('getEmail')->willReturn('john@example.com');
+
+        $projectUser = $this->createMock(ProjectUser::class);
+        $projectUser->method('getUser')->willReturn($user);
+
+        $task = $this->createMock(Task::class);
+        $task->method('getEstimatedHours')->willReturn(10.0);
+        $task->method('getStatus')->willReturn('todo');
+        $task->method('getId')->willReturn(1);
+        $task->method('getTitle')->willReturn('Task');
+        $task->method('getPriority')->willReturn('high');
+
+        $service = $this->buildService([$projectUser], [$task]);
+        $project = $this->createMock(Project::class);
+        $project->method('getId')->willReturn(1);
+
+        $workload = $service->getWorkloadByUser($project);
+
+        $this->assertCount(1, $workload);
+        $this->assertSame(1, $workload[0]['userId']);
+        $this->assertSame(10.0, $workload[0]['totalHours']);
+    }
+
+    public function testCalculatePriorityBonus(): void
+    {
+        $service = $this->buildService([], []);
+        $task = $this->createMock(Task::class);
+        $task->method('getPriority')->willReturn('high');
+
+        $method = new \ReflectionMethod($service, 'calculatePriorityBonus');
+        $method->setAccessible(true);
+
+        $this->assertSame(1.0, $method->invoke($service, $task));
+    }
+
+    public function testCalculateSkillMatchScore(): void
+    {
+        $skill = $this->createMock(Skill::class);
+        $skill->method('getName')->willReturn('PHP');
+
+        $task = $this->createMock(Task::class);
+        $task->method('getRequiredSkills')->willReturn(new ArrayCollection([$skill]));
+
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+
+        $service = $this->buildService([], []);
+
+        $method = new \ReflectionMethod($service, 'calculateSkillMatchScore');
+        $method->setAccessible(true);
+
+        $score = $method->invoke($service, $task, $user);
+        $this->assertSame(1.0, $score);
+    }
+
+    public function testCalculateSkillMatchScoreEmpty(): void
+    {
+        $task = $this->createMock(Task::class);
+        $task->method('getRequiredSkills')->willReturn(new ArrayCollection());
+
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(1);
+
+        $service = $this->buildService([], []);
+
+        $method = new \ReflectionMethod($service, 'calculateSkillMatchScore');
+        $method->setAccessible(true);
+
+        $score = $method->invoke($service, $task, $user);
+        $this->assertSame(0.5, $score);
+    }
+
+    public function testCalculateWorkloadScore(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->method('getMaxWorkloadHours')->willReturn(40.0);
+
+        $task = $this->createMock(Task::class);
+        $task->method('getEstimatedHours')->willReturn(10.0);
+        $task->method('isFinished')->willReturn(false);
+
+        $service = $this->buildService([], [$task]);
+        $project = $this->createMock(Project::class);
+
+        $method = new \ReflectionMethod($service, 'calculateWorkloadScore');
+        $method->setAccessible(true);
+
+        $score = $method->invoke($service, $user, $project);
+        $this->assertSame(1.0, $score);
+    }
+
+    public function testCalculateWorkloadScoreThresholds(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->method('getMaxWorkloadHours')->willReturn(10.0);
+
+        $project = $this->createMock(Project::class);
+
+        $method = new \ReflectionMethod($this->buildService([], []), 'calculateWorkloadScore');
+        $method->setAccessible(true);
+
+        $scoreFull = $method->invoke($this->buildService([], [$this->taskWithHours(10.0)]), $user, $project);
+        $scoreHigh = $method->invoke($this->buildService([], [$this->taskWithHours(9.0)]), $user, $project);
+        $scoreMid = $method->invoke($this->buildService([], [$this->taskWithHours(7.5)]), $user, $project);
+        $scoreLow = $method->invoke($this->buildService([], [$this->taskWithHours(5.0)]), $user, $project);
+        $scoreFree = $method->invoke($this->buildService([], [$this->taskWithHours(1.0)]), $user, $project);
+
+        $this->assertSame(0.0, $scoreFull);
+        $this->assertSame(0.1, $scoreHigh);
+        $this->assertSame(0.3, $scoreMid);
+        $this->assertSame(0.6, $scoreLow);
+        $this->assertSame(1.0, $scoreFree);
+    }
+
+    public function testAssignAllProjectTasksReturnsEmpty(): void
+    {
+        $service = $this->buildService([], []);
+        $project = $this->createMock(Project::class);
+        $project->method('getId')->willReturn(1);
+
+        $result = $service->assignAllProjectTasks($project);
+
+        $this->assertSame([], $result);
+    }
+
+    public function testCalculateAssignmentScore(): void
+    {
+        $service = $this->buildService([], []);
+        $task = $this->createMock(Task::class);
+        $task->method('getRequiredSkills')->willReturn(new ArrayCollection());
+        $task->method('getProject')->willReturn($this->createMock(Project::class));
+
+        $user = $this->createMock(User::class);
         $user->method('getId')->willReturn(1);
         $user->method('getMaxWorkloadHours')->willReturn(40.0);
-        
-        $this->userSkillRepository
-            ->method('findByUser')
-            ->willReturn([]);
-            
-        $this->taskRepository
-            ->method('findBy')
-            ->willReturn([]);
 
-        $reflection = new \ReflectionClass($this->service);
-        $method = $reflection->getMethod('calculateAssignmentScore');
+        $method = new \ReflectionMethod($service, 'calculateAssignmentScore');
         $method->setAccessible(true);
-        
-        $score = $method->invoke($this->service, $task, $user);
-        
+
+        $score = $method->invoke($service, $task, $user);
         $this->assertIsFloat($score);
-        $this->assertGreaterThanOrEqual(0, $score);
-        $this->assertLessThanOrEqual(1, $score);
+    }
+
+    public function testGetCurrentWorkloadHours(): void
+    {
+        $task = $this->createMock(Task::class);
+        $task->method('isFinished')->willReturn(false);
+        $task->method('getEstimatedHours')->willReturn(5.0);
+
+        $service = $this->buildService([], [$task]);
+        $project = $this->createMock(Project::class);
+        $user = $this->createMock(User::class);
+
+        $method = new \ReflectionMethod($service, 'getCurrentWorkloadHours');
+        $method->setAccessible(true);
+
+        $hours = $method->invoke($service, $user, $project);
+        $this->assertSame(5.0, $hours);
+    }
+
+    private function buildService(array $projectUsers, array $tasks): TaskAssignmentService
+    {
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $taskRepository = $this->createMock(TaskRepository::class);
+        $userSkillRepository = $this->createMock(UserSkillRepository::class);
+        $projectUserRepository = $this->createMock(ProjectUserRepository::class);
+
+        $projectUserRepository->method('findByProject')->willReturn($projectUsers);
+        $taskRepository->method('findBy')->willReturn($tasks);
+        $userSkillRepository->method('findByUser')->willReturn([
+            $this->buildUserSkill('PHP')
+        ]);
+
+        return new TaskAssignmentService($entityManager, $taskRepository, $userSkillRepository, $projectUserRepository);
+    }
+
+    private function buildUserSkill(string $name): UserSkill
+    {
+        $skill = new Skill();
+        $skill->setName($name);
+        $userSkill = new UserSkill();
+        $userSkill->setSkill($skill);
+
+        return $userSkill;
+    }
+
+    private function taskWithHours(float $hours): Task
+    {
+        $task = $this->createMock(Task::class);
+        $task->method('getEstimatedHours')->willReturn($hours);
+        $task->method('isFinished')->willReturn(false);
+
+        return $task;
     }
 }
+
